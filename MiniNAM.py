@@ -33,7 +33,7 @@ Eth_Protocols = {'8': 'IP', '1544': 'ARP', '56710': 'IPv6'}
 IP_Protocols = {'1': 'ICMP', '6': 'TCP', '17': 'UDP'}
 
 FLOWTIMEDEF = 'Fast'
-FLOWTIME = OrderedDict([('Very Slow', 40000), ('Slow', 20000), ('Fast', 5000), ('Very Fast', 1000), ('Real Time', 1)])
+FLOWTIME = OrderedDict([('Very Slow', 50), ('Slow', 40), ('Fast', 30), ('Very Fast', 20), ('Real Time', 1)])
 
 LinkTime = 0.1
 
@@ -236,7 +236,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         # Field for Packet Flow Speed
         Label(self.rootFrame, text="Speed of Packet Flow").grid(row=2, sticky=W)
         self.flowTime = StringVar(self.rootFrame)
-        self.flowTime.set(FLOWTIME.keys()[FLOWTIME.values().index(self.prefValues['flowTime'])])
+        self.flowTime.set(list(FLOWTIME.keys())[list(FLOWTIME.values()).index(self.prefValues['flowTime'])])
         self.flowTimeMenu = OptionMenu(self.rootFrame, self.flowTime, *FLOWTIME.keys())
         self.flowTimeMenu.grid(row=2, column=1, sticky=W)
 
@@ -587,11 +587,12 @@ class MiniNAM(Frame):
         # Gather topology info and create nodes
         self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
         self.createNodes()
-        self.displayPacket('h1', 's1', "hola")
-        self.displayPacket('h1', 's1', "hola")
-        self.displayPacket('h1', 's1', "hola")
+        # self.displayPacket('h1', 's1', "hola")
+        # self.displayPacket('h1', 's1', "hola")
+        # self.displayPacket('h1', 's1', "hola")
         # time.sleep(100)
         print("XXXXXXXXXXXXXXXXXX")
+
 
 
         # time.sleep(1)
@@ -804,7 +805,7 @@ class MiniNAM(Frame):
             PacketInfo['direction'] = direction
             '''
 
-        self.createPacket('s0', 'h0', 'none')
+        #self.createPacket('s0', 'h0', 'none')
 
         # except Exception:
         #   pass
@@ -828,7 +829,7 @@ class MiniNAM(Frame):
         self.drawLink('h1', 's1')
         self.drawLink('h2', 's2')
 
-        '''
+
         for data in self.intfData:
             try:
                 self.drawLink(data["interface"].split('-')[0], data["link"].split('-')[0])
@@ -842,7 +843,7 @@ class MiniNAM(Frame):
                     self.drawLink(ctrlr, switch['name'])
             except:
                 pass
-        '''
+
 
     def filterPacket(self, srcMAC, dstMAC, s_addr, d_addr, eth_protocol, ip_protocol):
         try:
@@ -960,8 +961,8 @@ class MiniNAM(Frame):
 
             t = 1000 / 50000  # 1000 for ms and 50 for steps
 
-            t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
-            #t = float(self.appPrefs['flowTime']) * float(100) / 50000  # 1000 for ms and 50 for steps
+            # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
+            t = float(self.appPrefs['flowTime']) * float(100) / 50000  # 1000 for ms and 50 for steps
             self.movePacket(packet, packetImage, delta, t)
 
         except Exception:
@@ -1554,8 +1555,9 @@ class MiniNAM(Frame):
         prefBox = PrefsDialog(self, title='Preferences', prefDefaults=prefDefaults)
         if prefBox.result:
             self.appPrefs = prefBox.result
-        if self.appPrefs['startCLI'] == 1:
-            self.startCLI()
+
+        #if self.appPrefs['startCLI'] == 1:
+        #    self.startCLI()
 
     def filterDetails(self):
         filterDefaults = self.appFilters
@@ -1641,6 +1643,19 @@ class MiniNAM(Frame):
         for data in self.intfData:
             for item in items:
                 data[str('label_' + item)].config(text=str(data[item]))
+
+    '''
+    def startCLI(self):
+        # Don't start a second CLI thread if it already exists
+        if self.cli is None:
+            self.cli = Thread(target=CLI, args=(self.net,))
+            self.cli.daemon = True
+            self.cli.start()
+        elif not self.cli.isAlive():
+            self.cli = Thread(target=CLI, args=(self.net,))
+            self.cli.daemon = True
+            self.cli.start()
+    '''
 
     @staticmethod
     def ovsShow(_ignore=None):
@@ -1961,7 +1976,7 @@ if __name__ == "__main__":
         errorMsg = ("-" * 80 + "\n" +
                     "Caught exception on line %d." % (line) +
                     " Cleaning up...\n\n" + "%s: %s\n" % (type_.__name__, val_) +
-                    "-" * 80 + "\n")
+                    "-"  * 80 + "\n")
         error(errorMsg)
         # Print stack trace to debug log
         import traceback
