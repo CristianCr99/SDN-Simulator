@@ -89,7 +89,7 @@ class NetworkTopology(object):
 
         for i in range(1, len(path) - 1):
 
-            if proactive == True:
+            if proactive == True and path[i] != switch:
                 self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
                 print('flowMod a ', path[i])
                 self.miniNam.displayPacket('c0', 's' + str(path[i]), '')
@@ -97,8 +97,12 @@ class NetworkTopology(object):
             if path[i] == switch:
                 action = path[i + 1]
                 # Enviamos paquet_out a switch (Enviar graficamente)
+                self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
+                print('flowMod a ', switch)
+                self.miniNam.displayPacket('c0', 's' + str(switch), '')
                 print('paquetOut a ', switch)
                 self.miniNam.displayPacket('c0','s' + str(switch), '')
+
 
         # Enviamos paquet_out a switch (Enviar graficamente)
         print('paquetOut a ', switch)
@@ -180,10 +184,14 @@ def create_topology(G, num_host, num_switch):
 def SDN():
     # Creación de una instancia de la clase NetworkTopology
     graph = NetworkTopology()
-    create_topology(graph, 2, 3)
+    num_host = 2
+    num_switch = 3
+    create_topology(graph, num_host, num_switch)
 
     graph.communication_hots(1, 1, 2)
-    graph.communication_hots(1, 2, 1)
+    graph.communication_hots(2, 2, 1)
+    graph.communication_hots(1, 1, 2)
+    graph.communication_hots(2, 2, 1)
     #graph.communication_hots(1, 2, 1)
 
     # Añadimos la entrada de flujo a la lista de entradas de flujos del nodo 1 de la topologia de red (instancia de la clase FlowEntry (src=1,dst=4,id=0))

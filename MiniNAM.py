@@ -730,16 +730,13 @@ class MiniNAM(Frame):
 
         for i in list_nodes:
             if i[1] == 'controller':
-                print('cccccccc')
                 self.Nodes.append(
                     {'name': 'c' + str(i[0]), 'widget': None, 'type': 'Controlador', 'ip': None, 'port': None,
                      'color': self.Controller_Color})
             elif i[1] == 'switch':
-                print('s'+str(i[0]))
                 self.Nodes.append(
                     {'name': 's'+str(i[0]), 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
             else:
-                print('hhhhhhhhhhhhhh')
                 self.Nodes.append({'name': 'h'+str(i[0]), 'widget': None, 'type': "Host", 'ip': None, 'color': None})
         # Controlador
         #self.Nodes.append(
