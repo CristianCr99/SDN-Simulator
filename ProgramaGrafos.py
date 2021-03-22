@@ -34,21 +34,26 @@ class FlowEntry:
 class NetworkTopology(object):
     def __init__(self):
         self.G = nx.Graph()
+        self.miniNam = None
         # self.MNAM = mn.MiniNAM()
 
     def get_graph(self):
         return (self.G)
 
+    def set_minin(self, minin):
+        self.miniNam = minin
+
+
     def add_switch(self, num_switch, flow_table=[]):
-        self.G.add_node(num_switch, tipo='switch', name='s' + str(num_switch), flow_table=flow_table)
+        self.G.add_node(num_switch, type='switch', name='s' + str(num_switch), flow_table=flow_table)
         # self.MNAM.addNode(num_switch,'switch')
 
     def add_host(self, num_host):
-        self.G.add_node(num_host, tipo='host', name='h' + str(num_host))
+        self.G.add_node(num_host, type='host', name='h' + str(num_host))
         # self.MNAM.addNode(num_host, 'host')
 
     def add_controller(self, num_controller):
-        self.G.add_node(num_controller, tipo='controller', name='c' + str(num_controller))
+        self.G.add_node(num_controller, type='controller', name='c' + str(num_controller))
         # self.MNAM.addNode(num_controller, 'controller')
 
     def add_link(self, node_a, node_b, weight_link):
@@ -57,6 +62,8 @@ class NetworkTopology(object):
 
     def add_flow_entry_to_node(self, node, flowentry):
         self.G.nodes[node]['flow_table'].append(flowentry)
+
+
 
 
     def show_flow_table(self, node):
@@ -85,11 +92,17 @@ class NetworkTopology(object):
             if proactive == True:
                 self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
                 print('flowMod a ', path[i])
+                self.miniNam.displayPacket('c0', 's' + str(path[i]), '')
+
             if path[i] == switch:
                 action = path[i + 1]
+                # Enviamos paquet_out a switch (Enviar graficamente)
+                print('paquetOut a ', switch)
+                self.miniNam.displayPacket('c0','s' + str(switch), '')
 
         # Enviamos paquet_out a switch (Enviar graficamente)
         print('paquetOut a ', switch)
+        #self.miniNam.displayPacket('c0', 's' + str(switch), '')
         return action
 
     def communication_hots(self, id, h_src, h_dst):
@@ -98,7 +111,10 @@ class NetworkTopology(object):
 
             listEnlaces = list(self.G.edges(h_src))
             Switch = int(tuple(listEnlaces[0])[1])  # Cogemos el Switch al cual esta conectado [1]
+            print('h'+str(h_src), 's' + str(Switch))
+            self.miniNam.displayPacket('h'+str(h_src), 's' + str(Switch), 'hola')
             print('Enviamos paquete a', Switch)
+
             has_arrived = False
 
             while has_arrived == False:
@@ -107,27 +123,69 @@ class NetworkTopology(object):
 
                 if action == 0:
                     print('No Matchin')
+                    self.miniNam.displayPacket('s' + str(Switch), 'c0', 'hola')
                     action = self.controller_action(id, h_src, h_dst, Switch, True)
 
                 print('enviamos paquete a', action)
 
                 # Reenviamos el paquete a al siguiente Switch indicado por action (Enviar graficamente)
-                Switch = action
 
                 if action == h_dst:
                     # Se envia al host destino y ha llegado al destino (Enviar graficamente)
                     print('Llega paquete al destino', action)
+                    self.miniNam.displayPacket('s'+str(Switch), 'h' + str(h_dst), 'hola')
                     has_arrived = True
                 else:
                     print('Llega paquete a', action)
+                    self.miniNam.displayPacket('s' + str(Switch), 's' + str(action), 'hola')
+
+                Switch = action
 
                 # Enviamos paquet_in al controlador
 
+def create_topology(G, num_host, num_switch):
 
+    nodo = []
+    links = []
+
+    for i in range(1, num_host + 1):
+        G.add_host(i)
+        nodo.append((i, 'host'))
+
+    for i in range(num_host + 1, num_host + 1 + num_switch):
+        G.add_switch(i, flow_table=[])
+        nodo.append((i, 'switch'))
+
+    G.add_controller(0)
+    nodo.append((0, 'controller'))
+
+    G.add_link(1, 3, 1)
+    links.append((1, 3, G.get_graph().nodes[1]['type'], G.get_graph().nodes[3]['type'])) #############################################
+    G.add_link(2, 5, 1)
+    links.append((2, 5, G.get_graph().nodes[2]['type'], G.get_graph().nodes[5]['type']))
+    G.add_link(3, 4, 1)
+    links.append((3, 4, G.get_graph().nodes[3]['type'], G.get_graph().nodes[4]['type']))
+    G.add_link(3, 5, 5)
+    links.append((3, 5, G.get_graph().nodes[3]['type'], G.get_graph().nodes[5]['type']))
+    G.add_link(4, 5, 1)
+    links.append((4, 5, G.get_graph().nodes[4]['type'], G.get_graph().nodes[5]['type']))
+    G.add_link(3, 0, sys.maxsize)
+    links.append((3, 0, G.get_graph().nodes[3]['type'], G.get_graph().nodes[0]['type']))
+    G.add_link(4, 0, sys.maxsize)
+    links.append((4, 0, G.get_graph().nodes[4]['type'], G.get_graph().nodes[0]['type']))
+    G.add_link(5, 0, sys.maxsize)
+    links.append((5, 0, G.get_graph().nodes[5]['type'], G.get_graph().nodes[0]['type']))
+    G.set_minin(mnam.MiniNAM(list_links=links, list_nodes=nodo))
 
 def SDN():
     # Creación de una instancia de la clase NetworkTopology
     graph = NetworkTopology()
+    create_topology(graph, 2, 3)
+
+    graph.communication_hots(1, 1, 2)
+    graph.communication_hots(1, 2, 1)
+    #graph.communication_hots(1, 2, 1)
+
     # Añadimos la entrada de flujo a la lista de entradas de flujos del nodo 1 de la topologia de red (instancia de la clase FlowEntry (src=1,dst=4,id=0))
     # graph.add_flow_entry_to_node(1, FlowEntry(1, 4, 0, ))
     # Añadimos la entrada de flujo a la lista de entradas de flujos del nodo 1 de la topologia de red (otra instancia de la clase FlowEntry (src=1,dst=8,id=1))
@@ -138,38 +196,29 @@ def SDN():
     # verInformacionConcretaEnlace(graph)
     # graph.add_flow_entry_to_node(1, FlowEntry(1, 8, 1, 1))
     # graph.show_flow_table(1)
-
+    '''
     for i in range(1, 3):
         graph.add_host(i)
     for i in range(3, 6):
         graph.add_switch(i, flow_table=[])
 
     graph.add_controller(6)
+    '''
 
     # self.MNAM.createNodes()
     # self.MNAM.createNodes()
     # self.MNAM.drawLink('h1', 'h2')
 
-    graph.add_link(1, 3, 1)
-    graph.add_link(2, 5, 1)
-    graph.add_link(3, 4, 1)
-    graph.add_link(3, 5, 5)
-    graph.add_link(4, 5, 1)
-    graph.add_link(3, 6, sys.maxsize)
-    graph.add_link(4, 6, sys.maxsize)
-    graph.add_link(5, 6, sys.maxsize)
 
 
-    graph.communication_hots(1, 1, 2)
-    graph.communication_hots(1, 1, 2)
+
+
+
+
+
 
 
 
 
 SDN()
-prueba = mnam.MiniNAM()
-prueba.mainloop()
-prueba.displayPacket('h1', 's1', "hola")
-prueba.displayPacket('h1', 's1', "hola")
-prueba.displayPacket('h1', 's1', "hola")
-prueba.displayPacket('h1', 's1', "hola")
+

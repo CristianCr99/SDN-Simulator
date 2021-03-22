@@ -461,7 +461,7 @@ class NodeStats(object):
 class MiniNAM(Frame):
     "A realtime network animator for Mininet."
 
-    def __init__(self, parent=None, cheight=900, cwidth=1200, net=None, locations={}):
+    def __init__(self, parent=None, cheight=720, cwidth=1280, net=None, locations={}, list_links = None, list_nodes = None):
 
         Frame.__init__(self, parent)
         self.action = None
@@ -585,8 +585,8 @@ class MiniNAM(Frame):
         self.active = True
 
         # Gather topology info and create nodes
-        self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
-        self.createNodes()
+        self.TopoInfo(list_nodes)  # Cambiarlo para que use la topología de nuestra red simulada
+        self.createNodes(list_links)
         # self.displayPacket('h1', 's1', "hola")
         # self.displayPacket('h1', 's1', "hola")
         # self.displayPacket('h1', 's1', "hola")
@@ -726,24 +726,37 @@ class MiniNAM(Frame):
 
     # Topology and Sniffing
 
-    def TopoInfo(self):
+    def TopoInfo(self, list_nodes):
 
+        for i in list_nodes:
+            if i[1] == 'controller':
+                print('cccccccc')
+                self.Nodes.append(
+                    {'name': 'c' + str(i[0]), 'widget': None, 'type': 'Controlador', 'ip': None, 'port': None,
+                     'color': self.Controller_Color})
+            elif i[1] == 'switch':
+                print('s'+str(i[0]))
+                self.Nodes.append(
+                    {'name': 's'+str(i[0]), 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
+            else:
+                print('hhhhhhhhhhhhhh')
+                self.Nodes.append({'name': 'h'+str(i[0]), 'widget': None, 'type': "Host", 'ip': None, 'color': None})
         # Controlador
-        self.Nodes.append(
-            {'name': "c0", 'widget': None, 'type': 'Controlador', 'ip': None, 'port': None, 'color': self.Controller_Color})
+        #self.Nodes.append(
+        #    {'name': "c0", 'widget': None, 'type': 'Controlador', 'ip': None, 'port': None, 'color': self.Controller_Color})
 
         # Switches
-        self.Nodes.append(
-            {'name': "s1", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
-        self.Nodes.append(
-            {'name': "s2", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
-        self.Nodes.append(
-            {'name': "s3", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
+        # self.Nodes.append(
+        #     {'name': "s1", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
+        # self.Nodes.append(
+        #     {'name': "s2", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
+        # self.Nodes.append(
+        #     {'name': "s3", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
 
         # Hosts
-        if self.appPrefs['displayHosts'] == 1:
-            self.Nodes.append({'name': "h1", 'widget': None, 'type': "Host", 'ip': None, 'color': None})
-            self.Nodes.append({'name': "h2", 'widget': None, 'type': "Host", 'ip': None, 'color': None})
+        # if self.appPrefs['displayHosts'] == 1:
+        #     self.Nodes.append({'name': "h1", 'widget': None, 'type': "Host", 'ip': None, 'color': None})
+        #     self.Nodes.append({'name': "h2", 'widget': None, 'type': "Host", 'ip': None, 'color': None})
 
     def intfExists(self, interface):
         for data in self.intfData:
@@ -810,24 +823,52 @@ class MiniNAM(Frame):
         # except Exception:
         #   pass
 
-    def createNodes(self):
+    def createNodes(self, list_links):
         # Drawing node Widgets
         for node in self.Nodes:
             if not self.findWidgetByName(node['name']):
+                if node['type'] == 'Controlador':
+                    height = 70
+                    low = self.cheight/3 - 100
+                elif node['type'] == 'Switch':
+                    height = self.cheight/3
+                    low = self.cheight / 2 - 100
+                else:
+                    height = self.cheight/2
+                    low = self.cheight - 100
+
+
+
                 location = self.nodelocations[node['name']] if node['name'] in self.nodelocations else (
-                    random.randrange(70, self.cwidth - 100), random.randrange(70, self.cheight - 100))
+                    random.randrange(70, self.cwidth - 100), random.randrange(height, low))
+                # ancho y bajo
                 self.newNamedNode(node, location[0], location[1])
 
         # Drawing data links
 
-        self.drawLink('s1', 's2')
-        self.drawLink('s1', 's3')
-        self.drawLink('s2', 's3')
-        self.drawLink('c0', 's1')
-        self.drawLink('c0', 's2')
-        self.drawLink('c0', 's3')
-        self.drawLink('h1', 's1')
-        self.drawLink('h2', 's2')
+        for i in list_links:
+            if i[2] == 'host':
+                a = 'h'
+            elif i[2] == 'switch':
+                a = 's'
+            else:
+                a = 'c'
+            if i[3] == 'host':
+                b = 'h'
+            elif i[3] == 'switch':
+                b = 's'
+            else:
+                b = 'c'
+            print(a+str(i[0]), b+str(i[1]))
+            self.drawLink(a+str(i[0]), b+str(i[1]))
+        # self.drawLink('s1', 's2')
+        # self.drawLink('s1', 's3')
+        # self.drawLink('s2', 's3')
+        # self.drawLink('c0', 's1')
+        # self.drawLink('c0', 's2')
+        # self.drawLink('c0', 's3')
+        # self.drawLink('h1', 's1')
+        # self.drawLink('h2', 's2')
 
 
         for data in self.intfData:
@@ -835,7 +876,7 @@ class MiniNAM(Frame):
                 self.drawLink(data["interface"].split('-')[0], data["link"].split('-')[0])
             except:
                 pass
-        
+
         # Drawing control links
         for switch in self.Nodes:
             try:
@@ -1944,6 +1985,7 @@ if __name__ == "__main__":
     try:
         #print(Image.open("Switch.png"))
         app = MiniNAM()
+        #app.mainloop()
         app.displayPacket('h1', 's1', "hola")
         #time.sleep(100)
         print("hola")
