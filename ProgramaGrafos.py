@@ -44,6 +44,9 @@ class NetworkTopology(object):
     def get_graph(self):
         return (self.G)
 
+    def set_graph(self, G):
+        self.G = G
+
     # def set_minin(self, minin):
     #     self.miniNam = minin
 
@@ -184,7 +187,7 @@ class NetworkTopology(object):
         links.append((5, 0, self.G.nodes[5]['type'], self.G.nodes[0]['type']))
         # G.set_minin(mnam.MiniNAM(list_links=links, list_nodes=nodo))
 
-        print(json.dumps(json_graph.node_link_data(self.G), indent=4))
+        #print(json.dumps(json_graph.node_link_data(self.G), indent=4))
         return links, nodo
 
     #def save_topology(self):

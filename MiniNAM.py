@@ -2,22 +2,29 @@ import json
 import os
 import random
 import socket
-import time
 import tkinter.filedialog
 import tkinter.font
 import tkinter.simpledialog
 from cmath import pi
+from json import JSONEncoder
 from math import atan2, sin, cos
 from struct import *
 from subprocess import *
 from threading import Thread
 from tkinter import *
 import time
-from tkinter import filedialog
-
+from tkinter import filedialog, messagebox
 from PIL import Image, ImageDraw
 from PIL import ImageTk as itk
+from networkx.readwrite import json_graph
 import ProgramaGrafos as p
+import networkx as nx
+
+
+class MyEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+
 
 try:
     import queue
@@ -1431,8 +1438,8 @@ class MiniNAM(Frame):
 
         fileMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="File", font=font, menu=fileMenu)
-        fileMenu.add_command(label="Load Topology", font=font, command=self.loadPrefs)
-        fileMenu.add_command(label="Save Topology", font=font, command=self.savePrefs)
+        fileMenu.add_command(label="Load Topology", font=font, command=self.loadGraph)
+        fileMenu.add_command(label="Save Topology", font=font, command=self.saveGraph)
         fileMenu.add_separator()
         fileMenu.add_command(label='Quit', command=self.quit, font=font)
 
@@ -1467,33 +1474,46 @@ class MiniNAM(Frame):
         else:
             return text
 
-    def savePrefs(self):
-        "Save preferences and filters."
-        myFormats = [
-            ('Config File', '*.config'),
-            ('All Files', '*'),
-        ]
-        savingDictionary = {}
-        fileName = tkinter.filedialog.asksaveasfilename(filetypes=myFormats, title="Save preferences and filters as...")
-        if len(fileName) > 0:
-            # Save Application preferences
-            savingDictionary['preferences'] = self.appPrefs
-            # Save Application filters
-            savingDictionary['filters'] = self.appFilters
+    def saveGraph(self):
+        try:
+            path = filedialog.asksaveasfile(title='Save Topology', initialdir='./Graphs',filetypes=(('Files .json', '*.json'), (('All Files', '*.*'))))
+            inf = json.dumps(json_graph.cytoscape_data(graph.get_graph()), indent=4, cls=MyEncoder)
+            f = open(path.name, 'w')
+            f.write(inf)
+            f.close()
+        except Exception as er:
+            messagebox.showwarning(er)
+        #finally:
+        #    f.close()
 
-            try:
-                f = open(fileName, 'wb')
-                f.write(json.dumps(savingDictionary, sort_keys=True, indent=4, separators=(',', ': ')))
-            # pylint: disable=broad-except
-            except Exception as er:
-                print(er)
-            # pylint: enable=broad-except
-            finally:
-                f.close()
+    def verInformacionGrafo(Grafo):
+        print('\n\n Características del Grafo G:',
+              '\n  Atributos del grafo:', G.graph,
+              '\n  Numero de nodos:', Grafo.number_of_nodes(),
+              '\n  Numero de arcos:', Grafo.number_of_edges(),
+              '\n  Lista de nodos:', list(Grafo.nodes),
+              '\n  Lista de arcos:', list(Grafo.edges))
 
-    def loadPrefs(self):
-        fichero = filedialog.askopenfilename(title='Load Graph', initialdir='./',filetypes=(('Files .txt', '*.txt'), (('All Files', '*.*'))))
-        # "Load command."
+    # Este lo he modificado totalmente yo :)
+    def loadGraph(self):
+        # Seleccionamos el fichero
+        try:
+            path = filedialog.askopenfile(title='Load Graph', initialdir='./Graphs', filetypes=(('Files .txt', '*.json'), (('All Files', '*.*'))))
+            # Leemos el fichero json
+            gnl = json.load(open(path.name))
+            G = json_graph.cytoscape_graph(gnl)
+            # TODO Aniadir una funcion que compruebe si cada uno tiene los atributos que deben tener y que salte una ventana emergente de error en tal caso
+            graph.set_graph(G)
+        except Exception as er:
+            messagebox.showwarning(er)
+        #self.verInformacionGrafo(G)
+        #except Exception as er:
+        #    print(er)
+
+
+
+
+        # "Load command."loadPrefs
         # c = self.canvas
         #
         # myFormats = [
@@ -1985,38 +2005,21 @@ iVBORw0KGgoAAAANSUhEUgAAAG8AAABbCAYAAAB9LtvbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
 
 if __name__ == "__main__":
     try:
-        #print(Image.open("Switch.png"))
+
         graph = p.NetworkTopology()
         links, nodes = graph.create_topology(2, 3)
 
         app = MiniNAM(list_links=links, list_nodes=nodes)
-        print(graph.get_graph().nodes())
+        app.linkDown()
+        #print(graph.get_graph().nodes())
         graph.communication_hots(app, 1, 1, 2)
         graph.communication_hots(app, 2, 2, 1)
         graph.communication_hots(app, 1, 1, 2)
         graph.communication_hots(app, 2, 2, 1)
+
 
         app.mainloop()
 
-        #app.mainloop()
-        #app.displayPacket('h1', 's1', "hola")
-        #time.sleep(100)
-        #print("hola")
-        #app.displayPacket('h1', 's1', "")
-
-        # app.displayPacket('h1', 's1', "")
-        # app.displayPacket('h1', 's1', "")
-        # app.displayPacket('h1', 's1', "")
-        # app.displayPacket('h1', 's1', "")
-        # app.displayPacket('h1', 's1', "")
-        # app.displayPacket('h1', 's1', "")
-        # app.displayPacket('h1', 's1', "")
-        # app.displayPacket('s1', 'c0', "")
-        # app.displayPacket('c0', 's1', "")
-        # app.displayPacket('c0', 's2', "")
-        # app.displayPacket('c0', 's3', "")
-        # app.displayPacket('s1', 's2', "")
-        # app.displayPacket('s2', 'h2', "")
         app.mainloop()
 
     except KeyboardInterrupt:

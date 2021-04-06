@@ -1,0 +1,163 @@
+{
+    "data": [],
+    "directed": false,
+    "multigraph": false,
+    "elements": {
+        "nodes": [
+            {
+                "data": {
+                    "type": "host",
+                    "name": "h1",
+                    "id": "1",
+                    "value": 1
+                }
+            },
+            {
+                "data": {
+                    "type": "host",
+                    "name": "h2",
+                    "id": "2",
+                    "value": 2
+                }
+            },
+            {
+                "data": {
+                    "type": "switch",
+                    "name": "s3",
+                    "flow_table": [
+                        {
+                            "id": 1,
+                            "src": 1,
+                            "dst": 2,
+                            "action": 4,
+                            "counter": 0
+                        },
+                        {
+                            "id": 2,
+                            "src": 2,
+                            "dst": 1,
+                            "action": 1,
+                            "counter": 0
+                        }
+                    ],
+                    "id": "3",
+                    "value": 3
+                }
+            },
+            {
+                "data": {
+                    "type": "switch",
+                    "name": "s4",
+                    "flow_table": [
+                        {
+                            "id": 1,
+                            "src": 1,
+                            "dst": 2,
+                            "action": 5,
+                            "counter": 0
+                        },
+                        {
+                            "id": 2,
+                            "src": 2,
+                            "dst": 1,
+                            "action": 3,
+                            "counter": 0
+                        }
+                    ],
+                    "id": "4",
+                    "value": 4
+                }
+            },
+            {
+                "data": {
+                    "type": "switch",
+                    "name": "s5",
+                    "flow_table": [
+                        {
+                            "id": 1,
+                            "src": 1,
+                            "dst": 2,
+                            "action": 2,
+                            "counter": 0
+                        },
+                        {
+                            "id": 2,
+                            "src": 2,
+                            "dst": 1,
+                            "action": 4,
+                            "counter": 0
+                        }
+                    ],
+                    "id": "5",
+                    "value": 5
+                }
+            },
+            {
+                "data": {
+                    "type": "controller",
+                    "name": "c0",
+                    "id": "0",
+                    "value": 0
+                }
+            }
+        ],
+        "edges": [
+            {
+                "data": {
+                    "weight": 1,
+                    "source": 1,
+                    "target": 3
+                }
+            },
+            {
+                "data": {
+                    "weight": 1,
+                    "source": 2,
+                    "target": 5
+                }
+            },
+            {
+                "data": {
+                    "weight": 1,
+                    "source": 3,
+                    "target": 4
+                }
+            },
+            {
+                "data": {
+                    "weight": 5,
+                    "source": 3,
+                    "target": 5
+                }
+            },
+            {
+                "data": {
+                    "weight": 2147483647,
+                    "source": 3,
+                    "target": 0
+                }
+            },
+            {
+                "data": {
+                    "weight": 1,
+                    "source": 4,
+                    "target": 5
+                }
+            },
+            {
+                "data": {
+                    "weight": 2147483647,
+                    "source": 4,
+                    "target": 0
+                }
+            },
+            {
+                "data": {
+                    "weight": 2147483647,
+                    "source": 5,
+                    "target": 0
+                }
+            }
+        ]
+    }
+}
