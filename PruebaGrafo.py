@@ -117,7 +117,7 @@ plt.show()
 
 
 # Si quisieramos exportar el grafo por completo lo haríamos de la siguiente manera:
-#print(json.dumps(json_graph.node_link_data(G), indent=4))
+print(json.dumps(json_graph.node_link_data(G), indent=4))
 
 # Este enlace muestra como importar y exportar archivos json: https://www.analyticslane.com/2018/07/16/archivos-json-con-python/
 # También revisar este enlace: https://www.grotto-networking.com/SDNfun.html

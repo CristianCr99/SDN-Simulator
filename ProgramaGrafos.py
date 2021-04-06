@@ -1,10 +1,14 @@
 from __future__ import print_function
+
+import json
+
 import networkx as nx
 import matplotlib.pyplot as plt
 from builtins import range
 from datetime import date
 import sys
 import MiniNAM as mnam
+from networkx.readwrite import json_graph
 
 
 class FlowEntry:
@@ -34,14 +38,14 @@ class FlowEntry:
 class NetworkTopology(object):
     def __init__(self):
         self.G = nx.Graph()
-        self.miniNam = None
+        #self.miniNam = None
         # self.MNAM = mn.MiniNAM()
 
     def get_graph(self):
         return (self.G)
 
-    def set_minin(self, minin):
-        self.miniNam = minin
+    # def set_minin(self, minin):
+    #     self.miniNam = minin
 
 
     def add_switch(self, num_switch, flow_table=[]):
@@ -79,7 +83,7 @@ class NetworkTopology(object):
                 return i.get_action()
         return 0
 
-    def controller_action(self, id, h_src, h_dst, switch, proactive):
+    def controller_action(self, miniNAM, id, h_src, h_dst, switch, proactive):
         # verInformacionConcretaNodo(self.G)
         all_path = dict(nx.all_pairs_dijkstra_path(self.G, cutoff=None, weight='weight'))
 
@@ -92,16 +96,16 @@ class NetworkTopology(object):
             if proactive == True and path[i] != switch:
                 self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
                 print('flowMod a ', path[i])
-                self.miniNam.displayPacket('c0', 's' + str(path[i]), '')
+                miniNAM.displayPacket('c0', 's' + str(path[i]), '')
 
             if path[i] == switch:
                 action = path[i + 1]
                 # Enviamos paquet_out a switch (Enviar graficamente)
                 self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
                 print('flowMod a ', switch)
-                self.miniNam.displayPacket('c0', 's' + str(switch), '')
+                miniNAM.displayPacket('c0', 's' + str(switch), 'sadasd')
                 print('paquetOut a ', switch)
-                self.miniNam.displayPacket('c0','s' + str(switch), '')
+                miniNAM.displayPacket('c0','s' + str(switch), 'asdasdsa')
 
 
         # Enviamos paquet_out a switch (Enviar graficamente)
@@ -109,14 +113,14 @@ class NetworkTopology(object):
         #self.miniNam.displayPacket('c0', 's' + str(switch), '')
         return action
 
-    def communication_hots(self, id, h_src, h_dst):
+    def communication_hots(self,miniNAM, id, h_src, h_dst):
 
         if self.G.degree(h_src) == 1:  # solo puede un host estar conectado a un Switch
 
             listEnlaces = list(self.G.edges(h_src))
             Switch = int(tuple(listEnlaces[0])[1])  # Cogemos el Switch al cual esta conectado [1]
             print('h'+str(h_src), 's' + str(Switch))
-            self.miniNam.displayPacket('h'+str(h_src), 's' + str(Switch), 'hola')
+            miniNAM.displayPacket('h'+str(h_src), 's' + str(Switch), 'hola')
             print('Enviamos paquete a', Switch)
 
             has_arrived = False
@@ -127,8 +131,8 @@ class NetworkTopology(object):
 
                 if action == 0:
                     print('No Matchin')
-                    self.miniNam.displayPacket('s' + str(Switch), 'c0', 'hola')
-                    action = self.controller_action(id, h_src, h_dst, Switch, True)
+                    miniNAM.displayPacket('s' + str(Switch), 'c0', 'hola')
+                    action = self.controller_action(miniNAM,id, h_src, h_dst, Switch, True)
 
                 print('enviamos paquete a', action)
 
@@ -137,96 +141,91 @@ class NetworkTopology(object):
                 if action == h_dst:
                     # Se envia al host destino y ha llegado al destino (Enviar graficamente)
                     print('Llega paquete al destino', action)
-                    self.miniNam.displayPacket('s'+str(Switch), 'h' + str(h_dst), 'hola')
+                    miniNAM.displayPacket('s'+str(Switch), 'h' + str(h_dst), 'hola')
                     has_arrived = True
                 else:
                     print('Llega paquete a', action)
-                    self.miniNam.displayPacket('s' + str(Switch), 's' + str(action), 'hola')
+                    miniNAM.displayPacket('s' + str(Switch), 's' + str(action), 'hola')
 
                 Switch = action
 
                 # Enviamos paquet_in al controlador
+    def create_topology(self, num_host, num_switch):
 
-def create_topology(G, num_host, num_switch):
+        nodo = []
+        links = []
 
-    nodo = []
-    links = []
+        for i in range(1, num_host + 1):
+            self.add_host(i)
+            nodo.append((i, 'host'))
 
-    for i in range(1, num_host + 1):
-        G.add_host(i)
-        nodo.append((i, 'host'))
+        for i in range(num_host + 1, num_host + 1 + num_switch):
+            self.add_switch(i, flow_table=[])
+            nodo.append((i, 'switch'))
 
-    for i in range(num_host + 1, num_host + 1 + num_switch):
-        G.add_switch(i, flow_table=[])
-        nodo.append((i, 'switch'))
+        self.add_controller(0)
+        nodo.append((0, 'controller'))
 
-    G.add_controller(0)
-    nodo.append((0, 'controller'))
+        self.add_link(1, 3, 1)
+        links.append((1, 3, self.G.nodes[1]['type'], self.G.nodes[3]['type'])) #############################################
+        self.add_link(2, 5, 1)
+        links.append((2, 5, self.G.nodes[2]['type'], self.G.nodes[5]['type']))
+        self.add_link(3, 4, 1)
+        links.append((3, 4, self.G.nodes[3]['type'], self.G.nodes[4]['type']))
+        self.add_link(3, 5, 5)
+        links.append((3, 5, self.G.nodes[3]['type'], self.G.nodes[5]['type']))
+        self.add_link(4, 5, 1)
+        links.append((4, 5, self.G.nodes[4]['type'], self.G.nodes[5]['type']))
+        self.add_link(3, 0, sys.maxsize)
+        links.append((3, 0, self.G.nodes[3]['type'], self.G.nodes[0]['type']))
+        self.add_link(4, 0, sys.maxsize)
+        links.append((4, 0, self.G.nodes[4]['type'], self.G.nodes[0]['type']))
+        self.add_link(5, 0, sys.maxsize)
+        links.append((5, 0, self.G.nodes[5]['type'], self.G.nodes[0]['type']))
+        # G.set_minin(mnam.MiniNAM(list_links=links, list_nodes=nodo))
 
-    G.add_link(1, 3, 1)
-    links.append((1, 3, G.get_graph().nodes[1]['type'], G.get_graph().nodes[3]['type'])) #############################################
-    G.add_link(2, 5, 1)
-    links.append((2, 5, G.get_graph().nodes[2]['type'], G.get_graph().nodes[5]['type']))
-    G.add_link(3, 4, 1)
-    links.append((3, 4, G.get_graph().nodes[3]['type'], G.get_graph().nodes[4]['type']))
-    G.add_link(3, 5, 5)
-    links.append((3, 5, G.get_graph().nodes[3]['type'], G.get_graph().nodes[5]['type']))
-    G.add_link(4, 5, 1)
-    links.append((4, 5, G.get_graph().nodes[4]['type'], G.get_graph().nodes[5]['type']))
-    G.add_link(3, 0, sys.maxsize)
-    links.append((3, 0, G.get_graph().nodes[3]['type'], G.get_graph().nodes[0]['type']))
-    G.add_link(4, 0, sys.maxsize)
-    links.append((4, 0, G.get_graph().nodes[4]['type'], G.get_graph().nodes[0]['type']))
-    G.add_link(5, 0, sys.maxsize)
-    links.append((5, 0, G.get_graph().nodes[5]['type'], G.get_graph().nodes[0]['type']))
-    G.set_minin(mnam.MiniNAM(list_links=links, list_nodes=nodo))
+        print(json.dumps(json_graph.node_link_data(self.G), indent=4))
+        return links, nodo
 
-def SDN():
-    # Creación de una instancia de la clase NetworkTopology
-    graph = NetworkTopology()
-    num_host = 2
-    num_switch = 3
-    create_topology(graph, num_host, num_switch)
-
-    graph.communication_hots(1, 1, 2)
-    graph.communication_hots(2, 2, 1)
-    graph.communication_hots(1, 1, 2)
-    graph.communication_hots(2, 2, 1)
-    #graph.communication_hots(1, 2, 1)
-
-    # Añadimos la entrada de flujo a la lista de entradas de flujos del nodo 1 de la topologia de red (instancia de la clase FlowEntry (src=1,dst=4,id=0))
-    # graph.add_flow_entry_to_node(1, FlowEntry(1, 4, 0, ))
-    # Añadimos la entrada de flujo a la lista de entradas de flujos del nodo 1 de la topologia de red (otra instancia de la clase FlowEntry (src=1,dst=8,id=1))
-    # graph.add_flow_entry_to_node(1, FlowEntry(1, 8, 1))
-    # Comprobamos que se añade correctamente
-    # graph.show_flow_table(1)
-    # verInformacionConcretaNodo(graph)
-    # verInformacionConcretaEnlace(graph)
-    # graph.add_flow_entry_to_node(1, FlowEntry(1, 8, 1, 1))
-    # graph.show_flow_table(1)
-    '''
-    for i in range(1, 3):
-        graph.add_host(i)
-    for i in range(3, 6):
-        graph.add_switch(i, flow_table=[])
-
-    graph.add_controller(6)
-    '''
-
-    # self.MNAM.createNodes()
-    # self.MNAM.createNodes()
-    # self.MNAM.drawLink('h1', 'h2')
+    #def save_topology(self):
 
 
+# def SDN():
+#     # Creación de una instancia de la clase NetworkTopology
+#     graph = NetworkTopology()
+#     num_host = 2
+#     num_switch = 3
+#     create_topology(graph, num_host, num_switch)
+#
+#     graph.communication_hots(1, 1, 2)
+#     graph.communication_hots(2, 2, 1)
+#     graph.communication_hots(1, 1, 2)
+#     graph.communication_hots(2, 2, 1)
+#     #graph.communication_hots(1, 2, 1)
+#
+#     # Añadimos la entrada de flujo a la lista de entradas de flujos del nodo 1 de la topologia de red (instancia de la clase FlowEntry (src=1,dst=4,id=0))
+#     # graph.add_flow_entry_to_node(1, FlowEntry(1, 4, 0, ))
+#     # Añadimos la entrada de flujo a la lista de entradas de flujos del nodo 1 de la topologia de red (otra instancia de la clase FlowEntry (src=1,dst=8,id=1))
+#     # graph.add_flow_entry_to_node(1, FlowEntry(1, 8, 1))
+#     # Comprobamos que se añade correctamente
+#     # graph.show_flow_table(1)
+#     # verInformacionConcretaNodo(graph)
+#     # verInformacionConcretaEnlace(graph)
+#     # graph.add_flow_entry_to_node(1, FlowEntry(1, 8, 1, 1))
+#     # graph.show_flow_table(1)
+#     '''
+#     for i in range(1, 3):
+#         graph.add_host(i)
+#     for i in range(3, 6):
+#         graph.add_switch(i, flow_table=[])
+#
+#     graph.add_controller(6)
+#     '''
+#
+#     # self.MNAM.createNodes()
+#     # self.MNAM.createNodes()
+#     # self.MNAM.drawLink('h1', 'h2')
 
 
-
-
-
-
-
-
-
-
-SDN()
+#SDN()
 

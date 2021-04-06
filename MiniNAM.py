@@ -13,8 +13,11 @@ from subprocess import *
 from threading import Thread
 from tkinter import *
 import time
+from tkinter import filedialog
+
 from PIL import Image, ImageDraw
 from PIL import ImageTk as itk
+import ProgramaGrafos as p
 
 try:
     import queue
@@ -591,7 +594,6 @@ class MiniNAM(Frame):
         # self.displayPacket('h1', 's1', "hola")
         # self.displayPacket('h1', 's1', "hola")
         # time.sleep(100)
-        print("XXXXXXXXXXXXXXXXXX")
 
 
 
@@ -1429,8 +1431,8 @@ class MiniNAM(Frame):
 
         fileMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="File", font=font, menu=fileMenu)
-        fileMenu.add_command(label="Load Prefs.", font=font, command=self.loadPrefs)
-        fileMenu.add_command(label="Save Prefs.", font=font, command=self.savePrefs)
+        fileMenu.add_command(label="Load Topology", font=font, command=self.loadPrefs)
+        fileMenu.add_command(label="Save Topology", font=font, command=self.savePrefs)
         fileMenu.add_separator()
         fileMenu.add_command(label='Quit', command=self.quit, font=font)
 
@@ -1490,25 +1492,26 @@ class MiniNAM(Frame):
                 f.close()
 
     def loadPrefs(self):
-        "Load command."
-        c = self.canvas
-
-        myFormats = [
-            ('Config File', '*.config'),
-            ('All Files', '*'),
-        ]
-        f = tkinter.filedialog.askopenfile(filetypes=myFormats, mode='rb')
-        if f == None:
-            return
-
-        loadedPrefs = self.convertJsonUnicode(json.load(f))
-        # Load application preferences
-        if 'preferences' in loadedPrefs:
-            self.appPrefs = dict(self.appPrefs.items() + loadedPrefs['preferences'].items())
-        # Load application filters
-        if 'filters' in loadedPrefs:
-            self.appFilters = dict(self.appFilters.items() + loadedPrefs['filters'].items())
-        f.close()
+        fichero = filedialog.askopenfilename(title='Load Graph', initialdir='./',filetypes=(('Files .txt', '*.txt'), (('All Files', '*.*'))))
+        # "Load command."
+        # c = self.canvas
+        #
+        # myFormats = [
+        #     ('Config File', '*.config'),
+        #     ('All Files', '*'),
+        # ]
+        # f = tkinter.filedialog.askopenfile(filetypes=myFormats, mode='rb')
+        # if f == None:
+        #     return
+        #
+        # loadedPrefs = self.convertJsonUnicode(json.load(f))
+        # # Load application preferences
+        # if 'preferences' in loadedPrefs:
+        #     self.appPrefs = dict(self.appPrefs.items() + loadedPrefs['preferences'].items())
+        # # Load application filters
+        # if 'filters' in loadedPrefs:
+        #     self.appFilters = dict(self.appFilters.items() + loadedPrefs['filters'].items())
+        # f.close()
 
     def printdata(self):
         # Convienience function to print interface data while developing
@@ -1978,29 +1981,42 @@ iVBORw0KGgoAAAANSUhEUgAAAG8AAABbCAYAAAB9LtvbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
     }
 
 
+
+
 if __name__ == "__main__":
     try:
         #print(Image.open("Switch.png"))
-        app = MiniNAM()
-        #app.mainloop()
-        app.displayPacket('h1', 's1', "hola")
-        #time.sleep(100)
-        print("hola")
-        app.displayPacket('h1', 's1', "")
+        graph = p.NetworkTopology()
+        links, nodes = graph.create_topology(2, 3)
 
-        app.displayPacket('h1', 's1', "")
-        app.displayPacket('h1', 's1', "")
-        app.displayPacket('h1', 's1', "")
-        app.displayPacket('h1', 's1', "")
-        app.displayPacket('h1', 's1', "")
-        app.displayPacket('h1', 's1', "")
-        app.displayPacket('h1', 's1', "")
-        app.displayPacket('s1', 'c0', "")
-        app.displayPacket('c0', 's1', "")
-        app.displayPacket('c0', 's2', "")
-        app.displayPacket('c0', 's3', "")
-        app.displayPacket('s1', 's2', "")
-        app.displayPacket('s2', 'h2', "")
+        app = MiniNAM(list_links=links, list_nodes=nodes)
+        print(graph.get_graph().nodes())
+        graph.communication_hots(app, 1, 1, 2)
+        graph.communication_hots(app, 2, 2, 1)
+        graph.communication_hots(app, 1, 1, 2)
+        graph.communication_hots(app, 2, 2, 1)
+
+        app.mainloop()
+
+        #app.mainloop()
+        #app.displayPacket('h1', 's1', "hola")
+        #time.sleep(100)
+        #print("hola")
+        #app.displayPacket('h1', 's1', "")
+
+        # app.displayPacket('h1', 's1', "")
+        # app.displayPacket('h1', 's1', "")
+        # app.displayPacket('h1', 's1', "")
+        # app.displayPacket('h1', 's1', "")
+        # app.displayPacket('h1', 's1', "")
+        # app.displayPacket('h1', 's1', "")
+        # app.displayPacket('h1', 's1', "")
+        # app.displayPacket('s1', 'c0', "")
+        # app.displayPacket('c0', 's1', "")
+        # app.displayPacket('c0', 's2', "")
+        # app.displayPacket('c0', 's3', "")
+        # app.displayPacket('s1', 's2', "")
+        # app.displayPacket('s2', 'h2', "")
         app.mainloop()
 
     except KeyboardInterrupt:
