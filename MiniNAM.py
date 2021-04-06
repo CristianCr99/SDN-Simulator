@@ -19,6 +19,8 @@ from PIL import ImageTk as itk
 from networkx.readwrite import json_graph
 import ProgramaGrafos as p
 import networkx as nx
+import ipywidgets as widgets
+
 
 
 class MyEncoder(JSONEncoder):
@@ -607,7 +609,7 @@ class MiniNAM(Frame):
         # time.sleep(1)
 
         # Close window gracefully
-        # Wm.wm_protocol(self.top, name='WM_DELETE_WINDOW', func=self.quit)
+        Wm.wm_protocol(self.top, name='WM_DELETE_WINDOW', func=self.quit)
 
     # Arguments and Network
 
@@ -865,7 +867,7 @@ class MiniNAM(Frame):
                 b = 's'
             else:
                 b = 'c'
-            print(a+str(i[0]), b+str(i[1]))
+            #print(a+str(i[0]), b+str(i[1]))
             self.drawLink(a+str(i[0]), b+str(i[1]))
         # self.drawLink('s1', 's2')
         # self.drawLink('s1', 's3')
@@ -1222,6 +1224,7 @@ class MiniNAM(Frame):
         self.showNodeStats(icon)
         icon.bind('<Button-1>', self.setFocus)
         if 'Switch' == node:
+            #print('hola')
             icon.bind('<Button-3>', self.do_switchPopup)
         if 'LegacyRouter' == node:
             icon.bind('<Button-3>', self.do_legacyRouterPopup)
@@ -1253,14 +1256,17 @@ class MiniNAM(Frame):
 
     def enterNode(self, event):
         "Select node on entry."
+        #print(event)
         self.selectNode(event)
 
     def leaveNode(self, _event):
         "Restore old selection on exit."
         self.selectItem(self.lastSelection)
 
+    # TODO Aquí se podría poner alguna información del elemento sobre el que nos hemos situado
     def showNodeStats(self, widget):
         nodeStats = NodeStats(widget)
+        print(nodeStats)
 
         def enter(_event):
             if self.appPrefs['showNodeStats'] == 0:
@@ -1273,10 +1279,10 @@ class MiniNAM(Frame):
             node = widget['text']
             for data in self.intfData:
                 if data['node'] == node:
-                    TXP += data['TXP'];
-                    TXB += data['TXB'];
-                    RXP += data['RXP'];
-                    RXB += data['RXB'];
+                    TXP += data['TXP']
+                    TXB += data['TXB']
+                    RXP += data['RXP']
+                    RXB += data['RXB']
             text = "TXP: " + str(TXP) + "\n" + "RXP: " + str(RXP) + "\n" + "TXB: " + str(TXB) + "\n" + "RXB: " + str(
                 RXB)
             nodeStats.showtip(text)
@@ -1401,6 +1407,7 @@ class MiniNAM(Frame):
 
         if 'Controller' in stags or 'Controller' in dtags:
             linkType = 'control'
+
             c.itemconfig(self.link, dash=(6, 4, 2, 4), fill='purple')
             self.createControlLinkBindings()
         else:
@@ -1410,6 +1417,7 @@ class MiniNAM(Frame):
 
         x, y = c.coords(self.widgetToItem[dest])
         c.coords(self.link, self.linkx, self.linky, x, y)
+        print(linkType)
         self.addLink(source, dest, linktype=linkType)
 
         # We're done
@@ -1486,13 +1494,7 @@ class MiniNAM(Frame):
         #finally:
         #    f.close()
 
-    def verInformacionGrafo(Grafo):
-        print('\n\n Características del Grafo G:',
-              '\n  Atributos del grafo:', G.graph,
-              '\n  Numero de nodos:', Grafo.number_of_nodes(),
-              '\n  Numero de arcos:', Grafo.number_of_edges(),
-              '\n  Lista de nodos:', list(Grafo.nodes),
-              '\n  Lista de arcos:', list(Grafo.edges))
+
 
     # Este lo he modificado totalmente yo :)
     def loadGraph(self):
@@ -1596,19 +1598,15 @@ class MiniNAM(Frame):
         src = linkDetail['src']
         dst = linkDetail['dest']
         srcName, dstName = src['text'], dst['text']
-        self.net.configLinkStatus(srcName, dstName, 'up')
+        #self.net.configLinkStatus(srcName, dstName, 'up')
         self.canvas.itemconfig(link, dash=())
 
     def linkDown(self):
         if (self.selection is None or
                 self.net is None):
+
             return
         link = self.selection
-        linkDetail = self.links[link]
-        src = linkDetail['src']
-        dst = linkDetail['dest']
-        srcName, dstName = src['text'], dst['text']
-        self.net.configLinkStatus(srcName, dstName, 'down')
         self.canvas.itemconfig(link, dash=(4, 4))
 
     def prefDetails(self):
@@ -1634,12 +1632,13 @@ class MiniNAM(Frame):
         name = self.itemToWidget[self.selection]['text']
         tags = self.canvas.gettags(self.selection)
 
-        if name not in self.net.nameToNode:
-            return
+        #if name not in self.net.nameToNode:
+        #    return
         if 'Switch' in tags or 'LegacySwitch' in tags:
-            call([
-                "xterm -T 'Bridge Details' -sb -sl 2000 -e 'ovs-vsctl list bridge " + name + "; read -p \"Press Enter to close\"' &"],
-                shell=True)
+            print('holaaaaaaaaaaaaaaaaaa')
+            #call([
+            #    "xterm -T 'Bridge Details' -sb -sl 2000 -e 'ovs-vsctl list bridge " + name + "; read -p \"Press Enter to close\"' &"],
+            #    shell=True)
 
     def intfInfo(self):
 
@@ -1778,6 +1777,7 @@ class MiniNAM(Frame):
         # display the popup menu
         if self.net:
             try:
+                print('asdasdasdasddas')
                 self.switchPopup.post(event.x_root, event.y_root)
                 self.switchPopup.focus_set()
             finally:
@@ -1793,8 +1793,9 @@ class MiniNAM(Frame):
                 self.selection not in self.itemToWidget):
             return
         name = self.itemToWidget[self.selection]['text']
-        if name not in self.net.nameToNode:
-            return
+        print('terminalhost')
+        #if name not in self.net.nameToNode:
+        #    return
         # term = makeTerm( self.net.nameToNode[ name ], 'Host', term=self.appPrefs['terminalType'] )
         # if StrictVersion(MININET_VERSION) > StrictVersion('2.0'):
         #    self.net.terms += term
@@ -1834,12 +1835,12 @@ class MiniNAM(Frame):
             self.flowQueues[q].queue.clear()
 
         # Stop network.
-        if self.net:
-            self.net.stop()
+        #if self.net:
+        #    self.net.stop()
 
         # cleanUpScreens()
 
-        self.net = None
+        #self.net = None
 
     def quit(self):
         "Stop our network, if any, then quit."
@@ -2007,19 +2008,14 @@ if __name__ == "__main__":
     try:
 
         graph = p.NetworkTopology()
-        links, nodes = graph.create_topology(2, 3)
+        links, nodes = graph.create_topology(2, 4)
 
-        app = MiniNAM(list_links=links, list_nodes=nodes)
-        app.linkDown()
-        #print(graph.get_graph().nodes())
+        app = MiniNAM(list_links=links, list_nodes=nodes, net=True)
+
         graph.communication_hots(app, 1, 1, 2)
         graph.communication_hots(app, 2, 2, 1)
         graph.communication_hots(app, 1, 1, 2)
         graph.communication_hots(app, 2, 2, 1)
-
-
-        app.mainloop()
-
         app.mainloop()
 
     except KeyboardInterrupt:
