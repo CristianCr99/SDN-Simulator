@@ -23,88 +23,89 @@
         "switchType": "ovs",
         "terminalType": "xterm"
     },
-    "controllers": [
+    "controllers": [],
+    "hosts": [
         {
+            "number": "1",
             "opts": {
-                "controllerProtocol": "tcp",
-                "controllerType": "ref",
-                "hostname": "c0",
-                "remoteIP": "127.0.0.1",
-                "remotePort": 6633
+                "hostname": "h1",
+                "nodeNum": 1,
+                "sched": "host"
             },
-            "x": "433.0",
-            "y": "458.0"
-        }
-    ],
-    "hosts": [],
-    "links": [
-        {
-            "dest": "r2",
-            "opts": {},
-            "src": "r1"
+            "x": "356.0",
+            "y": "340.0"
         },
         {
-            "dest": "s4",
+            "number": "2",
+            "opts": {
+                "hostname": "h2",
+                "nodeNum": 2,
+                "sched": "host"
+            },
+            "x": "695.0",
+            "y": "338.0"
+        }
+    ],
+    "links": [
+        {
+            "dest": "s1",
             "opts": {},
             "src": "s3"
         },
         {
-            "dest": "s3",
+            "dest": "s2",
             "opts": {},
-            "src": "r1"
+            "src": "s3"
         },
         {
-            "dest": "s4",
+            "dest": "s1",
             "opts": {},
-            "src": "r2"
+            "src": "s2"
+        },
+        {
+            "dest": "h1",
+            "opts": {},
+            "src": "s1"
+        },
+        {
+            "dest": "h2",
+            "opts": {},
+            "src": "s2"
         }
     ],
     "switches": [
         {
             "number": "1",
             "opts": {
-                "hostname": "r1",
+                "controllers": [],
+                "hostname": "s1",
                 "nodeNum": 1,
-                "switchType": "legacyRouter"
+                "switchType": "default"
             },
-            "x": "192.0",
-            "y": "121.0"
+            "x": "437.0",
+            "y": "157.0"
         },
         {
             "number": "2",
             "opts": {
-                "hostname": "r2",
+                "controllers": [],
+                "hostname": "s2",
                 "nodeNum": 2,
-                "switchType": "legacyRouter"
+                "switchType": "default"
             },
-            "x": "660.0",
-            "y": "126.0"
+            "x": "630.0",
+            "y": "146.0"
         },
         {
             "number": "3",
             "opts": {
-                "controllers": [
-                    "c0"
-                ],
+                "controllers": [],
                 "hostname": "s3",
                 "nodeNum": 3,
                 "switchType": "default"
             },
-            "x": "342.0",
-            "y": "289.0"
-        },
-        {
-            "number": "4",
-            "opts": {
-                "controllers": [
-                    "c0"
-                ],
-                "hostname": "s4",
-                "nodeNum": 4,
-                "switchType": "default"
-            },
-            "x": "595.0",
-            "y": "336.0"
+            "x": "491.0",
+            "y": "76.0"
         }
     ],
     "version": "2"
