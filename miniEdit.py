@@ -351,11 +351,11 @@ class HostDialog(CustomDialog):
             self.ipEntry.insert(0, self.prefValues['ip'])
 
         # Field for default route
-        Label(n, text="Port:").grid(row=2, sticky=E)
+        Label(n, text="Port:").grid(row=2, sticky=W)
         self.routeEntry = Entry(n)
         self.routeEntry.grid(row=2, column=1)
-        if 'Port' in self.prefValues:
-            self.routeEntry.insert(0, self.prefValues['Port'])
+        if 'port' in self.prefValues:
+            self.routeEntry.insert(0, self.prefValues['port'])
 
         # # Field for CPU
         # Label(self.propFrame, text="Amount CPU:").grid(row=3, sticky=E)
@@ -488,7 +488,7 @@ class HostDialog(CustomDialog):
                    # 'sched':self.schedVar.get(),
                    'hostname':self.hostnameEntry.get(),
                    'ip':self.ipEntry.get(),
-                   'Port':self.routeEntry.get(),
+                   'port':self.routeEntry.get(),
                    # 'startCommand':self.startEntry.get(),
                    # 'stopCommand':self.stopEntry.get(),
                    # 'privateDirectory':privateDirectories,
@@ -598,17 +598,17 @@ class SwitchDialog(CustomDialog):
         rowCount+=1
 
         # External Interfaces
-        Label(self.rightfieldFrame, text="External Interface:").grid(row=0, sticky=E)
-        self.b = Button( self.rightfieldFrame, text='Add', command=self.addInterface)
-        self.b.grid(row=0, column=1)
+        # Label(self.rightfieldFrame, text="External Interface:").grid(row=0, sticky=E)
+        # self.b = Button( self.rightfieldFrame, text='Add', command=self.addInterface)
+        # self.b.grid(row=0, column=1)
 
-        self.interfaceFrame = VerticalScrolledTable(self.rightfieldFrame, rows=0, columns=1, title='External Interfaces')
-        self.interfaceFrame.grid(row=1, column=0, sticky='nswe', columnspan=2)
-        self.tableFrame = self.interfaceFrame.interior
+        # self.interfaceFrame = VerticalScrolledTable(self.rightfieldFrame, rows=0, columns=1, title='External Interfaces')
+        # self.interfaceFrame.grid(row=1, column=0, sticky='nswe', columnspan=2)
+        # self.tableFrame = self.interfaceFrame.interior
 
         # Add defined interfaces
-        for externalInterface in externalInterfaces:
-            self.tableFrame.addRow(value=[externalInterface])
+        # for externalInterface in externalInterfaces:
+        #     self.tableFrame.addRow(value=[externalInterface])
 
         self.commandFrame = Frame(self.rootFrame)
         self.commandFrame.grid(row=1, column=0, sticky='nswe', columnspan=2)
@@ -630,6 +630,7 @@ class SwitchDialog(CustomDialog):
         self.tableFrame.addRow()
 
     def defaultDpid( self, name):
+        # http: // pakiti.com / datapath - ids /
         "Derive dpid from switch name, s1 -> 1"
         assert self  # satisfy pylint and allow contextual override
         try:
@@ -859,18 +860,18 @@ class ControllerDialog(tkSimpleDialog.Dialog):
         rowCount+=1
 
         # Field for Controller Type
-        Label(master, text="Controller Type:").grid(row=rowCount, sticky=E)
-        controllerType = self.ctrlrValues['controllerType']
-        self.o1 = OptionMenu(master, self.var, "Remote Controller", "In-Band Controller", "OpenFlow Reference", "OVS Controller")
-        self.o1.grid(row=rowCount, column=1, sticky=W)
-        if controllerType == 'ref':
-            self.var.set("OpenFlow Reference")
-        elif controllerType == 'inband':
-            self.var.set("In-Band Controller")
-        elif controllerType == 'remote':
-            self.var.set("Remote Controller")
-        else:
-            self.var.set("OVS Controller")
+        # Label(master, text="Controller Type:").grid(row=rowCount, sticky=E)
+        # controllerType = self.ctrlrValues['controllerType']
+        # self.o1 = OptionMenu(master, self.var, "Remote Controller", "In-Band Controller", "OpenFlow Reference", "OVS Controller")
+        # self.o1.grid(row=rowCount, column=1, sticky=W)
+        # if controllerType == 'ref':
+        #     self.var.set("OpenFlow Reference")
+        # elif controllerType == 'inband':
+        #     self.var.set("In-Band Controller")
+        # elif controllerType == 'remote':
+        #     self.var.set("Remote Controller")
+        # else:
+        #     self.var.set("OVS Controller")
         rowCount+=1
 
         # Field for Controller Protcol
@@ -1052,13 +1053,13 @@ class MiniEdit( Frame ):
         self.focus()
 
         self.hostPopup = Menu(self.top, tearoff=0)
-        self.hostPopup.add_command(label='Host Options', font=self.font)
-        self.hostPopup.add_separator()
+        # self.hostPopup.add_command(label='Host Options', font=self.font)
+        # self.hostPopup.add_separator()
         self.hostPopup.add_command(label='Properties', font=self.font, command=self.hostDetails )
 
-        self.hostRunPopup = Menu(self.top, tearoff=0)
-        self.hostRunPopup.add_command(label='Host Options', font=self.font)
-        self.hostRunPopup.add_separator()
+        # self.hostRunPopup = Menu(self.top, tearoff=0)
+        # self.hostRunPopup.add_command(label='Host Options', font=self.font)
+        # self.hostRunPopup.add_separator()
         # self.hostRunPopup.add_command(label='Terminal', font=self.font, command=self.xterm )
 
         # self.legacyRouterRunPopup = Menu(self.top, tearoff=0)
@@ -1355,6 +1356,8 @@ class MiniEdit( Frame ):
                 host['opts']['hostname'] = hostname
             if 'nodeNum' not in host['opts']:
                 host['opts']['nodeNum'] = int(nodeNum)
+            if 'port' in host['opts']:
+                port = host['opts']['port']
             x = host['x']
             y = host['y']
             self.addNode('Host', nodeNum, float(x), float(y), name=hostname)
@@ -1680,9 +1683,9 @@ class MiniEdit( Frame ):
                     if 'dpid' in opts:
                         f.write(", dpid='"+opts['dpid']+"'")
                     f.write(")\n")
-                    if 'externalInterfaces' in opts:
-                        for extInterface in opts['externalInterfaces']:
-                            f.write("    Intf( '"+extInterface+"', node="+name+" )\n")
+                    # if 'externalInterfaces' in opts:
+                    #     for extInterface in opts['externalInterfaces']:
+                    #         f.write("    Intf( '"+extInterface+"', node="+name+" )\n")
 
             f.write("\n")
             f.write("    info( '*** Add hosts\\n')\n")
@@ -2358,6 +2361,8 @@ class MiniEdit( Frame ):
             #     newHostOpts['defaultRoute'] = hostBox.result['defaultRoute']
             if len(hostBox.result['ip']) > 0:
                 newHostOpts['ip'] = hostBox.result['ip']
+            if len(hostBox.result['port']) > 0:
+                newHostOpts['port'] = hostBox.result['port']
             # if len(hostBox.result['externalInterfaces']) > 0:
             #     newHostOpts['externalInterfaces'] = hostBox.result['externalInterfaces']
             # if len(hostBox.result['vlanInterfaces']) > 0:
@@ -2397,8 +2402,8 @@ class MiniEdit( Frame ):
                 newSwitchOpts['hostname'] = switchBox.result['hostname']
                 name = switchBox.result['hostname']
                 widget[ 'text' ] = name
-            if len(switchBox.result['externalInterfaces']) > 0:
-                newSwitchOpts['externalInterfaces'] = switchBox.result['externalInterfaces']
+            # if len(switchBox.result['externalInterfaces']) > 0:
+            #     newSwitchOpts['externalInterfaces'] = switchBox.result['externalInterfaces']
             newSwitchOpts['switchIP'] = switchBox.result['switchIP']
             newSwitchOpts['sflow'] = switchBox.result['sflow']
             newSwitchOpts['netflow'] = switchBox.result['netflow']
