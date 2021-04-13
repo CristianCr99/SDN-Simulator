@@ -158,10 +158,4 @@ Elemento1.add_separator()
 Elemento1.add_command(label='Salir', command=avisoSalir)
 
 
-
-
-
-
-
-
 root.mainloop()

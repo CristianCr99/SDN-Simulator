@@ -35,7 +35,7 @@ p = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4
 # pkt = IP()/TCP()
 # wrpcap('./packlist.pcap', pkt, append=True)
 
-scapy_cap = rdpcap('packlist.pcap')
+scapy_cap = rdpcap('Packages/packlist.pcap')
 
 for packet in scapy_cap:
     if 'MAC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
@@ -61,7 +61,7 @@ for packet in scapy_cap:
 
 
 def clicked():
-    scapy_cap = rdpcap('packlist.pcap')
+    scapy_cap = rdpcap('Packages/packlist.pcap')
     for packet in scapy_cap:
         if 'LLC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
             if 'TCP' in packet:
