@@ -555,13 +555,13 @@ class MiniNAM(Frame):
         self.hostPopup = Menu(self.top, tearoff=0, takefocus=1)
         self.hostPopup.add_command(label='Host Options', font=self.font)
         self.hostPopup.add_separator()
-        self.hostPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
+        # self.hostPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
         self.hostPopup.bind("<FocusOut>", self.popupFocusOut)
 
         self.legacyRouterPopup = Menu(self.top, tearoff=0, takefocus=1)
         self.legacyRouterPopup.add_command(label='Router Options', font=self.font)
         self.legacyRouterPopup.add_separator()
-        self.legacyRouterPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
+        # self.legacyRouterPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
         self.legacyRouterPopup.bind("<FocusOut>", self.popupFocusOut)
 
         self.switchPopup = Menu(self.top, tearoff=0, takefocus=1)
@@ -1462,8 +1462,8 @@ class MiniNAM(Frame):
         runMenu.add_command(label="Clear", font=font, command=self.clearQueue)
         fileMenu.add_separator()
         runMenu.add_command(label='Show Interfaces Summary', font=font, command=self.intfInfo)
-        runMenu.add_command(label='Show OVS Summary', font=font, command=self.ovsShow)
-        runMenu.add_command(label='Root Terminal', font=font, command=self.rootTerminal)
+        # runMenu.add_command(label='Show OVS Summary', font=font, command=self.ovsShow)
+        # runMenu.add_command(label='Root Terminal', font=font, command=self.rootTerminal)
 
         # Application menu
         appMenu = Menu(mbar, tearoff=False)
@@ -1717,14 +1717,14 @@ class MiniNAM(Frame):
             self.cli.start()
     '''
 
-    @staticmethod
-    def ovsShow(_ignore=None):
-        call(["xterm -T 'OVS Summary' -sb -sl 2000 -e 'ovs-vsctl show; read -p \"Press Enter to close\"' &"],
-             shell=True)
-
-    @staticmethod
-    def rootTerminal(_ignore=None):
-        call(["xterm -T 'Root Terminal' -sb -sl 2000 &"], shell=True)
+    # @staticmethod
+    # def ovsShow(_ignore=None):
+    #     call(["xterm -T 'OVS Summary' -sb -sl 2000 -e 'ovs-vsctl show; read -p \"Press Enter to close\"' &"],
+    #          shell=True)
+    #
+    # @staticmethod
+    # def rootTerminal(_ignore=None):
+    #     call(["xterm -T 'Root Terminal' -sb -sl 2000 &"], shell=True)
 
     def do_linkPopup(self, event):
 
@@ -1786,14 +1786,14 @@ class MiniNAM(Frame):
 
     # Model interface
 
-    def xterm(self, _ignore=None):
-        "Make an xterm when a button is pressed."
-        if (self.selection is None or
-                self.net is None or
-                self.selection not in self.itemToWidget):
-            return
-        name = self.itemToWidget[self.selection]['text']
-        print('terminalhost')
+    # def xterm(self, _ignore=None):
+    #     "Make an xterm when a button is pressed."
+    #     if (self.selection is None or
+    #             self.net is None or
+    #             self.selection not in self.itemToWidget):
+    #         return
+    #     name = self.itemToWidget[self.selection]['text']
+    #     print('terminalhost')
         #if name not in self.net.nameToNode:
         #    return
         # term = makeTerm( self.net.nameToNode[ name ], 'Host', term=self.appPrefs['terminalType'] )
@@ -1802,16 +1802,16 @@ class MiniNAM(Frame):
         # else:
         #    self.net.terms.append(term)
 
-    def iperf(self, _ignore=None):
-        "Make an xterm when a button is pressed."
-        if (self.selection is None or
-                self.net is None or
-                self.selection not in self.itemToWidget):
-            return
-        name = self.itemToWidget[self.selection]['text']
-        if name not in self.net.nameToNode:
-            return
-        self.net.nameToNode[name].cmd('iperf -s -p 5001 &')
+    # def iperf(self, _ignore=None):
+    #     "Make an xterm when a button is pressed."
+    #     if (self.selection is None or
+    #             self.net is None or
+    #             self.selection not in self.itemToWidget):
+    #         return
+    #     name = self.itemToWidget[self.selection]['text']
+    #     if name not in self.net.nameToNode:
+    #         return
+    #     self.net.nameToNode[name].cmd('iperf -s -p 5001 &')
 
     @staticmethod
     def pathCheck(*args, **kwargs):
