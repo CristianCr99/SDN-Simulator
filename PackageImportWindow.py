@@ -8,7 +8,7 @@ from scapy.layers.l2 import Ether
 from scapy.utils import rdpcap
 
 
-class Application(tk.Frame):
+class PackageImportWindow(tk.Frame):
     def __init__(self, root):
         self.port_dst = tk.StringVar()
         self.port_src = tk.StringVar()
@@ -112,7 +112,6 @@ class Application(tk.Frame):
             self.list_packets[int(item_chain, 16) - 1][IP].dst = self.ip_dst.get()
             if 'TCP' in self.list_packets[int(item_chain, 16) - 1]:
                 transport_protocol = 'TCP'
-
             else:
                 transport_protocol = 'UDP'
 
@@ -235,8 +234,9 @@ class Application(tk.Frame):
         botones = tk.LabelFrame(self.root, height=1000)
         botones.grid(row=4, sticky='N')
 
-        tk.Button(botones, text="Delete", command=self.delete).grid(column=0, row=0)
-        tk.Button(botones, text="Load Packages from...", command=self.load_packages).grid(column=2, row=0)
+        tk.Button(botones, text="Delete Selected Packet", command=self.delete).grid(row=0, column=0)
+        #tk.Label(botones, text='       ').grid(row=0, column=1)
+        tk.Button(botones, text="Load Packages from...", command=self.load_packages).grid(row=0, column=2)
         # for i in range(0, 100):
         #     self.treeview.insert('', 'end', text=i, values=('hola1', 'hola2', 'hola3', 'hola4', 'hola5', 'hola6'))
 
@@ -248,6 +248,6 @@ class Application(tk.Frame):
         self.tree.insert('', 'end', values=('hola', 'hola'))
 
 
-app = Application(tk.Tk())
+app = PackageImportWindow(tk.Tk())
 app.root.resizable(False, False)
 app.root.mainloop()
