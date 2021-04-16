@@ -2,23 +2,18 @@ import json
 import os
 import re
 import sys
-from distutils.version import StrictVersion
 from optparse import OptionParser
 from subprocess import call
 from sys import exit  # pylint: disable=redefined-builtin
 from tkinter import (Frame, Label, LabelFrame, Entry, OptionMenu,
                      Checkbutton, Menu, Toplevel, Button, BitmapImage,
                      PhotoImage, Canvas, Scrollbar, Wm, TclError,
-                     StringVar, IntVar, E, W, EW, NW, Y, VERTICAL, SOLID,
-                     CENTER, RIGHT, LEFT, BOTH, TRUE, FALSE)
+                     StringVar, IntVar, E, W, NW, Y, VERTICAL, SOLID,
+                     RIGHT, LEFT, BOTH, TRUE, FALSE)
 from tkinter import filedialog as tkFileDialog
 from tkinter import font as tkFont
 from tkinter import simpledialog as tkSimpleDialog
 from tkinter.messagebox import showerror
-
-# if 'PYTHONPATH' in os.environ:
-#     sys.path = os.environ[ 'PYTHONPATH' ].split( ':' ) + sys.path
-
 
 class CustomDialog(object):
 
@@ -124,9 +119,6 @@ class SwitchDialog(CustomDialog):
         self.rightfieldFrame.grid(row=0, column=1, sticky='nswe')
 
         rowCount = 0
-        externalInterfaces = []
-        # if 'externalInterfaces' in self.prefValues:
-        #     externalInterfaces = self.prefValues['externalInterfaces']
 
         # Field for Hostname
 
@@ -210,19 +202,6 @@ class SwitchDialog(CustomDialog):
             self.dpctlEntry.insert(0, self.prefValues['dpctl'])
         rowCount+=1
 
-        # External Interfaces
-        # Label(self.rightfieldFrame, text="External Interface:").grid(row=0, sticky=E)
-        # self.b = Button( self.rightfieldFrame, text='Add', command=self.addInterface)
-        # self.b.grid(row=0, column=1)
-
-        # self.interfaceFrame = VerticalScrolledTable(self.rightfieldFrame, rows=0, columns=1, title='External Interfaces')
-        # self.interfaceFrame.grid(row=1, column=0, sticky='nswe', columnspan=2)
-        # self.tableFrame = self.interfaceFrame.interior
-
-        # Add defined interfaces
-        # for externalInterface in externalInterfaces:
-        #     self.tableFrame.addRow(value=[externalInterface])
-
         self.commandFrame = Frame(self.rootFrame)
         self.commandFrame.grid(row=1, column=0, sticky='nswe', columnspan=2)
         self.commandFrame.columnconfigure(1, weight=1)
@@ -252,16 +231,9 @@ class SwitchDialog(CustomDialog):
             return dpid
         except IndexError:
             return None
-            #raise Exception( 'Unable to derive default datapath ID - '
-            #                 'please either specify a dpid or use a '
-            #                 'canonical switch name such as s23.' )
+
 
     def apply(self):
-        # externalInterfaces = []
-        # for row in range(self.tableFrame.rows):
-        #     # debug( 'Interface is ' + self.tableFrame.get(row, 0), '\n' )
-        #     if len(self.tableFrame.get(row, 0)) > 0:
-        #         externalInterfaces.append(self.tableFrame.get(row, 0))
 
         dpid = self.dpidEntry.get()
         if (self.defaultDpid(self.hostnameEntry.get()) is None
@@ -270,7 +242,6 @@ class SwitchDialog(CustomDialog):
                           message= 'Unable to derive default datapath ID - '
                              'please either specify a DPID or use a '
                              'canonical switch name such as s23.' )
-
 
         results = {
             # 'externalInterfaces':externalInterfaces,
@@ -472,22 +443,6 @@ class ControllerDialog(tkSimpleDialog.Dialog):
         self.e2.grid(row=rowCount, column=1)
         self.e2.insert(0, self.ctrlrValues['remotePort'])
         rowCount+=1
-
-        # Field for Controller Type
-        # Label(master, text="Controller Type:").grid(row=rowCount, sticky=E)
-        # controllerType = self.ctrlrValues['controllerType']
-        # self.o1 = OptionMenu(master, self.var, "Remote Controller", "In-Band Controller", "OpenFlow Reference", "OVS Controller")
-        # self.o1.grid(row=rowCount, column=1, sticky=W)
-        # if controllerType == 'ref':
-        #     self.var.set("OpenFlow Reference")
-        # elif controllerType == 'inband':
-        #     self.var.set("In-Band Controller")
-        # elif controllerType == 'remote':
-        #     self.var.set("Remote Controller")
-        # else:
-        #     self.var.set("OVS Controller")
-        rowCount+=1
-
         # Field for Controller Protcol
         Label(master, text="Protocol:").grid(row=rowCount, sticky=E)
         if 'controllerProtocol' in self.ctrlrValues:
@@ -826,27 +781,7 @@ class MiniEdit( Frame ):
         # Spacer
         Label( toolbar, text='' ).pack()
 
-        # Commands
-        # for cmd, color in [ ( 'Stop', 'darkRed' ), ( 'Run', 'darkGreen' ) ]:
-        #     doCmd = getattr( self, 'do' + cmd )
-        #     b = Button( toolbar, text=cmd, font=self.smallFont,
-        #                 fg=color, command=doCmd )
-        #     b.pack( fill='x', side='bottom' )
-
         return toolbar
-
-    # def doRun( self ):
-    #     "Run command."
-    #     self.activate( 'Select' )
-    #     for tool in self.tools:
-    #         self.buttons[ tool ].config( state='disabled' )
-    #     self.start()
-    #
-    # def doStop( self ):
-    #     "Stop command."
-    #     self.stop()
-    #     for tool in self.tools:
-    #         self.buttons[ tool ].config( state='normal' )
 
     def addNode( self, node, nodeNum, x, y, name=None):
         "Add a new node to our canvas."
@@ -872,42 +807,25 @@ class MiniEdit( Frame ):
 
 
     def loadTopology( self ):
-        "Load command."
         c = self.canvas
-
-        myFormats = [
-            ('Mininet Topology','*.mn'),
-            ('All Files','*'),
-        ]
-        f = tkFileDialog.askopenfile(filetypes=myFormats, mode='rb')
+        f = tkFileDialog.askopenfile(title='Open Topology', initialdir='./Graphs', mode='rb', filetypes=(('Files .json', '*.json'), ('All Files', '*.*')))
         if f is None:
             return
         self.newTopology()
         loadedTopology = self.convertJsonUnicode(json.load(f))
 
-
-
         # Load controllers
         if 'controllers' in loadedTopology:
-            if loadedTopology['version'] == '1':
-                # This is old location of controller info
-                hostname = 'c0'
-                self.controllers = {}
-                self.controllers[hostname] = loadedTopology['controllers']['c0']
-                self.controllers[hostname]['hostname'] = hostname
-                self.addNode('Controller', 0, float(30), float(30), name=hostname)
+
+            controllers = loadedTopology['controllers']
+            for controller in controllers:
+                hostname = controller['opts']['hostname']
+                x = controller['x']
+                y = controller['y']
+                self.addNode('Controller', 0, float(x), float(y), name=hostname)
+                self.controllers[hostname] = controller['opts']
                 icon = self.findWidgetByName(hostname)
                 icon.bind('<Button-3>', self.do_controllerPopup )
-            else:
-                controllers = loadedTopology['controllers']
-                for controller in controllers:
-                    hostname = controller['opts']['hostname']
-                    x = controller['x']
-                    y = controller['y']
-                    self.addNode('Controller', 0, float(x), float(y), name=hostname)
-                    self.controllers[hostname] = controller['opts']
-                    icon = self.findWidgetByName(hostname)
-                    icon.bind('<Button-3>', self.do_controllerPopup )
 
 
         # Load hosts
@@ -921,8 +839,6 @@ class MiniEdit( Frame ):
                 host['opts']['hostname'] = hostname
             if 'nodeNum' not in host['opts']:
                 host['opts']['nodeNum'] = int(nodeNum)
-            if 'port' in host['opts']:
-                port = host['opts']['port']
             x = host['x']
             y = host['y']
             self.addNode('Host', nodeNum, float(x), float(y), name=hostname)
@@ -957,14 +873,22 @@ class MiniEdit( Frame ):
                 switch['opts']['nodeNum'] = int(nodeNum)
             x = switch['x']
             y = switch['y']
-            if switch['opts']['switchType'] == "Switch":
+            if switch['opts']['switchType'] == "legacyRouter":
+                self.addNode('LegacyRouter', nodeNum, float(x), float(y), name=hostname)
+                icon = self.findWidgetByName(hostname)
+                icon.bind('<Button-3>', self.do_legacyRouterPopup )
+            elif switch['opts']['switchType'] == "legacySwitch":
+                self.addNode('LegacySwitch', nodeNum, float(x), float(y), name=hostname)
+                icon = self.findWidgetByName(hostname)
+                icon.bind('<Button-3>', self.do_legacySwitchPopup )
+            else:
                 self.addNode('Switch', nodeNum, float(x), float(y), name=hostname)
                 icon = self.findWidgetByName(hostname)
                 icon.bind('<Button-3>', self.do_switchPopup )
             self.switchOpts[hostname] = switch['opts']
 
             # create links to controllers
-            if int(loadedTopology['version']) > 1:
+            if True:
                 controllers = self.switchOpts[hostname]['controllers']
                 for controller in controllers:
                     dest = self.findWidgetByName(controller)
@@ -981,21 +905,7 @@ class MiniEdit( Frame ):
                     self.addLink( icon, dest, linktype='control' )
                     self.createControlLinkBindings()
                     self.link = self.linkWidget = None
-            else:
-                dest = self.findWidgetByName('c0')
-                dx, dy = self.canvas.coords( self.widgetToItem[ dest ] )
-                self.link = self.canvas.create_line(float(x),
-                                                    float(y),
-                                                    dx,
-                                                    dy,
-                                                    width=4,
-                                                    fill='red',
-                                                    dash=(6, 4, 2, 4),
-                                                    tag='link' )
-                c.itemconfig(self.link, tags=c.gettags(self.link)+('control',))
-                self.addLink( icon, dest, linktype='control' )
-                self.createControlLinkBindings()
-                self.link = self.linkWidget = None
+
 
         # Load links
         links = loadedTopology['links']
@@ -1052,8 +962,10 @@ class MiniEdit( Frame ):
         ]
 
         savingDictionary = {}
-        fileName = tkFileDialog.asksaveasfilename(filetypes=myFormats ,title="Save the topology as...")
-        if len(fileName ) > 0:
+        fileName = tkFileDialog.asksaveasfilename(title='Save the topology as...', initialdir='./Graphs',
+                                     filetypes=(('Files .json', '*.json'), ('All Files', '*.*')))
+        # fileName = tkFileDialog.asksaveasfilename(filetypes=myFormats ,title="Save the topology as...")
+        if len(fileName) > 0:
             # Save Switches and Hosts
             hostsToSave = []
             switchesToSave = []
@@ -1470,37 +1382,6 @@ class MiniEdit( Frame ):
 
     # Menu handlers
 
-    # def about( self ):
-    #     "Display about box."
-    #     about = self.aboutBox
-    #     if about is None:
-    #         bg = 'white'
-    #         about = Toplevel( bg='white' )
-    #         about.title( 'About' )
-    #         desc = self.appName + ': a simple network editor for MiniNet'
-    #         version = 'MiniEdit '+MINIEDIT_VERSION
-    #         author = 'Originally by: Bob Lantz <rlantz@cs>, April 2010'
-    #         enhancements = 'Enhancements by: Gregory Gee, Since July 2013'
-    #         www = 'http://gregorygee.wordpress.com/category/miniedit/'
-    #         line1 = Label( about, text=desc, font='Helvetica 10 bold', bg=bg )
-    #         line2 = Label( about, text=version, font='Helvetica 9', bg=bg )
-    #         line3 = Label( about, text=author, font='Helvetica 9', bg=bg )
-    #         line4 = Label( about, text=enhancements, font='Helvetica 9', bg=bg )
-    #         line5 = Entry( about, font='Helvetica 9', bg=bg, width=len(www), justify=CENTER )
-    #         line5.insert(0, www)
-    #         line5.configure(state='readonly')
-    #         line1.pack( padx=20, pady=10 )
-    #         line2.pack(pady=10 )
-    #         line3.pack(pady=10 )
-    #         line4.pack(pady=10 )
-    #         line5.pack(pady=10 )
-    #         hide = ( lambda about=about: about.withdraw() )
-    #         self.aboutBox = about
-    #         # Hide on close rather than destroying window
-    #         Wm.wm_protocol( about, name='WM_DELETE_WINDOW', func=hide )
-    #     # Show (existing) window
-    #     about.deiconify()
-
     def createToolImages( self ):
         "Create toolbar (and icon) images."
 
@@ -1525,31 +1406,15 @@ class MiniEdit( Frame ):
         self.master.wait_window(hostBox.top)
         if hostBox.result:
             newHostOpts = {'nodeNum':self.hostOpts[name]['nodeNum']}
-            # newHostOpts['sched'] = hostBox.result['sched']
-            # if len(hostBox.result['startCommand']) > 0:
-            #     newHostOpts['startCommand'] = hostBox.result['startCommand']
-            # if len(hostBox.result['stopCommand']) > 0:
-            #     newHostOpts['stopCommand'] = hostBox.result['stopCommand']
-            # if len(hostBox.result['cpu']) > 0:
-            #     newHostOpts['cpu'] = float(hostBox.result['cpu'])
-            # if len(hostBox.result['cores']) > 0:
-            #     newHostOpts['cores'] = hostBox.result['cores']
+
             if len(hostBox.result['hostname']) > 0:
                 newHostOpts['hostname'] = hostBox.result['hostname']
                 name = hostBox.result['hostname']
                 widget['text'] = name
-            # if len(hostBox.result['defaultRoute']) > 0:
-            #     newHostOpts['defaultRoute'] = hostBox.result['defaultRoute']
             if len(hostBox.result['ip']) > 0:
                 newHostOpts['ip'] = hostBox.result['ip']
             if len(hostBox.result['port']) > 0:
                 newHostOpts['port'] = hostBox.result['port']
-            # if len(hostBox.result['externalInterfaces']) > 0:
-            #     newHostOpts['externalInterfaces'] = hostBox.result['externalInterfaces']
-            # if len(hostBox.result['vlanInterfaces']) > 0:
-            #     newHostOpts['vlanInterfaces'] = hostBox.result['vlanInterfaces']
-            # if len(hostBox.result['privateDirectory']) > 0:
-            #     newHostOpts['privateDirectory'] = hostBox.result['privateDirectory']
             self.hostOpts[name] = newHostOpts
 
 
