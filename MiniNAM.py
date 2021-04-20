@@ -20,7 +20,7 @@ from networkx.readwrite import json_graph
 import ProgramaGrafos as p
 import networkx as nx
 import ipywidgets as widgets
-
+import miniEdit as edit
 
 
 class MyEncoder(JSONEncoder):
@@ -1446,8 +1446,9 @@ class MiniNAM(Frame):
 
         fileMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="File", font=font, menu=fileMenu)
-        fileMenu.add_command(label="Load Topology", font=font, command=self.loadGraph)
-        fileMenu.add_command(label="Save Topology", font=font, command=self.saveGraph)
+        fileMenu.add_command(label="Load topology", font=font, command=self.loadGraph)
+        fileMenu.add_command(label="Save topology", font=font, command=self.saveGraph)
+        fileMenu.add_command(label="Customize topology", font=font, command=self.customize_topology)
         fileMenu.add_separator()
         fileMenu.add_command(label='Quit', command=self.quit, font=font)
 
@@ -1499,15 +1500,54 @@ class MiniNAM(Frame):
     # Este lo he modificado totalmente yo :)
     def loadGraph(self):
         # Seleccionamos el fichero
-        try:
+        # try:
             path = filedialog.askopenfile(title='Load Graph', initialdir='./Graphs', filetypes=(('Files .txt', '*.json'), (('All Files', '*.*'))))
             # Leemos el fichero json
-            gnl = json.load(open(path.name))
-            G = json_graph.cytoscape_graph(gnl)
+            edit_topo = json.load(open(path.name))
+            # G = json_graph.cytoscape_graph(gnl)
             # TODO Aniadir una funcion que compruebe si cada uno tiene los atributos que deben tener y que salte una ventana emergente de error en tal caso
-            graph.set_graph(G)
-        except Exception as er:
-            messagebox.showwarning(er)
+            g = nx.Graph()
+            if 'hosts' in edit_topo:
+                for i in edit_topo['hosts']:
+                    # print(i['opts']['mac'])
+                    g.add_node(i['opts']['hostname'])
+                    g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
+                    g.nodes[i['opts']['hostname']]['ip'] = i['opts']['ip']
+                    g.nodes[i['opts']['hostname']]['port'] = i['opts']['port']
+                    print('info',g.nodes[i['opts']['hostname']])
+
+            if 'controllers' in edit_topo:
+                for i in edit_topo['controllers']:
+                    # print(i['opts']['mac'])
+                    g.add_node(i['opts']['hostname'])
+                    g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
+                    g.nodes[i['opts']['hostname']]['ip'] = i['opts']['remoteIP']
+                    g.nodes[i['opts']['hostname']]['port'] = str(i['opts']['remotePort'])
+                    print('info',g.nodes[i['opts']['hostname']])
+
+            if 'switches' in edit_topo:
+                for i in edit_topo['switches']:
+                    # print(i['opts']['mac'])
+                    g.add_node(i['opts']['hostname'])
+                    g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
+                    g.nodes[i['opts']['hostname']]['ip'] = i['opts']['ip']
+                    g.nodes[i['opts']['hostname']]['port'] = str(i['opts']['port'])
+                    g.nodes[i['opts']['hostname']]['flow_table'] = []
+                    print('info',g.nodes[i['opts']['hostname']])
+
+            if 'links' in edit_topo:
+                for i in edit_topo['links']:
+                    # print(i['opts']['mac'])
+                    if 'weight' in i['opts']:
+                        g.add_edges_from([(i['src'], i['dest'], {'weight': int(i['opts']['weight'])})])
+                    else:
+                        g.add_edges_from([(i['src'], i['dest'], {'weight': 1})])
+
+                    print('info',list(g.edges))
+
+            # graph.set_graph(g)
+        # except Exception as er:
+        #     messagebox.showwarning(er)
         #self.verInformacionGrafo(G)
         #except Exception as er:
         #    print(er)
@@ -1534,6 +1574,13 @@ class MiniNAM(Frame):
         # if 'filters' in loadedPrefs:
         #     self.appFilters = dict(self.appFilters.items() + loadedPrefs['filters'].items())
         # f.close()
+
+    def customize_topology(self):
+        root = tkinter.Toplevel()
+        edit_topology = edit.MiniEdit(root)
+        edit_topology.mainloop()
+
+
 
     def printdata(self):
         # Convienience function to print interface data while developing
