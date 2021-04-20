@@ -473,7 +473,7 @@ class NodeStats(object):
 class MiniNAM(Frame):
     "A realtime network animator for Mininet."
 
-    def __init__(self, parent=None, cheight=720, cwidth=1280, net=None, locations={}, list_links = None, list_nodes = None):
+    def __init__(self, parent=None, cheight=720, cwidth=1280, net=None, locations={}):
 
         Frame.__init__(self, parent)
         self.action = None
@@ -597,8 +597,8 @@ class MiniNAM(Frame):
         self.active = True
 
         # Gather topology info and create nodes
-        self.TopoInfo(list_nodes)  # Cambiarlo para que use la topología de nuestra red simulada
-        self.createNodes(list_links)
+        self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
+        self.createNodes()
         # self.displayPacket('h1', 's1', "hola")
         # self.displayPacket('h1', 's1', "hola")
         # self.displayPacket('h1', 's1', "hola")
@@ -737,18 +737,19 @@ class MiniNAM(Frame):
 
     # Topology and Sniffing
 
-    def TopoInfo(self, list_nodes):
-
-        for i in list_nodes:
-            if i[1] == 'controller':
+    def TopoInfo(self):
+        print('hello')
+        for i in graph.get_graph().nodes():
+            print(i[0])
+            if i[0] == 'c':
                 self.Nodes.append(
-                    {'name': 'c' + str(i[0]), 'widget': None, 'type': 'Controlador', 'ip': None, 'port': None,
+                    {'name': i, 'widget': None, 'type': 'Controlador', 'ip': graph.get_graph().nodes()[i]['ip'], 'port': graph.get_graph().nodes()[i]['port'],
                      'color': self.Controller_Color})
-            elif i[1] == 'switch':
+            elif i[0] == 's':
                 self.Nodes.append(
-                    {'name': 's'+str(i[0]), 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
-            else:
-                self.Nodes.append({'name': 'h'+str(i[0]), 'widget': None, 'type': "Host", 'ip': None, 'color': None})
+                    {'name': i, 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
+            elif i[0] == 'h':
+                self.Nodes.append({'name': i, 'widget': None, 'type': "Host", 'ip': graph.get_graph().nodes()[i]['ip'], 'color': None})
         # Controlador
         #self.Nodes.append(
         #    {'name': "c0", 'widget': None, 'type': 'Controlador', 'ip': None, 'port': None, 'color': self.Controller_Color})
@@ -831,44 +832,46 @@ class MiniNAM(Frame):
         # except Exception:
         #   pass
 
-    def createNodes(self, list_links):
+    def createNodes(self):
         # Drawing node Widgets
         for node in self.Nodes:
             if not self.findWidgetByName(node['name']):
-                if node['type'] == 'Controlador':
-                    height = 70
-                    low = self.cheight/3 - 100
-                elif node['type'] == 'Switch':
-                    height = self.cheight/3
-                    low = self.cheight / 2 - 100
-                else:
-                    height = self.cheight/2
-                    low = self.cheight - 100
+
+                # if node['type'] == 'Controlador':
+                #     height = 70
+                #     low = self.cheight/3 - 100
+                # elif node['type'] == 'Switch':
+                #     height = self.cheight/3
+                #     low = self.cheight / 2 - 100
+                # else:
+                #     height = self.cheight/2
+                #     low = self.cheight - 100
 
 
 
-                location = self.nodelocations[node['name']] if node['name'] in self.nodelocations else (
-                    random.randrange(70, self.cwidth - 100), random.randrange(height, low))
-                # ancho y bajo
-                self.newNamedNode(node, location[0], location[1])
+                # location = self.nodelocations[node['name']] if node['name'] in self.nodelocations else (random.randrange(70,self.cwidth-100), random.randrange(70,self.cheight-100))
+                print(node)
+                self.newNamedNode(node,  float(graph.get_graph().nodes()[node['name']]['x']), float(graph.get_graph().nodes()[node['name']]['y']))
 
         # Drawing data links
 
-        for i in list_links:
-            if i[2] == 'host':
-                a = 'h'
-            elif i[2] == 'switch':
-                a = 's'
-            else:
-                a = 'c'
-            if i[3] == 'host':
-                b = 'h'
-            elif i[3] == 'switch':
-                b = 's'
-            else:
-                b = 'c'
-            #print(a+str(i[0]), b+str(i[1]))
-            self.drawLink(a+str(i[0]), b+str(i[1]))
+        for i in list(graph.get_graph().edges()):
+            # if i[0] == 'host':
+            #     a = 'h'
+            # elif i[2] == 'switch':
+            #     a = 's'
+            # else:
+            #     a = 'c'
+            # if i[3] == 'host':
+            #     b = 'h'
+            # elif i[3] == 'switch':
+            #     b = 's'
+            # else:
+            #     b = 'c'
+            # #print(a+str(i[0]), b+str(i[1]))
+            self.drawLink(i[0], i[1])
+            print('enlace de', i[0], 'a', i[1])
+        # for i in
         # self.drawLink('s1', 's2')
         # self.drawLink('s1', 's3')
         # self.drawLink('s2', 's3')
@@ -879,11 +882,11 @@ class MiniNAM(Frame):
         # self.drawLink('h2', 's2')
 
 
-        for data in self.intfData:
-            try:
-                self.drawLink(data["interface"].split('-')[0], data["link"].split('-')[0])
-            except:
-                pass
+        # for data in self.intfData:
+        #     try:
+        #         self.drawLink(data["interface"].split('-')[0], data["link"].split('-')[0])
+        #     except:
+        #         pass
 
         # Drawing control links
         for switch in self.Nodes:
@@ -1514,6 +1517,8 @@ class MiniNAM(Frame):
                     g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
                     g.nodes[i['opts']['hostname']]['ip'] = i['opts']['ip']
                     g.nodes[i['opts']['hostname']]['port'] = i['opts']['port']
+                    g.nodes[i['opts']['hostname']]['x'] = i['x']
+                    g.nodes[i['opts']['hostname']]['y'] = i['y']
                     print('info',g.nodes[i['opts']['hostname']])
 
             if 'controllers' in edit_topo:
@@ -1523,6 +1528,8 @@ class MiniNAM(Frame):
                     g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
                     g.nodes[i['opts']['hostname']]['ip'] = i['opts']['remoteIP']
                     g.nodes[i['opts']['hostname']]['port'] = str(i['opts']['remotePort'])
+                    g.nodes[i['opts']['hostname']]['x'] = i['x']
+                    g.nodes[i['opts']['hostname']]['y'] = i['y']
                     print('info',g.nodes[i['opts']['hostname']])
 
             if 'switches' in edit_topo:
@@ -1533,6 +1540,9 @@ class MiniNAM(Frame):
                     g.nodes[i['opts']['hostname']]['ip'] = i['opts']['ip']
                     g.nodes[i['opts']['hostname']]['port'] = str(i['opts']['port'])
                     g.nodes[i['opts']['hostname']]['flow_table'] = []
+                    g.nodes[i['opts']['hostname']]['x'] = i['x']
+                    g.nodes[i['opts']['hostname']]['y'] = i['y']
+                    g.add_edges_from([(i['opts']['hostname'], i['opts']['controllers'][0], {'weight': sys.maxsize})])
                     print('info',g.nodes[i['opts']['hostname']])
 
             if 'links' in edit_topo:
@@ -1545,7 +1555,17 @@ class MiniNAM(Frame):
 
                     print('info',list(g.edges))
 
-            # graph.set_graph(g)
+            print('hola')
+
+            graph.set_graph(g)
+            self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
+            self.createNodes()
+            graph.communication_hots(app, 1, 'h1', 'h2')
+
+
+            # for i in list(g.nodes):
+            #     print(i)
+
         # except Exception as er:
         #     messagebox.showwarning(er)
         #self.verInformacionGrafo(G)
@@ -1578,7 +1598,7 @@ class MiniNAM(Frame):
     def customize_topology(self):
         root = tkinter.Toplevel()
         edit_topology = edit.MiniEdit(root)
-        edit_topology.mainloop()
+
 
 
 
@@ -2055,14 +2075,14 @@ if __name__ == "__main__":
     try:
 
         graph = p.NetworkTopology()
-        links, nodes = graph.create_topology(2, 4)
+        # links, nodes = graph.create_topology(2, 4)
 
-        app = MiniNAM(list_links=links, list_nodes=nodes, net=True)
+        app = MiniNAM(net=True)
 
-        graph.communication_hots(app, 1, 1, 2)
-        graph.communication_hots(app, 2, 2, 1)
-        graph.communication_hots(app, 1, 1, 2)
-        graph.communication_hots(app, 2, 2, 1)
+        # graph.communication_hots(app, 1, 1, 2)
+        # graph.communication_hots(app, 2, 2, 1)
+        # graph.communication_hots(app, 1, 1, 2)
+        # graph.communication_hots(app, 2, 2, 1)
         app.mainloop()
 
     except KeyboardInterrupt:

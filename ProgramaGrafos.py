@@ -99,16 +99,16 @@ class NetworkTopology(object):
             if proactive == True and path[i] != switch:
                 self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
                 print('flowMod a ', path[i])
-                miniNAM.displayPacket('c0', 's' + str(path[i]), '')
+                miniNAM.displayPacket('c0', path[i], '')
 
             if path[i] == switch:
                 action = path[i + 1]
                 # Enviamos paquet_out a switch (Enviar graficamente)
                 self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
                 print('flowMod a ', switch)
-                miniNAM.displayPacket('c0', 's' + str(switch), 'sadasd')
+                miniNAM.displayPacket('c0', switch, 'sadasd')
                 print('paquetOut a ', switch)
-                miniNAM.displayPacket('c0','s' + str(switch), 'asdasdsa')
+                miniNAM.displayPacket('c0',switch, 'asdasdsa')
 
 
         # Enviamos paquet_out a switch (Enviar graficamente)
@@ -121,9 +121,9 @@ class NetworkTopology(object):
         if self.G.degree(h_src) == 1:  # solo puede un host estar conectado a un Switch
 
             listEnlaces = list(self.G.edges(h_src))
-            Switch = int(tuple(listEnlaces[0])[1])  # Cogemos el Switch al cual esta conectado [1]
-            print('h'+str(h_src), 's' + str(Switch))
-            miniNAM.displayPacket('h'+str(h_src), 's' + str(Switch), 'hola')
+            Switch = tuple(listEnlaces[0])[1] # Cogemos el Switch al cual esta conectado [1]
+            print(h_src, Switch)
+            miniNAM.displayPacket(h_src, Switch, 'hola')
             print('Enviamos paquete a', Switch)
 
             has_arrived = False
@@ -134,7 +134,7 @@ class NetworkTopology(object):
 
                 if action == 0:
                     print('No Matchin')
-                    miniNAM.displayPacket('s' + str(Switch), 'c0', 'hola')
+                    miniNAM.displayPacket(Switch, 'c0', 'hola')
                     action = self.controller_action(miniNAM,id, h_src, h_dst, Switch, True)
 
                 print('enviamos paquete a', action)
@@ -144,11 +144,11 @@ class NetworkTopology(object):
                 if action == h_dst:
                     # Se envia al host destino y ha llegado al destino (Enviar graficamente)
                     print('Llega paquete al destino', action)
-                    miniNAM.displayPacket('s'+str(Switch), 'h' + str(h_dst), 'hola')
+                    miniNAM.displayPacket(Switch, h_dst, 'hola')
                     has_arrived = True
                 else:
                     print('Llega paquete a', action)
-                    miniNAM.displayPacket('s' + str(Switch), 's' + str(action), 'hola')
+                    miniNAM.displayPacket(Switch, action, 'hola')
 
                 Switch = action
 
@@ -157,6 +157,10 @@ class NetworkTopology(object):
 
         nodo = []
         links = []
+
+        # for i in list(self.G.nodes):
+        #
+
 
         for i in range(1, num_host + 1):
             self.add_host(i)
@@ -186,7 +190,7 @@ class NetworkTopology(object):
         self.add_link(5, 0, sys.maxsize)
         links.append((5, 0, self.G.nodes[5]['type'], self.G.nodes[0]['type']))
         # G.set_minin(mnam.MiniNAM(list_links=links, list_nodes=nodo))
-
+        print(links,nodo)
         #print(json.dumps(json_graph.node_link_data(self.G), indent=4))
         return links, nodo
 
