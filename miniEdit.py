@@ -10,10 +10,6 @@ from tkinter import filedialog as tkFileDialog
 from tkinter import font as tkFont
 from tkinter import simpledialog as tkSimpleDialog
 
-# from tkinter import filedialog as tkFileDialog
-# from tkinter import font as tkFont
-# from tkinter import simpledialog as tkSimpleDialog
-
 
 class CustomDialog(object):
 
@@ -77,7 +73,7 @@ class HostDialog(CustomDialog):
         self.macEntry = Entry(remoteFrame)
         self.macEntry.grid(row=1, column=1)
         if 'mac' in self.prefValues:
-            self.ipEntry.insert(0, self.prefValues['mac'])
+            self.macEntry.insert(0, self.prefValues['mac'])
 
         Label(remoteFrame, text="IP Address:").grid(row=2, sticky=E)
         self.ipEntry = Entry(remoteFrame)
@@ -319,29 +315,29 @@ class ControllerDialog(tkSimpleDialog.Dialog):
     def body(self, master):
 
         self.var = StringVar(master)
-
-        rowCount = 0
-        # Field for Remove Controller IP
-        remoteFrame = LabelFrame(master, text='Remote/In-Band Controller', padx=5, pady=5)
-        remoteFrame.grid(row=rowCount, column=0, columnspan=2, sticky=W)
-
-        rowCount += 1
+        self.protcolvar = StringVar(master)
+        remoteFrame = LabelFrame(master, text='Controller', padx=5, pady=5)
+        remoteFrame.grid(row=0, column=0, columnspan=1, sticky=W)
+        rowCount=0
         # Field for Hostname
-        Label(remoteFrame, text="Controller Name:").grid(row=rowCount, sticky=E)
+        Label(remoteFrame, text="Hostname:").grid(row=rowCount, sticky=E)
         self.hostnameEntry = Entry(remoteFrame)
         self.hostnameEntry.grid(row=rowCount, column=1)
         self.hostnameEntry.insert(0, self.ctrlrValues['hostname'])
         rowCount+=1
 
         # Field for Remove Controller Port
-        Label(master, text="Controller Port:").grid(row=rowCount, sticky=E)
+        Label(remoteFrame, text="Port:").grid(row=rowCount, sticky=E)
         self.e2 = Entry(remoteFrame)
         self.e2.grid(row=rowCount, column=1)
         self.e2.insert(0, self.ctrlrValues['remotePort'])
         rowCount+=1
 
         # Field for Controller Type
-        # Label(master, text="Controller Type:").grid(row=rowCount, sticky=E)
+        Label(remoteFrame, text="Mac:").grid(row=rowCount, sticky=E)
+        self.e3 = Entry(remoteFrame)
+        self.e3.grid(row=rowCount, column=1)
+        self.e3.insert(0, self.ctrlrValues['mac'])
         # controllerType = self.ctrlrValues['controllerType']
         # self.o1 = OptionMenu(master, self.var, "Remote Controller", "In-Band Controller", "OpenFlow Reference", "OVS Controller")
         # self.o1.grid(row=rowCount, column=1, sticky=W)
@@ -352,8 +348,8 @@ class ControllerDialog(tkSimpleDialog.Dialog):
         # elif controllerType == 'remote':
         #     self.var.set("Remote Controller")
         # else:
-        #     self.var.set("OVS Controller")
-        # rowCount+=1
+
+        rowCount+=1
 
         # Field for Controller Protcol
         # Label(master, text="Protocol:").grid(row=rowCount, sticky=E)
@@ -361,19 +357,20 @@ class ControllerDialog(tkSimpleDialog.Dialog):
         #     controllerProtocol = self.ctrlrValues['controllerProtocol']
         # else:
         #     controllerProtocol = 'tcp'
-        # #self.protcol = OptionMenu(master, self.protcolvar, "TCP", "SSL")
-        # #self.protcol.grid(row=rowCount, column=1, sticky=W)
+        # self.protcol = OptionMenu(master, self.protcolvar, "TCP", "SSL")
+        # self.protcol.grid(row=rowCount, column=1, sticky=W)
         # if controllerProtocol == 'ssl':
         #     self.protcolvar.set("SSL")
         # else:
         #     self.protcolvar.set("TCP")
         # rowCount+=1
 
+        # Field for Remove Controller IP
 
 
-        Label(remoteFrame, text="IP Address:").grid(row=0, sticky=E)
+        Label(remoteFrame, text="IP Address:").grid(row=rowCount, sticky=E)
         self.e1 = Entry(remoteFrame)
-        self.e1.grid(row=0, column=1)
+        self.e1.grid(row=rowCount, column=1)
         self.e1.insert(0, self.ctrlrValues['remoteIP'])
         rowCount+=1
 
@@ -382,7 +379,8 @@ class ControllerDialog(tkSimpleDialog.Dialog):
     def apply(self):
         self.result = { 'hostname': self.hostnameEntry.get(),
                         'remoteIP': self.e1.get(),
-                        'remotePort': int(self.e2.get())}
+                        'remotePort': int(self.e2.get()),
+                        'mac': self.e3.get()}
 
 
 class ToolTip(object):
@@ -1020,12 +1018,13 @@ class MiniEdit( Frame ):
             self.hostOpts[name]['nodeNum']=self.hostCount
             self.hostOpts[name]['hostname']=name
         if node == 'Controller':
-            name = self.nodePrefixes[ node ] + str( self.controllerCount )
-            ctrlr = { 'controllerType': 'ref',
-                      'hostname': name,
-                      'controllerProtocol': 'tcp',
-                      'remoteIP': '127.0.0.1',
-                      'remotePort': 6633}
+            name = self.nodePrefixes[node] + str(self.controllerCount)
+            ctrlr = {'controllerType': 'ref',
+                     'hostname': name,
+                     'controllerProtocol': 'tcp',
+                     'remoteIP': '127.0.0.1',
+                     'remotePort': 6633,
+                     'mac': ''}
             self.controllers[name] = ctrlr
             # We want to start controller count at 0
             self.controllerCount += 1
@@ -1399,7 +1398,7 @@ class MiniEdit( Frame ):
         if linkBox.result is not None:
             linkDetail['linkOpts'] = linkBox.result
 
-    def controllerDetails(self):
+    def controllerDetails(self,  _ignore=None ):
         if (self.selection is None or
                 self.net is not None or
                 self.selection not in self.itemToWidget):
@@ -1411,8 +1410,11 @@ class MiniEdit( Frame ):
         if 'Controller' not in tags:
             return
 
+        print(self.controllers[name])
         ctrlrBox = ControllerDialog(self, title='Controller Details', ctrlrDefaults=self.controllers[name])
+        print(ctrlrBox.result)
         if ctrlrBox.result:
+            print('nuevo', ctrlrBox.result)
             # debug( 'Controller is ' + ctrlrBox.result[0], '\n' )
             if len(ctrlrBox.result['hostname']) > 0:
                 name = ctrlrBox.result['hostname']
@@ -1420,6 +1422,19 @@ class MiniEdit( Frame ):
             else:
                 ctrlrBox.result['hostname'] = name
             self.controllers[name] = ctrlrBox.result
+
+            if len(ctrlrBox.result['hostname']) > 0:
+
+                self.controllers['hostname'] = ctrlrBox.result['hostname']
+                name = ctrlrBox.result['hostname']
+                widget['text'] = name
+            if len(ctrlrBox.result['mac']) > 0:
+                self.controllers['mac'] = ctrlrBox.result['mac']
+            if len(ctrlrBox.result['remoteIP']) > 0:
+                self.controllers['remoteIP'] = ctrlrBox.result['remoteIP']
+            if ctrlrBox.result['remotePort'] > 0:
+                self.controllers['remotePort'] = ctrlrBox.result['remotePort']
+
             #info('New controller details for ' + name + ' = ' + str(self.controllers[name]), '\n')
             # Find references to controller and change name
             if oldName != name:
@@ -1443,16 +1458,7 @@ class MiniEdit( Frame ):
 
         if name not in self.net.nameToNode:
             return
-        if 'Switch' in tags or 'LegacySwitch' in tags:
-            call(["xterm -T 'Bridge Details' -sb -sl 2000 -e 'ovs-vsctl list bridge " + name + "; read -p \"Press Enter to close\"' &"], shell=True)
 
-    # @staticmethod
-    # def ovsShow( _ignore=None ):
-    #     call(["xterm -T 'OVS Summary' -sb -sl 2000 -e 'ovs-vsctl show; read -p \"Press Enter to close\"' &"], shell=True)
-    #
-    # @staticmethod
-    # def rootTerminal( _ignore=None ):
-    #     call(["xterm -T 'Root Terminal' -sb -sl 2000 &"], shell=True)
 
     # Model interface
     #
