@@ -153,46 +153,46 @@ class NetworkTopology(object):
                 Switch = action
 
                 # Enviamos paquet_in al controlador
-    def create_topology(self, num_host, num_switch):
-
-        nodo = []
-        links = []
-
-        # for i in list(self.G.nodes):
-        #
-
-
-        for i in range(1, num_host + 1):
-            self.add_host(i)
-            nodo.append((i, 'host'))
-
-        for i in range(num_host + 1, num_host + 1 + num_switch):
-            self.add_switch(i, flow_table=[])
-            nodo.append((i, 'switch'))
-
-        self.add_controller(0)
-        nodo.append((0, 'controller'))
-
-        self.add_link(1, 3, 1)
-        links.append((1, 3, self.G.nodes[1]['type'], self.G.nodes[3]['type'])) #############################################
-        self.add_link(2, 5, 1)
-        links.append((2, 5, self.G.nodes[2]['type'], self.G.nodes[5]['type']))
-        self.add_link(3, 4, 1)
-        links.append((3, 4, self.G.nodes[3]['type'], self.G.nodes[4]['type']))
-        self.add_link(3, 5, 5)
-        links.append((3, 5, self.G.nodes[3]['type'], self.G.nodes[5]['type']))
-        self.add_link(4, 5, 1)
-        links.append((4, 5, self.G.nodes[4]['type'], self.G.nodes[5]['type']))
-        self.add_link(3, 0, sys.maxsize)
-        links.append((3, 0, self.G.nodes[3]['type'], self.G.nodes[0]['type']))
-        self.add_link(4, 0, sys.maxsize)
-        links.append((4, 0, self.G.nodes[4]['type'], self.G.nodes[0]['type']))
-        self.add_link(5, 0, sys.maxsize)
-        links.append((5, 0, self.G.nodes[5]['type'], self.G.nodes[0]['type']))
-        # G.set_minin(mnam.MiniNAM(list_links=links, list_nodes=nodo))
-        print(links,nodo)
-        #print(json.dumps(json_graph.node_link_data(self.G), indent=4))
-        return links, nodo
+    # def create_topology(self, num_host, num_switch):
+    #
+    #     nodo = []
+    #     links = []
+    #
+    #     # for i in list(self.G.nodes):
+    #     #
+    #
+    #
+    #     for i in range(1, num_host + 1):
+    #         self.add_host(i)
+    #         nodo.append((i, 'host'))
+    #
+    #     for i in range(num_host + 1, num_host + 1 + num_switch):
+    #         self.add_switch(i, flow_table=[])
+    #         nodo.append((i, 'switch'))
+    #
+    #     self.add_controller(0)
+    #     nodo.append((0, 'controller'))
+    #
+    #     self.add_link(1, 3, 1)
+    #     links.append((1, 3, self.G.nodes[1]['type'], self.G.nodes[3]['type'])) #############################################
+    #     self.add_link(2, 5, 1)
+    #     links.append((2, 5, self.G.nodes[2]['type'], self.G.nodes[5]['type']))
+    #     self.add_link(3, 4, 1)
+    #     links.append((3, 4, self.G.nodes[3]['type'], self.G.nodes[4]['type']))
+    #     self.add_link(3, 5, 5)
+    #     links.append((3, 5, self.G.nodes[3]['type'], self.G.nodes[5]['type']))
+    #     self.add_link(4, 5, 1)
+    #     links.append((4, 5, self.G.nodes[4]['type'], self.G.nodes[5]['type']))
+    #     self.add_link(3, 0, sys.maxsize)
+    #     links.append((3, 0, self.G.nodes[3]['type'], self.G.nodes[0]['type']))
+    #     self.add_link(4, 0, sys.maxsize)
+    #     links.append((4, 0, self.G.nodes[4]['type'], self.G.nodes[0]['type']))
+    #     self.add_link(5, 0, sys.maxsize)
+    #     links.append((5, 0, self.G.nodes[5]['type'], self.G.nodes[0]['type']))
+    #     # G.set_minin(mnam.MiniNAM(list_links=links, list_nodes=nodo))
+    #     print(links,nodo)
+    #     #print(json.dumps(json_graph.node_link_data(self.G), indent=4))
+    #     return links, nodo
 
     #def save_topology(self):
 
