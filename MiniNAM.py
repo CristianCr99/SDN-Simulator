@@ -21,7 +21,11 @@ import ProgramaGrafos as p
 import networkx as nx
 import ipywidgets as widgets
 import miniEdit as edit
-
+from scapy.layers.inet import *
+from scapy.sendrecv import sniff, AsyncSniffer, send
+import socket
+import tkinter as tk
+from scapy.utils import wrpcap, wireshark, rdpcap
 
 class MyEncoder(JSONEncoder):
     def default(self, o):
@@ -1560,7 +1564,25 @@ class MiniNAM(Frame):
             graph.set_graph(g)
             self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
             self.createNodes()
-            graph.communication_hots(app, 1, 'h1', 'h2')
+
+            p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
+            graph.communication_hots(app,'h1', p1)
+
+            for i in list(graph.get_graph().nodes):
+                if i[0] == 's':
+                    graph.show_flow_table(i)
+
+            graph.communication_hots(app, 'h1', p1)
+
+            for i in list(graph.get_graph().nodes):
+                if i[0] == 's':
+                    graph.show_flow_table(i)
+
+            # p2 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=4511, dport=22)
+            # graph.communication_hots(app, 'h1', p2)
+            # graph.communication_hots(app, 'h1', p2)
+
+
 
 
             # for i in list(g.nodes):

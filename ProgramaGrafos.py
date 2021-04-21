@@ -9,36 +9,68 @@ from datetime import date
 import sys
 import MiniNAM as mnam
 from networkx.readwrite import json_graph
+from scapy.layers.inet import *
+from scapy.sendrecv import sniff, AsyncSniffer, send
+import socket
+import tkinter as tk
+from scapy.utils import wrpcap, wireshark, rdpcap
 
 
 class FlowEntry:
-    def __init__(self, id, src, dst, action):
-        self.id = id
-        self.src = src
-        self.dst = dst
+    def __init__(self, mac_src, mac_dst, ip_src, ip_dst, transport_protocol, port_src, port_dst, action):
+        # self.id = id
+        self.mac_src = mac_src
+        self.mac_dst = mac_dst
+        self.ip_src = ip_src
+        self.ip_dst = ip_dst
+        self.port_src = port_src
+        self.port_dst = port_dst
+        self.transport_protocol = transport_protocol
+        self.counter_packet_number = 0
+        self.counter_packet_byte = 0
         self.action = action
-        self.counter = 0
 
-    def get_src(self):
-        return (self.src)
+    def get_ip_src(self):
+        return (self.ip_src)
 
-    def get_dst(self):
-        return (self.dst)
+    def get_ip_dst(self):
+        return (self.ip_dst)
 
-    def get_id(self):
-        return (self.id)
+    def get_mac_src(self):
+        return (self.mac_src)
+
+    def get_mac_dst(self):
+        return (self.mac_dst)
+
+    def get_port_src(self):
+        return (self.port_src)
+
+    def get_port_dst(self):
+        return (self.port_dst)
+
+    def get_transport_protocol(self):
+        return (self.transport_protocol)
 
     def get_action(self):
         return (self.action)
 
-    def get_counter(self):
-        return (self.counter)
+    def get_counter_packet_number(self):
+        return self.counter_packet_number
+
+    def get_counter_packet_byte(self):
+        return self.counter_packet_byte
+
+    def set_counter_packet_number(self, counter_packet_number):
+        self.counter_packet_number = counter_packet_number
+
+    def set_counter_packet_byte(self, counter_packet_byte):
+        self.counter_packet_byte = counter_packet_byte
 
 
 class NetworkTopology(object):
     def __init__(self):
         self.G = nx.Graph()
-        #self.miniNam = None
+        # self.miniNam = None
         # self.MNAM = mn.MiniNAM()
 
     def get_graph(self):
@@ -49,7 +81,6 @@ class NetworkTopology(object):
 
     # def set_minin(self, minin):
     #     self.miniNam = minin
-
 
     def add_switch(self, num_switch, flow_table=[]):
         self.G.add_node(num_switch, type='switch', name='s' + str(num_switch), flow_table=flow_table)
@@ -70,87 +101,140 @@ class NetworkTopology(object):
     def add_flow_entry_to_node(self, node, flowentry):
         self.G.nodes[node]['flow_table'].append(flowentry)
 
-
-
-
     def show_flow_table(self, node):
+        print("Tabla de flujo del switch:", node)
+        j = 0
         for i in (self.G.nodes[node]['flow_table']):
-            print("Entrada de flujo " + str(i.get_id()))
-            print("     Origen: " + str(i.get_src()))
-            print("     Destino: " + str(i.get_dst()))
-            print("----------------------")
+            print('------- Entrada ' + str(j) + ' -------')
+            print("     MAC src: " + i.get_mac_src())
+            print("     MAC dst: " + i.get_mac_dst())
+            print("     IP src: " + i.get_ip_src())
+            print("     IP src: " + i.get_ip_dst())
+            print("     Transport protocol: " + i.get_transport_protocol())
+            print("     Port src: " + str(i.get_port_src()))
+            print("     Port dst: " + str(i.get_port_dst()))
+            print("     Packet number counter: " + str(i.get_counter_packet_number()) + ' packets')
+            print("     Packet bytes counter: " + str(i.get_counter_packet_byte()) + ' bytes')
+            print("-----------------------------------")
+            j += 1
 
-    def match_and_action(self, switch, id, h_src, h_dst):
+    def match_and_action(self, switch, packet):
+
         for i in (self.G.nodes[switch]['flow_table']):
-            if i.get_id() == id and i.get_src() == h_src and i.get_dst() == h_dst:
+            # print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
+            #       packet[IP].dst)
+            if 'TCP' in packet:
+                protocol = 'TCP'
+            else:
+                protocol = 'UDP'
+            print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
+                Ether].src,i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
+                IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,  i.get_port_dst() == packet[protocol].dport)
+
+            if i.get_mac_src() == packet[Ether].src or i.get_mac_src() == '*' and i.get_mac_dst() == packet[
+                Ether].src or i.get_mac_dst() == '*' \
+                    and i.get_ip_src() == packet[IP].src and i.get_ip_dst() == packet[
+                IP].dst and i.get_transport_protocol() == protocol \
+                    and i.get_port_src() == packet[protocol].sport and i.get_port_dst() == packet[protocol].dport:
+
+                i.set_counter_packet_number(i.get_counter_packet_number() + 1)
+                i.set_counter_packet_byte(i.get_counter_packet_byte() + len(packet))
+
                 return i.get_action()
         return 0
 
-    def controller_action(self, miniNAM, id, h_src, h_dst, switch, proactive):
-        # verInformacionConcretaNodo(self.G)
-        all_path = dict(nx.all_pairs_dijkstra_path(self.G, cutoff=None, weight='weight'))
+    def find_hosts_by_ip_packet(self, packet):
+        src_host = None
+        dst_host = None
+        for i in list(self.G.nodes):
+            if self.G.nodes[i]['ip'] == packet[IP].src:
+                src_host = i
+            if self.G.nodes[i]['ip'] == packet[IP].dst:
+                dst_host = i
+        return src_host, dst_host
 
-        path = nx.dijkstra_path(self.G, h_src, h_dst, 'weight')
+    def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
+        # verInformacionConcretaNodo(self.G)
+        # TODO Preguntar por la otra funcion que te debuelve solo el camino deseado de un origen a un destino
+
+        #all_path = dict(nx.all_pairs_dijkstra_path(self.G, cutoff=None, weight='weight'))
+
+        path = nx.dijkstra_path(self.G, src_host, dst_host, 'weight')
 
         # Enviamos a cada Switch un flowMod (Enviar graficamente)
+
+        if 'TCP' in packet:
+            protocol = 'TCP'
+        else:
+            protocol = 'UDP'
 
         for i in range(1, len(path) - 1):
 
             if proactive == True and path[i] != switch:
-                self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
+                # def __init__(self, mac_src, mac_dst, ip_src, ip_dst, transport_protocol,port_src, port_dst, action):
+                self.add_flow_entry_to_node(path[i], FlowEntry('*', '*', packet[IP].src,
+                                                               packet[IP].dst, protocol ,packet[protocol].sport,
+                                                               packet[protocol].dport, path[i + 1]))
                 print('flowMod a ', path[i])
                 miniNAM.displayPacket('c0', path[i], '')
 
             if path[i] == switch:
                 action = path[i + 1]
                 # Enviamos paquet_out a switch (Enviar graficamente)
-                self.add_flow_entry_to_node(path[i], FlowEntry(id, h_src, h_dst, path[i + 1]))
+                self.add_flow_entry_to_node(path[i], FlowEntry('*', '*', packet[IP].src,
+                                                               packet[IP].dst, protocol ,packet[protocol].sport,
+                                                               packet[protocol].dport, path[i + 1]))
                 print('flowMod a ', switch)
                 miniNAM.displayPacket('c0', switch, 'sadasd')
                 print('paquetOut a ', switch)
-                miniNAM.displayPacket('c0',switch, 'asdasdsa')
-
+                miniNAM.displayPacket('c0', switch, 'asdasdsa')
 
         # Enviamos paquet_out a switch (Enviar graficamente)
         print('paquetOut a ', switch)
-        #self.miniNam.displayPacket('c0', 's' + str(switch), '')
+        # self.miniNam.displayPacket('c0', 's' + str(switch), '')
         return action
 
-    def communication_hots(self,miniNAM, id, h_src, h_dst):
+    def communication_hots(self, miniNAM, h_src, packet):
 
-        if self.G.degree(h_src) == 1:  # solo puede un host estar conectado a un Switch
+        src_host, dst_host = self.find_hosts_by_ip_packet(packet)
+        print('Hosts:',src_host, dst_host)
 
-            listEnlaces = list(self.G.edges(h_src))
-            Switch = tuple(listEnlaces[0])[1] # Cogemos el Switch al cual esta conectado [1]
-            print(h_src, Switch)
-            miniNAM.displayPacket(h_src, Switch, 'hola')
-            print('Enviamos paquete a', Switch)
+        if src_host == h_src and dst_host is not None:
 
-            has_arrived = False
+            if self.G.degree(src_host) == 1:  # solo puede un host estar conectado a un Switch
 
-            while has_arrived == False:
+                listEnlaces = list(self.G.edges(src_host))
+                Switch = tuple(listEnlaces[0])[1]  # Cogemos el Switch al cual esta conectado [1]
+                print(src_host, Switch)
+                miniNAM.displayPacket(src_host, Switch, 'hola')
+                print('Enviamos paquete a', Switch)
 
-                action = self.match_and_action(Switch, id, h_src, h_dst)
+                has_arrived = False
 
-                if action == 0:
-                    print('No Matchin')
-                    miniNAM.displayPacket(Switch, 'c0', 'hola')
-                    action = self.controller_action(miniNAM,id, h_src, h_dst, Switch, True)
+                while has_arrived == False:
 
-                print('enviamos paquete a', action)
+                    action = self.match_and_action(Switch, packet)
 
-                # Reenviamos el paquete a al siguiente Switch indicado por action (Enviar graficamente)
+                    if action == 0:
+                        print('No Matchin')
+                        miniNAM.displayPacket(Switch, 'c0', 'hola')
+                        #def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
+                        action = self.controller_action(miniNAM, packet, src_host, dst_host, Switch, True)
 
-                if action == h_dst:
-                    # Se envia al host destino y ha llegado al destino (Enviar graficamente)
-                    print('Llega paquete al destino', action)
-                    miniNAM.displayPacket(Switch, h_dst, 'hola')
-                    has_arrived = True
-                else:
-                    print('Llega paquete a', action)
-                    miniNAM.displayPacket(Switch, action, 'hola')
+                    print('enviamos paquete a', action)
 
-                Switch = action
+                    # Reenviamos el paquete a al siguiente Switch indicado por action (Enviar graficamente)
+
+                    if action == dst_host:
+                        # Se envia al host destino y ha llegado al destino (Enviar graficamente)
+                        print('Llega paquete al destino', action)
+                        miniNAM.displayPacket(Switch, dst_host, 'hola')
+                        has_arrived = True
+                    else:
+                        print('Llega paquete a', action)
+                        miniNAM.displayPacket(Switch, action, 'hola')
+
+                    Switch = action
 
                 # Enviamos paquet_in al controlador
     # def create_topology(self, num_host, num_switch):
@@ -194,8 +278,7 @@ class NetworkTopology(object):
     #     #print(json.dumps(json_graph.node_link_data(self.G), indent=4))
     #     return links, nodo
 
-    #def save_topology(self):
-
+    # def save_topology(self):
 
 # def SDN():
 #     # Creación de una instancia de la clase NetworkTopology
@@ -234,5 +317,4 @@ class NetworkTopology(object):
 #     # self.MNAM.drawLink('h1', 'h2')
 
 
-#SDN()
-
+# SDN()

@@ -39,12 +39,14 @@ scapy_cap = rdpcap('Packages/packlist.pcap')
 
 for packet in scapy_cap:
     if 'MAC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
+
         if 'TCP' in packet:
             inf = 'TCP'
         else:
             inf = 'UDP'
         print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
               packet[IP].dst, 'sport:', packet[inf].sport, 'dport:', packet[inf].sport)
+        print('len:', len(packet))
 
 # print(len(pkt))
 #
