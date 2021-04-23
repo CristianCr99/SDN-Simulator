@@ -1,0 +1,114 @@
+{
+    "controllers": [
+        {
+            "opts": {
+                "hostname": "c0",
+                "mac": "777",
+                "remoteIP": "666",
+                "remotePort": 888
+            },
+            "x": "440.0",
+            "y": "68.0"
+        }
+    ],
+    "hosts": [
+        {
+            "number": "1",
+            "opts": {
+                "hostname": "h1",
+                "ip": "999",
+                "mac": "999",
+                "nodeNum": 1,
+                "port": "999"
+            },
+            "x": "205.0",
+            "y": "515.0"
+        },
+        {
+            "number": "2",
+            "opts": {
+                "hostname": "h2",
+                "ip": "10",
+                "mac": "10",
+                "nodeNum": 2,
+                "port": "10"
+            },
+            "x": "756.0",
+            "y": "514.0"
+        }
+    ],
+    "links": [
+        {
+            "dest": "s3",
+            "opts": {},
+            "src": "s1"
+        },
+        {
+            "dest": "s2",
+            "opts": {},
+            "src": "s1"
+        },
+        {
+            "dest": "s3",
+            "opts": {},
+            "src": "s2"
+        },
+        {
+            "dest": "h1",
+            "opts": {},
+            "src": "s1"
+        },
+        {
+            "dest": "h2",
+            "opts": {},
+            "src": "s2"
+        }
+    ],
+    "switches": [
+        {
+            "number": "1",
+            "opts": {
+                "controllers": [
+                    "c0"
+                ],
+                "hostname": "s1",
+                "ip": "111",
+                "mac": "111",
+                "nodeNum": 1,
+                "port": "111"
+            },
+            "x": "252.0",
+            "y": "379.0"
+        },
+        {
+            "number": "2",
+            "opts": {
+                "controllers": [
+                    "c0"
+                ],
+                "hostname": "s2",
+                "ip": "111",
+                "mac": "111",
+                "nodeNum": 2,
+                "port": "111"
+            },
+            "x": "712.0",
+            "y": "360.0"
+        },
+        {
+            "number": "3",
+            "opts": {
+                "controllers": [
+                    "c0"
+                ],
+                "hostname": "s3",
+                "ip": "333",
+                "mac": "333",
+                "nodeNum": 3,
+                "port": "333"
+            },
+            "x": "429.0",
+            "y": "261.0"
+        }
+    ]
+}

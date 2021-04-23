@@ -26,6 +26,7 @@ from scapy.sendrecv import sniff, AsyncSniffer, send
 import socket
 import tkinter as tk
 from scapy.utils import wrpcap, wireshark, rdpcap
+import PackageImportWindow as p_import_w
 
 class MyEncoder(JSONEncoder):
     def default(self, o):
@@ -214,6 +215,9 @@ def packetParser(packet):
 
     except:
         return PacketInfo
+
+
+
 
 
 class PrefsDialog(tkinter.simpledialog.Dialog):
@@ -557,8 +561,9 @@ class MiniNAM(Frame):
         self.focus()
         self.canvas.bind('<Button-1>', self.setFocus)
         self.hostPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.hostPopup.add_command(label='Host Options', font=self.font)
-        self.hostPopup.add_separator()
+        self.hostPopup.add_command(label='Host Details', font=self.font)
+        self.hostPopup.add_command(label='Traffic Insertion', font=self.font, command= lambda: self.traffic_insertion(self.selection))
+        #self.hostPopup.add_separator()
         # self.hostPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
         self.hostPopup.bind("<FocusOut>", self.popupFocusOut)
 
@@ -599,6 +604,7 @@ class MiniNAM(Frame):
         self.validate = None
         self.net = net
         self.active = True
+        self.traffic_hosts = None
 
         # Gather topology info and create nodes
         self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
@@ -1565,18 +1571,18 @@ class MiniNAM(Frame):
             self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
             self.createNodes()
 
-            p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
-            graph.communication_hots(app,'h1', p1)
-
-            for i in list(graph.get_graph().nodes):
-                if i[0] == 's':
-                    graph.show_flow_table(i)
-
-            graph.communication_hots(app, 'h1', p1)
-
-            for i in list(graph.get_graph().nodes):
-                if i[0] == 's':
-                    graph.show_flow_table(i)
+            # p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
+            # graph.communication_hots(app,'h1', p1)
+            #
+            # for i in list(graph.get_graph().nodes):
+            #     if i[0] == 's':
+            #         graph.show_flow_table(i)
+            #
+            # graph.communication_hots(app, 'h1', p1)
+            #
+            # for i in list(graph.get_graph().nodes):
+            #     if i[0] == 's':
+            #         graph.show_flow_table(i)
 
             # p2 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=4511, dport=22)
             # graph.communication_hots(app, 'h1', p2)
@@ -1936,6 +1942,12 @@ class MiniNAM(Frame):
         self.stop()
 
         Frame.quit(self)
+
+    def traffic_insertion(self, host):
+        print(host)
+        root = tkinter.Toplevel()
+        import_packets = p_import_w.PackageImportWindow(root)
+
 
 
 def miniImages():
