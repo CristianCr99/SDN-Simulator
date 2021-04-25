@@ -28,64 +28,35 @@ class PackageImportWindow(tk.Frame):
 
     def delete(self):
         if len(self.tree.selection()) > 0:
+            indexes_to_delete = []
+            print('IDs de las tuplas que se van a eliminar: ', self.tree.selection())
             for selected_packet in self.tree.selection():
+                indexes_to_delete.append(int(selected_packet, 10) - 1)  # Guardamos el valor del índice en entero
+            indexes_to_delete = sorted(indexes_to_delete,
+                                       reverse=True)  # Ordenamos los índices de mayor a menor antes de borrar
+            print('Índices que se van a borrar de la lista: ', indexes_to_delete)
+            for index in indexes_to_delete:
+                self.list_packets.pop(index)  # Borramos de la lista local los paquetes indicados
 
-                # print(self.tree.item(selected_item))
-                # self.tree.delete(selected_item)
+            for child in self.tree.get_children():
+                self.tree.delete(child)  # Vaciamos el árbol
 
-                item_chain = str(selected_packet)[1:]  # Eliminamos la I de la cadena I009 -> 009
-                for i in item_chain:
-                    if i == '0':
-                        item_chain = item_chain[1:]
+            i = 1
+            for packet in self.list_packets:
+                if 'MAC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
+                    # new_list.append(packet)
+                    if 'TCP' in packet:
+                        protocol = 'TCP'
                     else:
-                        break
-                print('item seleccionado',item_chain)
-                print('log de la lista de paquetes:',len(self.list_packets))
-                self.list_packets.pop(int(item_chain, 16)-1)
-                new_list = []
-                for i in self.tree.get_children():
-                    self.tree.delete(i)
+                        protocol = 'UDP'
+                    # Reinsertamos los paquetes actualizados
+                    self.tree.insert('', 'end', iid=i, values=(
+                        i, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
+                        packet[protocol].sport,
+                        packet[protocol].dport, protocol))
+                    i += 1
 
-                self.tree.configure(yscrollcommand=self.scroll.set)
-                self.tree = ttk.Treeview(self.root)
-                self.tree.configure(yscrollcommand=self.scroll.set)
-
-                self.tree['show'] = 'headings'
-                self.tree["columns"] = ("1", "2", "3", "4", "5", "6", "7", '8')
-                # Set the heading (Attribute Names)
-                self.tree.heading('1', text='Num Packet')
-                self.tree.heading('2', text='MAC Source')
-                self.tree.heading('3', text='MAC Destination')
-                self.tree.heading('4', text='IP Source')
-                self.tree.heading('5', text='IP Destination')
-                self.tree.heading('6', text='Port Source')
-                self.tree.heading('7', text='Port Destination')
-                self.tree.heading('8', text='Transport Protocol')
-                # Specify attributes of the columns (We want to stretch it!)
-                self.tree.column('1', minwidth=120, width=120, stretch=False)
-                self.tree.column('2', minwidth=120, width=120, stretch=False)
-                self.tree.column('3', minwidth=120, width=120, stretch=False)
-                self.tree.column('4', minwidth=120, width=120, stretch=False)
-                self.tree.column('5', minwidth=120, width=120, stretch=False)
-                self.tree.column('6', minwidth=120, width=120, stretch=False)
-                self.tree.column('7', minwidth=120, width=120, stretch=False)
-                self.tree.column('8', minwidth=120, width=120, stretch=False)
-                self.tree.grid(row=0)
-                i = 1
-                for packet in self.list_packets:
-                    if 'MAC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
-                        new_list.append(packet)
-                        if 'TCP' in packet:
-                            protocol = 'TCP'
-                        else:
-                            protocol = 'UDP'
-
-                        self.tree.insert('', 'end', values=(
-                            i, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst, packet[protocol].sport,
-                            packet[protocol].dport, protocol))
-                        i += 1
-
-                self.list_packets = new_list
+            # self.list_packets = new_list
 
     def load_values(self):
         print('hola')
@@ -127,7 +98,7 @@ class PackageImportWindow(tk.Frame):
             self.list_packets[int(item_chain, 16) - 1][transport_protocol].sport = int(self.port_src.get())
             self.list_packets[int(item_chain, 16) - 1][transport_protocol].dport = int(self.port_dst.get())
 
-            self.tree.item(selected_item, values=(self.tree.item(selected_item)['values'][0], self.mac_src.get(), self.mac_dst.get(), self.ip_src.get(), self.ip_dst.get(), self.port_src.get(), self.port_dst.get()))
+            self.tree.item(selected_item, values=(self.tree.item(selected_item)['values'][0], self.mac_src.get(), self.mac_dst.get(), self.ip_src.get(), self.ip_dst.get(), self.port_src.get(), self.port_dst.get(), self.protocol.get()))
 
             print('Cambio Correcto')
             # except OSError as error:
@@ -172,7 +143,7 @@ class PackageImportWindow(tk.Frame):
                         protocol = 'UDP'
                     print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
                           packet[IP].dst, 'sport:', packet[protocol].sport, 'dport:', packet[protocol].sport, 'protocol:', protocol)
-                    self.tree.insert('', 'end', values=(
+                    self.tree.insert('', 'end', iid=i, values=(
                     i, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst, packet[protocol].sport,
                     packet[protocol].dport, protocol))
                     i += 1
@@ -206,7 +177,7 @@ class PackageImportWindow(tk.Frame):
                     else:
                         protocol = 'UDP'
 
-                    self.tree.insert('', 'end', values=(
+                    self.tree.insert('', 'end', iid=i, values=(
                         i, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst, packet[protocol].sport,
                         packet[protocol].dport, protocol))
                     i += 1
