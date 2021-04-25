@@ -34,7 +34,7 @@ class PackageImportWindow(tk.Frame):
                 indexes_to_delete.append(int(selected_packet, 10) - 1)  # Guardamos el valor del índice en entero
             indexes_to_delete = sorted(indexes_to_delete,
                                        reverse=True)  # Ordenamos los índices de mayor a menor antes de borrar
-            print('Índices que se van a borrar de la lista: ', indexes_to_delete)
+            print('Índices que se van a borrar de la lista : ', indexes_to_delete)
             for index in indexes_to_delete:
                 self.list_packets.pop(index)  # Borramos de la lista local los paquetes indicados
 
