@@ -754,6 +754,7 @@ class MiniNAM(Frame):
             except:
                 ip_color = 'pink'
 
+
             print('4')
 
             if ip_color is not None:
