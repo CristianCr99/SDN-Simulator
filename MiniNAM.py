@@ -1571,9 +1571,9 @@ class MiniNAM(Frame):
             self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
             self.createNodes()
 
-            # p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
-            # graph.communication_hots(app,'h1', p1)
-            #
+            p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
+            graph.communication_hots(app,'h1', p1)
+
             # for i in list(graph.get_graph().nodes):
             #     if i[0] == 's':
             #         graph.show_flow_table(i)
