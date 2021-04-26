@@ -1,19 +1,7 @@
 from __future__ import print_function
-
-import json
-
-import networkx as nx
-import matplotlib.pyplot as plt
 from builtins import range
-from datetime import date
-import sys
-import MiniNAM as mnam
-from networkx.readwrite import json_graph
+import networkx as nx
 from scapy.layers.inet import *
-from scapy.sendrecv import sniff, AsyncSniffer, send
-import socket
-import tkinter as tk
-from scapy.utils import wrpcap, wireshark, rdpcap
 
 
 class FlowEntry:
@@ -176,7 +164,7 @@ class NetworkTopology(object):
                                                                packet[IP].dst, protocol ,packet[protocol].sport,
                                                                packet[protocol].dport, path[i + 1]))
                 print('flowMod a ', path[i])
-                miniNAM.displayPacket('c0', path[i], '')
+                miniNAM.displayPacket('c0', path[i], '', True)
 
             if path[i] == switch:
                 action = path[i + 1]
@@ -185,9 +173,9 @@ class NetworkTopology(object):
                                                                packet[IP].dst, protocol ,packet[protocol].sport,
                                                                packet[protocol].dport, path[i + 1]))
                 print('flowMod a ', switch)
-                miniNAM.displayPacket('c0', switch, 'sadasd')
+                miniNAM.displayPacket('c0', switch, 'sadasd', True)
                 print('paquetOut a ', switch)
-                miniNAM.displayPacket('c0', switch, 'asdasdsa')
+                miniNAM.displayPacket('c0', switch, 'asdasdsa', True)
 
         # Enviamos paquet_out a switch (Enviar graficamente)
         print('paquetOut a ', switch)
@@ -206,7 +194,7 @@ class NetworkTopology(object):
                 listEnlaces = list(self.G.edges(src_host))
                 Switch = tuple(listEnlaces[0])[1]  # Cogemos el Switch al cual esta conectado [1]
                 print(src_host, Switch)
-                miniNAM.displayPacket(src_host, Switch, 'hola')
+                miniNAM.displayPacket(src_host, Switch, packet, False)
                 print('Enviamos paquete a', Switch)
 
                 has_arrived = False
@@ -217,7 +205,7 @@ class NetworkTopology(object):
 
                     if action == 0:
                         print('No Matchin')
-                        miniNAM.displayPacket(Switch, 'c0', 'hola')
+                        miniNAM.displayPacket(Switch, 'c0', packet, True)
                         #def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
                         action = self.controller_action(miniNAM, packet, src_host, dst_host, Switch, True)
 
@@ -228,11 +216,11 @@ class NetworkTopology(object):
                     if action == dst_host:
                         # Se envia al host destino y ha llegado al destino (Enviar graficamente)
                         print('Llega paquete al destino', action)
-                        miniNAM.displayPacket(Switch, dst_host, 'hola')
+                        miniNAM.displayPacket(Switch, dst_host, packet, False)
                         has_arrived = True
                     else:
                         print('Llega paquete a', action)
-                        miniNAM.displayPacket(Switch, action, 'hola')
+                        miniNAM.displayPacket(Switch, action, packet, False)
 
                     Switch = action
 

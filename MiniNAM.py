@@ -1,7 +1,5 @@
 import json
 import os
-import random
-import socket
 import tkinter.filedialog
 import tkinter.font
 import tkinter.simpledialog
@@ -9,24 +7,20 @@ from cmath import pi
 from json import JSONEncoder
 from math import atan2, sin, cos
 from struct import *
-from subprocess import *
 from threading import Thread
 from tkinter import *
-import time
 from tkinter import filedialog, messagebox
+
+import networkx as nx
 from PIL import Image, ImageDraw
 from PIL import ImageTk as itk
 from networkx.readwrite import json_graph
-import ProgramaGrafos as p
-import networkx as nx
-import ipywidgets as widgets
-import miniEdit as edit
 from scapy.layers.inet import *
-from scapy.sendrecv import sniff, AsyncSniffer, send
-import socket
-import tkinter as tk
-from scapy.utils import wrpcap, wireshark, rdpcap
+
 import PackageImportWindow as p_import_w
+import ProgramaGrafos as p
+import miniEdit as edit
+
 
 class MyEncoder(JSONEncoder):
     def default(self, o):
@@ -46,8 +40,6 @@ MININAM_VERSION = "1.0.1"
 if 'PYTHONPATH' in os.environ:
     sys.path = os.environ['PYTHONPATH'].split(':') + sys.path
 
-Eth_Protocols = {'8': 'IP', '1544': 'ARP', '56710': 'IPv6'}
-IP_Protocols = {'1': 'ICMP', '6': 'TCP', '17': 'UDP'}
 
 FLOWTIMEDEF = 'Fast'
 FLOWTIME = OrderedDict([('Very Slow', 50), ('Slow', 40), ('Fast', 30), ('Very Fast', 20), ('Real Time', 1)])
@@ -59,165 +51,6 @@ def version(*_args):
     "Print Mininet and MiniNAM version and exit"
     print("MiniNAM: %s" % MININAM_VERSION)
     sys.exit()
-
-
-def packetParser(packet):
-    PacketInfo = {}
-    PacketInfo['eth_protocol'] = None
-    PacketInfo['srcMAC'] = None
-    PacketInfo['dstMAC'] = None
-    PacketInfo['s_addr'] = None
-    PacketInfo['d_addr'] = None
-    PacketInfo['ip_protocol'] = None
-    PacketInfo['ttl'] = None
-    PacketInfo['source_port'] = None
-    PacketInfo['dest_port'] = None
-    PacketInfo['sequence'] = None
-    PacketInfo['data'] = None
-    PacketInfo['icmp_type'] = None
-    PacketInfo['code'] = None
-    PacketInfo['checksum'] = None
-    PacketInfo['length'] = None
-    PacketInfo['protocol_type'] = None
-
-    try:
-        # parse ethernet header
-        eth_length = 14
-        eth_header = packet[:eth_length]
-
-        eth = unpack('!6s6sH', eth_header)
-
-        eth_protocol = socket.ntohs(eth[2])
-
-        dstMAC = ':'.join('%02x' % ord(b) for b in packet[0:6])
-        srcMAC = ':'.join('%02x' % ord(b) for b in packet[6:12])
-
-        PacketInfo['srcMAC'] = str(srcMAC)
-        PacketInfo['dstMAC'] = str(dstMAC)
-        PacketInfo['eth_protocol'] = str(eth_protocol)
-
-        # Parse IP packets, IP Protocol number = 8
-        if eth_protocol == 8:
-            # Parse IP header
-            # take first 20 characters for the ip header
-            ip_header = packet[eth_length:20 + eth_length]
-
-            # now unpack them
-            iph = unpack('!BBHHHBBH4s4s', ip_header)
-
-            version_ihl = iph[0]
-            ihl = version_ihl & 0xF
-
-            iph_length = ihl * 4
-
-            ttl = iph[5]
-            protocol = iph[6]
-            s_addr = socket.inet_ntoa(iph[8]);
-            d_addr = socket.inet_ntoa(iph[9]);
-
-            PacketInfo['s_addr'] = s_addr
-            PacketInfo['d_addr'] = d_addr
-            PacketInfo['ip_protocol'] = str(protocol)
-            PacketInfo['ttl'] = str(ttl)
-
-            # TCP protocol
-            if protocol == 6:
-                t = iph_length + eth_length
-                tcp_header = packet[t:t + 32]
-
-                # now unpack them
-                tcph = unpack('!HHLLBBHHHBBBBLL', tcp_header)
-
-                source_port = tcph[0]
-                dest_port = tcph[1]
-                sequence = tcph[2]
-                acknowledgement = tcph[3]
-                doff_reserved = tcph[4]
-                tcph_length = doff_reserved >> 4
-                TSVal = tcph[13]
-
-                h_size = eth_length + iph_length + tcph_length * 4
-                # get data from the packet
-                data = packet[h_size:]
-                PacketInfo['source_port'] = source_port
-                PacketInfo['dest_port'] = dest_port
-                PacketInfo['sequence'] = sequence
-                PacketInfo['acknowledgement'] = acknowledgement
-                PacketInfo['TSVal'] = TSVal
-                PacketInfo['data'] = data
-
-            # ICMP Packets
-            elif protocol == 1:
-                u = iph_length + eth_length
-                icmph_length = 4
-                icmp_header = packet[u:u + 4]
-
-                # now unpack them
-                icmph = unpack('!BBH', icmp_header)
-
-                icmp_type = icmph[0]
-                code = icmph[1]
-                checksum = icmph[2]
-
-                h_size = eth_length + iph_length + icmph_length
-                data_size = len(packet) - h_size
-
-                # get data from the packet
-                data = packet[h_size:]
-                PacketInfo['icmp_type'] = str(icmp_type)
-                PacketInfo['code'] = str(code)
-                PacketInfo['checksum'] = str(checksum)
-                PacketInfo['data'] = data
-
-            # UDP packets
-            elif protocol == 17:
-                u = iph_length + eth_length
-                udph_length = 8
-                udp_header = packet[u:u + 8]
-
-                # now unpack them
-                udph = unpack('!HHHH', udp_header)
-
-                source_port = udph[0]
-                dest_port = udph[1]
-                length = udph[2]
-                checksum = udph[3]
-
-                h_size = eth_length + iph_length + udph_length
-                data_size = len(packet) - h_size
-
-                # get data from the packet
-                data = packet[h_size:]
-                PacketInfo['source_port'] = source_port
-                PacketInfo['dest_port'] = dest_port
-                PacketInfo['length'] = length
-                PacketInfo['checksum'] = checksum
-                PacketInfo['data'] = data
-            # Other IP packet like IGMP can be parsed here.
-            else:
-                pass
-
-        # Parse ARP packets
-        elif eth_protocol == 1544:
-            arp_header = packet[14:42]
-            arph = unpack("!2sH1s1s2s6s4s6s4s", arp_header)
-            s_addr = socket.inet_ntoa(arph[6])
-            d_addr = socket.inet_ntoa(arph[8])
-            protocol_type = arph[1]
-            PacketInfo['s_addr'] = str(s_addr)
-            PacketInfo['d_addr'] = str(d_addr)
-            PacketInfo['protocol_type'] = protocol_type
-        # Other EthPackets like IPv6 can be parsed here.
-        else:
-            pass
-
-        return PacketInfo
-
-    except:
-        return PacketInfo
-
-
-
 
 
 class PrefsDialog(tkinter.simpledialog.Dialog):
@@ -233,39 +66,12 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         "Create dialog body"
         self.rootFrame = master
 
-        # Field for displaying traffic flows
-        Label(self.rootFrame, text="Display traffic flows in the network").grid(row=0, sticky=W)
-        self.displayFlows = IntVar()
-        self.cdisplayFlows = Checkbutton(self.rootFrame, variable=self.displayFlows)
-        self.cdisplayFlows.grid(row=0, column=1, sticky=W)
-        if self.prefValues['displayFlows'] == 0:
-            self.cdisplayFlows.deselect()
-        else:
-            self.cdisplayFlows.select()
-
-        # Field for displaying hosts along with network topology
-        Label(self.rootFrame, text="Display hosts in the network:").grid(row=1, sticky=W)
-        self.displayHosts = IntVar()
-        self.cdisplayHosts = Checkbutton(self.rootFrame, variable=self.displayHosts)
-        self.cdisplayHosts.grid(row=1, column=1, sticky=W)
-        if self.prefValues['displayHosts'] == 0:
-            self.cdisplayHosts.deselect()
-        else:
-            self.cdisplayHosts.select()
-
         # Field for Packet Flow Speed
         Label(self.rootFrame, text="Speed of Packet Flow").grid(row=2, sticky=W)
         self.flowTime = StringVar(self.rootFrame)
         self.flowTime.set(list(FLOWTIME.keys())[list(FLOWTIME.values()).index(self.prefValues['flowTime'])])
         self.flowTimeMenu = OptionMenu(self.rootFrame, self.flowTime, *FLOWTIME.keys())
         self.flowTimeMenu.grid(row=2, column=1, sticky=W)
-
-        # Field for Node Colors
-        Label(self.rootFrame, text="Color Code Packets By:").grid(row=3, sticky=W)
-        self.nodeColorsVar = StringVar(self.rootFrame)
-        self.nodeColorsOption = OptionMenu(self.rootFrame, self.nodeColorsVar, "Source", "Destination", "None")
-        self.nodeColorsOption.grid(row=3, column=1, sticky=W)
-        self.nodeColorsVar.set(self.prefValues['nodeColors'])
 
         # Selection for color of packet type
         self.typeColorsFrame = LabelFrame(self.rootFrame, text='Colors for Packet Types', padx=5, pady=5)
@@ -274,49 +80,33 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
             self.typeColorsFrame.columnconfigure(i, weight=1)
         self.typeColors = self.prefValues['typeColors']
 
-        # Selection of color for ARP
-        Label(self.typeColorsFrame, text="ARP").grid(row=0, column=0, sticky=W)
-        self.ARPColor = StringVar(self.typeColorsFrame)
-        self.ARPColor.set(self.typeColors["ARP"])
-        self.ARPColorMenu = OptionMenu(self.typeColorsFrame, self.ARPColor, "None", "Red", "Green", "Blue", "Purple")
-        self.ARPColorMenu.grid(row=1, column=0, sticky=W)
 
         # Selection of color for TCP
         Label(self.typeColorsFrame, text="TCP").grid(row=0, column=1, sticky=W)
         self.TCPColor = StringVar(self.typeColorsFrame)
         self.TCPColor.set(self.typeColors["TCP"])
-        self.TCPColorMenu = OptionMenu(self.typeColorsFrame, self.TCPColor, "None", "Red", "Green", "Blue", "Purple")
+        self.TCPColorMenu = OptionMenu(self.typeColorsFrame, self.TCPColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
         self.TCPColorMenu.grid(row=1, column=1, sticky=W)
-        # Selection of color for ICMP
-        Label(self.typeColorsFrame, text="ICMP").grid(row=0, column=2, sticky=W)
-        self.ICMPColor = StringVar(self.typeColorsFrame)
-        self.ICMPColor.set(self.typeColors["ICMP"])
-        self.ICMPColorMenu = OptionMenu(self.typeColorsFrame, self.ICMPColor, "None", "Red", "Green", "Blue", "Purple")
-        self.ICMPColorMenu.grid(row=1, column=2, sticky=W)
+
         # Selection of color for UDP
-        Label(self.typeColorsFrame, text="UDP").grid(row=0, column=3, sticky=W)
+        Label(self.typeColorsFrame, text="UDP").grid(row=0, column=2, sticky=W)
         self.UDPColor = StringVar(self.typeColorsFrame)
         self.UDPColor.set(self.typeColors["UDP"])
-        self.UDPColorMenu = OptionMenu(self.typeColorsFrame, self.UDPColor, "None", "Red", "Green", "Blue", "Purple")
-        self.UDPColorMenu.grid(row=1, column=3, sticky=W)
+        self.UDPColorMenu = OptionMenu(self.typeColorsFrame, self.UDPColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
+        self.UDPColorMenu.grid(row=1, column=2, sticky=W)
+        # Selection of color for OpenFlow
+        Label(self.typeColorsFrame, text="OpenFlow").grid(row=0, column=3, sticky=W)
+        self.OpenFlowColor = StringVar(self.typeColorsFrame)
+        self.OpenFlowColor.set(self.typeColors["OpenFlow"])
+        self.OpenFlowColorMenu = OptionMenu(self.typeColorsFrame, self.OpenFlowColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange')
+        self.OpenFlowColorMenu.grid(row=1, column=3, sticky=W)
 
-        # Selection of terminal type
-        Label(self.rootFrame, text="Default Terminal:").grid(row=5, sticky=W)
-        self.terminalVar = StringVar(self.rootFrame)
-        self.terminalOption = OptionMenu(self.rootFrame, self.terminalVar, "xterm", "gterm")
-        self.terminalOption.grid(row=5, column=1, sticky=W)
-        terminalType = self.prefValues['terminalType']
-        self.terminalVar.set(terminalType)
-
-        # Field for CLI
-        Label(self.rootFrame, text="Start CLI:").grid(row=6, sticky=W)
-        self.cliStart = IntVar()
-        self.cliButton = Checkbutton(self.rootFrame, variable=self.cliStart)
-        self.cliButton.grid(row=6, column=1, sticky=W)
-        if self.prefValues['startCLI'] == 0:
-            self.cliButton.deselect()
-        else:
-            self.cliButton.select()
+        # Selection of color for OpenFlow
+        Label(self.typeColorsFrame, text="User traffic").grid(row=0, column=4, sticky=W)
+        self.UsertrafficColor = StringVar(self.typeColorsFrame)
+        self.UsertrafficColor.set(self.typeColors["Usertraffic"])
+        self.UsertrafficColorMenu = OptionMenu(self.typeColorsFrame, self.UsertrafficColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange')
+        self.UsertrafficColorMenu.grid(row=1, column=4, sticky=W)
 
         # Field for showing IP Packets
         Label(self.rootFrame, text="Show IP address on packets:").grid(row=7, sticky=W)
@@ -335,35 +125,21 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         else:
             self.cshowNodeStats.select()
 
-        # Field for identifying packets belonging to same flow
-        Label(self.rootFrame, text="Identify packets in the same flow and display in order:").grid(row=9, sticky=W)
-        self.identifyFlows = IntVar()
-        self.cidentifyFlows = Checkbutton(self.rootFrame, variable=self.identifyFlows)
-        self.cidentifyFlows.grid(row=9, column=1, sticky=W)
-        if self.prefValues['identifyFlows'] == 0:
-            self.cidentifyFlows.deselect()
-        else:
-            self.cidentifyFlows.select()
 
     def apply(self):
 
         flowTime = FLOWTIME[self.flowTime.get()]
-        self.typeColors['ARP'] = str(self.ARPColor.get())
+        # self.typeColors['ARP'] = str(self.ARPColor.get())
         self.typeColors['TCP'] = str(self.TCPColor.get())
-        self.typeColors['ICMP'] = str(self.ICMPColor.get())
+        self.typeColors['OpenFlow'] = str(self.OpenFlowColor.get())
         self.typeColors['UDP'] = str(self.UDPColor.get())
+        self.typeColors['Usertraffic'] = str(self.UsertrafficColor.get())
         typeColors = self.typeColors
 
-        self.result = {'displayFlows': self.displayFlows.get(),
-                       'displayHosts': self.displayHosts.get(),
-                       'flowTime': flowTime,
-                       'nodeColors': self.nodeColorsVar.get(),
+        self.result = {'flowTime': flowTime,
                        'typeColors': typeColors,
-                       'terminalType': self.terminalVar.get(),
-                       'startCLI': self.cliStart.get(),
                        'showAddr': self.showAddrVar.get(),
-                       'showNodeStats': self.showNodeStats.get(),
-                       'identifyFlows': self.identifyFlows.get()
+                       'showNodeStats': self.showNodeStats.get()
                        }
 
 
@@ -488,15 +264,10 @@ class MiniNAM(Frame):
 
         # Defaults for preferences and filters
         self.appPrefs = {
-            'displayFlows': 1,
-            'displayHosts': 1,
             'flowTime': FLOWTIME[FLOWTIMEDEF],
-            'nodeColors': 'Source',
-            'typeColors': {'ARP': 'Red', 'TCP': 'Green', 'ICMP': 'Blue', 'UDP': 'Green'},
-            'startCLI': 1,
-            'terminalType': 'xterm',
-            'showAddr': 'None',
-            'showNodeStats': 0,
+            'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown'},
+            'showAddr': 'Source',
+            'showNodeStats': 1,
             'identifyFlows': 1
         }
         self.appFilters = {
@@ -621,7 +392,6 @@ class MiniNAM(Frame):
         # Close window gracefully
         Wm.wm_protocol(self.top, name='WM_DELETE_WINDOW', func=self.quit)
 
-    # Arguments and Network
 
     def custom(self, _option, _opt_str, value, _parser):
         "Parse custom file and add params."
@@ -907,37 +677,37 @@ class MiniNAM(Frame):
                 pass
 
 
-    def filterPacket(self, srcMAC, dstMAC, s_addr, d_addr, eth_protocol, ip_protocol):
-        try:
-            if s_addr is not None:
-                if s_addr in self.appFilters['hideFromIPMAC']:
-                    return True
-            if d_addr is not None:
-                if d_addr in self.appFilters['hideToIPMAC']:
-                    return True
-            if srcMAC is not None:
-                if srcMAC in self.appFilters['hideFromIPMAC']:
-                    return True
-            if dstMAC is not None:
-                if dstMAC in self.appFilters['hideToIPMAC']:
-                    return True
-            if ip_protocol is not None:
-                if IP_Protocols[str(ip_protocol)] in self.appFilters['hidePackets']:
-                    return True
-            if eth_protocol is not None:
-                if Eth_Protocols[str(eth_protocol)] in self.appFilters['hidePackets']:
-                    return True
-            if 'ALL' in [t.upper() for t in self.appFilters['showPackets']]:
-                return False
-            if ip_protocol is not None:
-                if IP_Protocols[str(ip_protocol)] in self.appFilters['showPackets']:
-                    return False
-            if eth_protocol is not None:
-                if Eth_Protocols[str(eth_protocol)] in self.appFilters['showPackets']:
-                    return False
-            return True
-        except:
-            return True
+    # def filterPacket(self, srcMAC, dstMAC, s_addr, d_addr, eth_protocol, ip_protocol):
+    #     try:
+    #         if s_addr is not None:
+    #             if s_addr in self.appFilters['hideFromIPMAC']:
+    #                 return True
+    #         if d_addr is not None:
+    #             if d_addr in self.appFilters['hideToIPMAC']:
+    #                 return True
+    #         if srcMAC is not None:
+    #             if srcMAC in self.appFilters['hideFromIPMAC']:
+    #                 return True
+    #         if dstMAC is not None:
+    #             if dstMAC in self.appFilters['hideToIPMAC']:
+    #                 return True
+    #         if ip_protocol is not None:
+    #             if IP_Protocols[str(ip_protocol)] in self.appFilters['hidePackets']:
+    #                 return True
+    #         if eth_protocol is not None:
+    #             if Eth_Protocols[str(eth_protocol)] in self.appFilters['hidePackets']:
+    #                 return True
+    #         if 'ALL' in [t.upper() for t in self.appFilters['showPackets']]:
+    #             return False
+    #         if ip_protocol is not None:
+    #             if IP_Protocols[str(ip_protocol)] in self.appFilters['showPackets']:
+    #                 return False
+    #         if eth_protocol is not None:
+    #             if Eth_Protocols[str(eth_protocol)] in self.appFilters['showPackets']:
+    #                 return False
+    #         return True
+    #     except:
+    #         return True
 
     def createPacket(self, src, dst, PacketInfo):
         try:
@@ -954,7 +724,7 @@ class MiniNAM(Frame):
         except Exception as e:
             print(e)
 
-    def displayPacket(self, src, dst, PacketInfo):
+    def displayPacket(self, src, dst, Packet, is_openflow):
 
         try:
             c = self.canvas
@@ -966,38 +736,31 @@ class MiniNAM(Frame):
             # Draw a rectangle shape for the packet
             image1 = Image.new("RGBA", (30, 15))
             draw = ImageDraw.Draw(image1)
-            draw.polygon([(0, 0), (0, 15), (30, 15), (30, 0)], "black")
+            draw.polygon([(0, 0), (0, 15), (300, 15), (300, 0)], "black")
 
-            # Color code packet based on IP if needed
-            try:
-                # node_color = PacketInfo["node_color"]
-                node_color = "red"
-            except:
-                node_color = 'black'
+            if is_openflow:
+                color_by_type_packet = self.appPrefs['typeColors']['OpenFlow']
+            else:
+                color_by_type_packet = self.appPrefs['typeColors']['Usertraffic']
 
-            draw.polygon([(10, 0), (10, 15), (30, 15), (30, 0)], node_color)
+            draw.polygon([(10, 0), (10, 15), (30, 15), (30, 0)], color_by_type_packet)
 
-            # Color code packet by type
             try:
-                eth_color = self.appPrefs['typeColors'][Eth_Protocols[PacketInfo['eth_protocol']]]
-                if eth_color == 'None': eth_color = 'black'
+                if 'UDP' in Packet:
+                    protocol = 'UDP'
+                elif 'TCP' in Packet:
+                    protocol = 'TCP'
+                ip_color = self.appPrefs['typeColors'][protocol]
             except:
-                eth_color = None
-                eth_color = 'blue'
-            try:
-                ip_color = self.appPrefs['typeColors'][IP_Protocols[PacketInfo["ip_protocol"]]]
-                if ip_color == 'None':  ip_color = 'black'
-            except:
-                ip_color = None
                 ip_color = 'pink'
 
-            if eth_color is not None:
-                draw.polygon([(0, 0), (0, 15), (10, 15), (10, 0)], eth_color)
+            print('4')
+
             if ip_color is not None:
                 draw.polygon([(0, 0), (0, 15), (10, 15), (10, 0)], ip_color)
 
             # If IP address is not displayed then rotate the packet along the link
-            if self.appPrefs['showAddr'] == 'None':
+            if self.appPrefs['showAddr'] == 'None' or  is_openflow:
                 angle = -1 * atan2(dsty - srcy, dstx - srcx)
                 dx = 7 * sin(angle)
                 dy = 7 * cos(angle)
@@ -1006,22 +769,22 @@ class MiniNAM(Frame):
 
             else:
                 if self.appPrefs['showAddr'] == 'Source':
-                    addr = PacketInfo['s_addr']
+                    addr = Packet[IP].src
                 elif self.appPrefs['showAddr'] == 'Destination':
-                    addr = PacketInfo['d_addr']
+                    addr = Packet[IP].dst
 
                 address = addr.split('.')[0] + '.' + addr.split('.')[-1]
+                print(address)
                 draw.text((0, 0), address)
                 packetImage = itk.PhotoImage(image1)
                 dx, dy = 0, 0
-
+            print('5')
             self.packetImage.append(packetImage)
             packet = c.create_image(srcx + dx, srcy + dy, image=packetImage)
             deltax = (dstx - srcx) / 50
             deltay = (dsty - srcy) / 50
             delta = deltax, deltay
 
-            t = 1000 / 50000  # 1000 for ms and 50 for steps
 
             # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
             t = float(self.appPrefs['flowTime']) * float(100) / 50000  # 1000 for ms and 50 for steps
@@ -1573,6 +1336,9 @@ class MiniNAM(Frame):
 
             p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
             graph.communication_hots(app,'h1', p1)
+
+            p2 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / UDP(sport=3001, dport=422)
+            graph.communication_hots(app, 'h1', p2)
 
             # for i in list(graph.get_graph().nodes):
             #     if i[0] == 's':
