@@ -17,9 +17,10 @@ from PIL import ImageTk as itk
 from networkx.readwrite import json_graph
 from scapy.layers.inet import *
 
-import PackageImportWindow as p_import_w
+import PacketImportWindow as p_import_w
 import ProgramaGrafos as p
 import miniEdit as edit
+import InfoSwitchWindow as info_switch
 
 
 class MyEncoder(JSONEncoder):
@@ -378,7 +379,7 @@ class MiniNAM(Frame):
         self.legacyRouterPopup.bind("<FocusOut>", self.popupFocusOut)
 
         self.switchPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.switchPopup.add_command(label='Switch Options', font=self.font)
+        self.switchPopup.add_command(label='Switch Options', font=self.font, command=self.show_switch_info)
         self.switchPopup.add_separator()
         self.switchPopup.add_command(label='List bridge details', font=self.font, command=self.listBridge)
         self.switchPopup.bind("<FocusOut>", self.popupFocusOut)
@@ -588,16 +589,16 @@ class MiniNAM(Frame):
             dstx, dsty = c.coords(self.widgetToItem[d])
 
             # Draw a rectangle shape for the packet
-            image1 = Image.new("RGBA", (30, 15))
+            image1 = Image.new("RGBA", (45, 15))
             draw = ImageDraw.Draw(image1)
-            draw.polygon([(0, 0), (0, 15), (30, 15), (30, 0)], "black")
+            draw.polygon([(0, 0), (0, 15), (45, 15), (40, 0)], "black")
 
             if is_openflow:
                 color_by_type_packet = self.appPrefs['typeColors']['OpenFlow']
             else:
                 color_by_type_packet = self.appPrefs['typeColors']['Usertraffic']
 
-            draw.polygon([(10, 0), (10, 15), (30, 15), (30, 0)], color_by_type_packet)
+            draw.polygon([(15, 0), (15, 15), (45, 15), (45, 0)], color_by_type_packet)
 
             if not is_openflow:
                 try:
@@ -618,10 +619,10 @@ class MiniNAM(Frame):
             print('4')
 
             if ip_color is not None:
-                draw.polygon([(0, 0), (0, 15), (10, 15), (10, 0)], ip_color)
+                draw.polygon([(0, 0), (0, 15), (15, 15), (15, 0)], ip_color)
 
             # If IP address is not displayed then rotate the packet along the link
-            if self.appPrefs['showAddr'] == 'None' or is_openflow:
+            if self.appPrefs['showAddr'] == 'None':
                 angle = -1 * atan2(dsty - srcy, dstx - srcx)
                 dx = 7 * sin(angle)
                 dy = 7 * cos(angle)
@@ -636,7 +637,7 @@ class MiniNAM(Frame):
                 #
                 # address = addr.split('.')[0] + '.' + addr.split('.')[-1]
                 # print(address)
-                draw.text((0, 0), h_src_dst.split(' ')[0] + '->' + h_src_dst.split(' ')[1])
+                draw.text((0, 0), h_src_dst)
                 packetImage = itk.PhotoImage(image1)
                 dx, dy = 0, 0
             print('5')
@@ -719,6 +720,7 @@ class MiniNAM(Frame):
                 q.task_done()
             except:
                 pass
+
 
     def clearQueue(self, qu=None):
         "To clear queue and remove all enqueued packets"
@@ -1198,8 +1200,26 @@ class MiniNAM(Frame):
             p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
             graph.communication_hots(app,'h1', p1)
 
-            p2 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / UDP(sport=3001, dport=422)
-            graph.communication_hots(app, 'h1', p2)
+            p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / TCP(sport=4000, dport=3000)
+            graph.communication_hots(app, 'h2', p2)
+
+            p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
+            graph.communication_hots(app, 'h1', p1)
+
+            p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / TCP(sport=4000, dport=3000)
+            graph.communication_hots(app, 'h2', p2)
+
+            p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / UDP(sport=20, dport=4)
+            graph.communication_hots(app, 'h1', p1)
+
+            p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / UDP(sport=4, dport=20)
+            graph.communication_hots(app, 'h2', p2)
+
+            p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / UDP(sport=20, dport=4)
+            graph.communication_hots(app, 'h1', p1)
+
+            p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / UDP(sport=4, dport=20)
+            graph.communication_hots(app, 'h2', p2)
 
 
     def customize_topology(self):
@@ -1295,6 +1315,22 @@ class MiniNAM(Frame):
         filterBox = FiltersDialog(self, title='Filters', filterDefaults=filterDefaults)
         if filterBox.result:
             self.appFilters = filterBox.result
+
+    def show_switch_info(self, _ignore=None):
+        if (self.selection is None or
+                self.net is None or
+                self.selection not in self.itemToWidget):
+            return
+
+        root = tkinter.Toplevel()
+        name = self.itemToWidget[self.selection]['text']
+
+        info_s = info_switch.InfoSwitchWindow(root, graph.get_graph().nodes[name], name)
+        info_s.initialize_user_interface()
+
+
+
+
 
     def listBridge(self, _ignore=None):
         if (self.selection is None or

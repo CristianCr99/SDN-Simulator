@@ -22,7 +22,7 @@ class PackageImportWindow(tk.Frame):
         self.initialize_user_interface()
         self.list_packets = []
 
-    def edit(self,selected_item ,mac_src, mac_dst, ip_src, ip_dst, sport, dport, protocol):
+    def edit(self, mac_src, mac_dst, ip_src, ip_dst, sport, dport, protocol):
         selected_item = self.tree.selection()[0]
         self.tree.item(selected_item, values=(mac_src, mac_dst, ip_src, ip_dst, sport, dport, protocol))
 
@@ -272,6 +272,6 @@ class PackageImportWindow(tk.Frame):
         self.tree.insert('', 'end', values=('hola', 'hola'))
 
 
-app = PackageImportWindow(tk.Tk())
-app.root.resizable(False, False)
-app.root.mainloop()
+# app = PackageImportWindow(tk.Tk())
+# app.root.resizable(False, False)
+# app.root.mainloop()
