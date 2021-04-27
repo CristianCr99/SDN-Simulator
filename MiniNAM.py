@@ -74,39 +74,69 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         self.flowTimeMenu.grid(row=2, column=1, sticky=W)
 
         # Selection for color of packet type
-        self.typeColorsFrame = LabelFrame(self.rootFrame, text='Colors for Packet Types', padx=5, pady=5)
-        self.typeColorsFrame.grid(row=4, column=0, columnspan=2, sticky=EW)
+        self.typeColorsOpenFlow = LabelFrame(self.rootFrame, text='Colors for Openflow Packet Types', padx=5, pady=5)
+        self.typeColorsOpenFlow.grid(row=4, column=0, columnspan=2, sticky=EW)
         for i in range(3):
-            self.typeColorsFrame.columnconfigure(i, weight=1)
+            self.typeColorsOpenFlow.columnconfigure(i, weight=1)
         self.typeColors = self.prefValues['typeColors']
+
+        Label(self.typeColorsOpenFlow, text="General Color").grid(row=0, column=0, sticky=W)
+        self.OpenFlowColor = StringVar(self.typeColorsOpenFlow)
+        self.OpenFlowColor.set(self.typeColors["OpenFlow"])
+        self.OpenFlowColorMenu = OptionMenu(self.typeColorsOpenFlow, self.OpenFlowColor, "None", "Red", "Green", "Blue",
+                                            "Purple", 'Brown', 'Cyan', 'Orange')
+        self.OpenFlowColorMenu.grid(row=1, column=0, sticky=W)
+
+        Label(self.typeColorsOpenFlow, text="Packet In").grid(row=0, column=1, sticky=W)
+        self.PacketInColor = StringVar(self.typeColorsOpenFlow)
+        self.PacketInColor.set(self.typeColors["Packet_In"])
+        self.PacketInColorMenu = OptionMenu(self.typeColorsOpenFlow, self.PacketInColor, "None", "Red", "Green", "Blue", "Purple",
+                                       'Brown', 'Cyan', 'Orange', 'Violet')
+        self.PacketInColorMenu.grid(row=1, column=1, sticky=W)
+
+        # Selection of color for UDP
+        Label(self.typeColorsOpenFlow, text="Packet Out").grid(row=0, column=2, sticky=W)
+        self.PacketOutColor = StringVar(self.typeColorsOpenFlow)
+        self.PacketOutColor.set(self.typeColors["Packet_Out"])
+        self.PacketOutColorMenu = OptionMenu(self.typeColorsOpenFlow, self.PacketOutColor, "None", "Red", "Green", "Blue", "Purple",
+                                       'Brown', 'Cyan', 'Orange', 'Violet')
+        self.PacketOutColorMenu.grid(row=1, column=2, sticky=W)
+
+        Label(self.typeColorsOpenFlow, text="Flow Mod").grid(row=0, column=3, sticky=W)
+        self.FlowModColor = StringVar(self.typeColorsOpenFlow)
+        self.FlowModColor.set(self.typeColors["Flow_Mod"])
+        self.FlowModColorMenu = OptionMenu(self.typeColorsOpenFlow, self.FlowModColor, "None", "Red", "Green", "Blue", "Purple",
+                                       'Brown', 'Cyan', 'Orange', 'Violet')
+        self.FlowModColorMenu.grid(row=1, column=3, sticky=W)
+
+        self.typeColorsData = LabelFrame(self.rootFrame, text='Colors for Data Packet Types', padx=5, pady=5)
+        self.typeColorsData.grid(row=5, column=0, columnspan=2, sticky=EW)
+        for i in range(3):
+            self.typeColorsData.columnconfigure(i, weight=1)
 
 
         # Selection of color for TCP
-        Label(self.typeColorsFrame, text="TCP").grid(row=0, column=1, sticky=W)
-        self.TCPColor = StringVar(self.typeColorsFrame)
+        Label(self.typeColorsData, text="TCP").grid(row=0, column=1, sticky=W)
+        self.TCPColor = StringVar(self.typeColorsData)
         self.TCPColor.set(self.typeColors["TCP"])
-        self.TCPColorMenu = OptionMenu(self.typeColorsFrame, self.TCPColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
+        self.TCPColorMenu = OptionMenu(self.typeColorsData, self.TCPColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
         self.TCPColorMenu.grid(row=1, column=1, sticky=W)
 
         # Selection of color for UDP
-        Label(self.typeColorsFrame, text="UDP").grid(row=0, column=2, sticky=W)
-        self.UDPColor = StringVar(self.typeColorsFrame)
+        Label(self.typeColorsData, text="UDP").grid(row=0, column=2, sticky=W)
+        self.UDPColor = StringVar(self.typeColorsData)
         self.UDPColor.set(self.typeColors["UDP"])
-        self.UDPColorMenu = OptionMenu(self.typeColorsFrame, self.UDPColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
+        self.UDPColorMenu = OptionMenu(self.typeColorsData, self.UDPColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
         self.UDPColorMenu.grid(row=1, column=2, sticky=W)
-        # Selection of color for OpenFlow
-        Label(self.typeColorsFrame, text="OpenFlow").grid(row=0, column=3, sticky=W)
-        self.OpenFlowColor = StringVar(self.typeColorsFrame)
-        self.OpenFlowColor.set(self.typeColors["OpenFlow"])
-        self.OpenFlowColorMenu = OptionMenu(self.typeColorsFrame, self.OpenFlowColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange')
-        self.OpenFlowColorMenu.grid(row=1, column=3, sticky=W)
+
+
 
         # Selection of color for OpenFlow
-        Label(self.typeColorsFrame, text="User traffic").grid(row=0, column=4, sticky=W)
-        self.UsertrafficColor = StringVar(self.typeColorsFrame)
+        Label(self.typeColorsData, text="General Color").grid(row=0, column=0, sticky=W)
+        self.UsertrafficColor = StringVar(self.typeColorsData)
         self.UsertrafficColor.set(self.typeColors["Usertraffic"])
-        self.UsertrafficColorMenu = OptionMenu(self.typeColorsFrame, self.UsertrafficColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange')
-        self.UsertrafficColorMenu.grid(row=1, column=4, sticky=W)
+        self.UsertrafficColorMenu = OptionMenu(self.typeColorsData, self.UsertrafficColor, "None", "Red", "Green", "Blue", "Purple", 'Brown', 'Cyan', 'Orange')
+        self.UsertrafficColorMenu.grid(row=1, column=0, sticky=W)
 
         # Field for showing IP Packets
         Label(self.rootFrame, text="Show IP address on packets:").grid(row=7, sticky=W)
@@ -134,6 +164,9 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         self.typeColors['OpenFlow'] = str(self.OpenFlowColor.get())
         self.typeColors['UDP'] = str(self.UDPColor.get())
         self.typeColors['Usertraffic'] = str(self.UsertrafficColor.get())
+        self.typeColors['Packet_In'] = str(self.PacketInColor.get())
+        self.typeColors['Packet_Out'] = str(self.PacketOutColor.get())
+        self.typeColors['Flow_Mod'] = str(self.FlowModColor.get())
         typeColors = self.typeColors
 
         self.result = {'flowTime': flowTime,
@@ -265,7 +298,7 @@ class MiniNAM(Frame):
         # Defaults for preferences and filters
         self.appPrefs = {
             'flowTime': FLOWTIME[FLOWTIMEDEF],
-            'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown'},
+            'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown', 'Packet_In': 'Cyan', 'Packet_Out': 'Gren','Flow_Mod': 'Red'},
             'showAddr': 'Source',
             'showNodeStats': 1,
             'identifyFlows': 1
@@ -484,38 +517,7 @@ class MiniNAM(Frame):
         params.update(**kwargs)
         opts.add_option('--' + name, **params)
 
-    def runTest(self):
-
-        cluster = self.options.cluster
-        # cli = ClusterCLI if cluster else CLI
-        # if self.options.pre:
-        # cli(self.net, script=self.options.pre)
-        test = self.options.test
-        ALTSPELLING = {'pingall': 'pingAll',
-                       'pingpair': 'pingPair',
-                       'iperfudp': 'iperfUdp',
-                       'iperfUDP': 'iperfUdp'}
-
-        test = ALTSPELLING.get(test, test)
-
-        if test == 'none':
-            pass
-        elif test == 'all':
-            self.net.waitConnected()
-            self.net.start()
-            self.net.ping()
-            self.net.iperf()
-        elif test == 'cli':
-            # cli( self.net )
-            pass
-        elif test != 'build':
-            self.net.waitConnected()
-            getattr(self.net, test)()
-
-        # if self.options.post:
-        # cli(self.net, script=self.options.post)
-
-    # Topology and Sniffing
+    # Topology
 
     def TopoInfo(self):
         print('hello')
@@ -530,22 +532,6 @@ class MiniNAM(Frame):
                     {'name': i, 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
             elif i[0] == 'h':
                 self.Nodes.append({'name': i, 'widget': None, 'type': "Host", 'ip': graph.get_graph().nodes()[i]['ip'], 'color': None})
-        # Controlador
-        #self.Nodes.append(
-        #    {'name': "c0", 'widget': None, 'type': 'Controlador', 'ip': None, 'port': None, 'color': self.Controller_Color})
-
-        # Switches
-        # self.Nodes.append(
-        #     {'name': "s1", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
-        # self.Nodes.append(
-        #     {'name': "s2", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
-        # self.Nodes.append(
-        #     {'name': "s3", 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
-
-        # Hosts
-        # if self.appPrefs['displayHosts'] == 1:
-        #     self.Nodes.append({'name': "h1", 'widget': None, 'type': "Host", 'ip': None, 'color': None})
-        #     self.Nodes.append({'name': "h2", 'widget': None, 'type': "Host", 'ip': None, 'color': None})
 
     def intfExists(self, interface):
         for data in self.intfData:
@@ -553,81 +539,10 @@ class MiniNAM(Frame):
                 return data
         return None
 
-    def sniff(self):
-
-        # Create raw socket to receive everything
-        '''
-        try:
-            s = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(0x0003))
-        except socket.error as msg:
-            print('Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
-            sys.exit()
-        # receive a packet
-        while True:
-            if self.appPrefs['displayFlows'] == 0:
-                continue
-
-            packet = s.recvfrom(65565)
-
-            interface = packet[1][0]
-            direction = "incoming"
-            if packet[1][2] == socket.PACKET_OUTGOING:
-                direction = "outgoing"
-
-            # packet string from tuple
-            packet = packet[0]
-
-            #Parse the packet and get info in headers
-            PacketInfo = packetParser(packet)
-
-            eth_protocol = PacketInfo['eth_protocol']
-            srcMAC, dstMAC = PacketInfo['srcMAC'], PacketInfo['dstMAC']
-            ip_protocol = PacketInfo['ip_protocol']
-            s_addr, d_addr = PacketInfo['s_addr'], PacketInfo['d_addr']
-            data = PacketInfo['data']
-
-            # TODO: Sniff the controller packets
-
-            try:
-                #Skip packet if it is supposed to be filtered
-                if self.filterPacket(srcMAC, dstMAC, s_addr, d_addr, eth_protocol, ip_protocol):
-                    continue
-            except:
-                continue
-
-            try:
-                #Make sure that the interface info exists in our topology
-                intf = self.intfExists(interface)
-                if not intf:
-                    continue
-            except Exception:
-                continue
-
-            PacketInfo['interface'] = interface
-            PacketInfo['direction'] = direction
-            '''
-
-        #self.createPacket('s0', 'h0', 'none')
-
-        # except Exception:
-        #   pass
-
     def createNodes(self):
         # Drawing node Widgets
         for node in self.Nodes:
             if not self.findWidgetByName(node['name']):
-
-                # if node['type'] == 'Controlador':
-                #     height = 70
-                #     low = self.cheight/3 - 100
-                # elif node['type'] == 'Switch':
-                #     height = self.cheight/3
-                #     low = self.cheight / 2 - 100
-                # else:
-                #     height = self.cheight/2
-                #     low = self.cheight - 100
-
-
 
                 # location = self.nodelocations[node['name']] if node['name'] in self.nodelocations else (random.randrange(70,self.cwidth-100), random.randrange(70,self.cheight-100))
                 print(node)
@@ -636,37 +551,8 @@ class MiniNAM(Frame):
         # Drawing data links
 
         for i in list(graph.get_graph().edges()):
-            # if i[0] == 'host':
-            #     a = 'h'
-            # elif i[2] == 'switch':
-            #     a = 's'
-            # else:
-            #     a = 'c'
-            # if i[3] == 'host':
-            #     b = 'h'
-            # elif i[3] == 'switch':
-            #     b = 's'
-            # else:
-            #     b = 'c'
-            # #print(a+str(i[0]), b+str(i[1]))
             self.drawLink(i[0], i[1])
             print('enlace de', i[0], 'a', i[1])
-        # for i in
-        # self.drawLink('s1', 's2')
-        # self.drawLink('s1', 's3')
-        # self.drawLink('s2', 's3')
-        # self.drawLink('c0', 's1')
-        # self.drawLink('c0', 's2')
-        # self.drawLink('c0', 's3')
-        # self.drawLink('h1', 's1')
-        # self.drawLink('h2', 's2')
-
-
-        # for data in self.intfData:
-        #     try:
-        #         self.drawLink(data["interface"].split('-')[0], data["link"].split('-')[0])
-        #     except:
-        #         pass
 
         # Drawing control links
         for switch in self.Nodes:
@@ -676,38 +562,6 @@ class MiniNAM(Frame):
             except:
                 pass
 
-
-    # def filterPacket(self, srcMAC, dstMAC, s_addr, d_addr, eth_protocol, ip_protocol):
-    #     try:
-    #         if s_addr is not None:
-    #             if s_addr in self.appFilters['hideFromIPMAC']:
-    #                 return True
-    #         if d_addr is not None:
-    #             if d_addr in self.appFilters['hideToIPMAC']:
-    #                 return True
-    #         if srcMAC is not None:
-    #             if srcMAC in self.appFilters['hideFromIPMAC']:
-    #                 return True
-    #         if dstMAC is not None:
-    #             if dstMAC in self.appFilters['hideToIPMAC']:
-    #                 return True
-    #         if ip_protocol is not None:
-    #             if IP_Protocols[str(ip_protocol)] in self.appFilters['hidePackets']:
-    #                 return True
-    #         if eth_protocol is not None:
-    #             if Eth_Protocols[str(eth_protocol)] in self.appFilters['hidePackets']:
-    #                 return True
-    #         if 'ALL' in [t.upper() for t in self.appFilters['showPackets']]:
-    #             return False
-    #         if ip_protocol is not None:
-    #             if IP_Protocols[str(ip_protocol)] in self.appFilters['showPackets']:
-    #                 return False
-    #         if eth_protocol is not None:
-    #             if Eth_Protocols[str(eth_protocol)] in self.appFilters['showPackets']:
-    #                 return False
-    #         return True
-    #     except:
-    #         return True
 
     def createPacket(self, src, dst, PacketInfo):
         try:
@@ -724,7 +578,7 @@ class MiniNAM(Frame):
         except Exception as e:
             print(e)
 
-    def displayPacket(self, src, dst, Packet, is_openflow):
+    def displayPacket(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst):
 
         try:
             c = self.canvas
@@ -736,7 +590,7 @@ class MiniNAM(Frame):
             # Draw a rectangle shape for the packet
             image1 = Image.new("RGBA", (30, 15))
             draw = ImageDraw.Draw(image1)
-            draw.polygon([(0, 0), (0, 15), (300, 15), (300, 0)], "black")
+            draw.polygon([(0, 0), (0, 15), (30, 15), (30, 0)], "black")
 
             if is_openflow:
                 color_by_type_packet = self.appPrefs['typeColors']['OpenFlow']
@@ -745,14 +599,20 @@ class MiniNAM(Frame):
 
             draw.polygon([(10, 0), (10, 15), (30, 15), (30, 0)], color_by_type_packet)
 
-            try:
-                if 'UDP' in Packet:
-                    protocol = 'UDP'
-                elif 'TCP' in Packet:
-                    protocol = 'TCP'
-                ip_color = self.appPrefs['typeColors'][protocol]
-            except:
-                ip_color = 'pink'
+            if not is_openflow:
+                try:
+                    if 'UDP' in Packet:
+                        protocol = 'UDP'
+                    elif 'TCP' in Packet:
+                        protocol = 'TCP'
+                    ip_color = self.appPrefs['typeColors'][protocol]
+                except:
+                    ip_color = 'pink'
+            else:
+                try:
+                    ip_color = self.appPrefs['typeColors'][type_openflow]
+                except:
+                    ip_color = 'pink'
 
 
             print('4')
@@ -761,7 +621,7 @@ class MiniNAM(Frame):
                 draw.polygon([(0, 0), (0, 15), (10, 15), (10, 0)], ip_color)
 
             # If IP address is not displayed then rotate the packet along the link
-            if self.appPrefs['showAddr'] == 'None' or  is_openflow:
+            if self.appPrefs['showAddr'] == 'None' or is_openflow:
                 angle = -1 * atan2(dsty - srcy, dstx - srcx)
                 dx = 7 * sin(angle)
                 dy = 7 * cos(angle)
@@ -769,14 +629,14 @@ class MiniNAM(Frame):
                 packetImage = itk.PhotoImage(image1.rotate(angle, expand=True))
 
             else:
-                if self.appPrefs['showAddr'] == 'Source':
-                    addr = Packet[IP].src
-                elif self.appPrefs['showAddr'] == 'Destination':
-                    addr = Packet[IP].dst
-
-                address = addr.split('.')[0] + '.' + addr.split('.')[-1]
-                print(address)
-                draw.text((0, 0), address)
+                # if self.appPrefs['showAddr'] == 'Source':
+                #     addr = Packet[IP].src
+                # elif self.appPrefs['showAddr'] == 'Destination':
+                #     addr = Packet[IP].dst
+                #
+                # address = addr.split('.')[0] + '.' + addr.split('.')[-1]
+                # print(address)
+                draw.text((0, 0), h_src_dst.split(' ')[0] + '->' + h_src_dst.split(' ')[1])
                 packetImage = itk.PhotoImage(image1)
                 dx, dy = 0, 0
             print('5')
@@ -1341,60 +1201,10 @@ class MiniNAM(Frame):
             p2 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / UDP(sport=3001, dport=422)
             graph.communication_hots(app, 'h1', p2)
 
-            # for i in list(graph.get_graph().nodes):
-            #     if i[0] == 's':
-            #         graph.show_flow_table(i)
-            #
-            # graph.communication_hots(app, 'h1', p1)
-            #
-            # for i in list(graph.get_graph().nodes):
-            #     if i[0] == 's':
-            #         graph.show_flow_table(i)
-
-            # p2 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=4511, dport=22)
-            # graph.communication_hots(app, 'h1', p2)
-            # graph.communication_hots(app, 'h1', p2)
-
-
-
-
-            # for i in list(g.nodes):
-            #     print(i)
-
-        # except Exception as er:
-        #     messagebox.showwarning(er)
-        #self.verInformacionGrafo(G)
-        #except Exception as er:
-        #    print(er)
-
-
-
-
-        # "Load command."loadPrefs
-        # c = self.canvas
-        #
-        # myFormats = [
-        #     ('Config File', '*.config'),
-        #     ('All Files', '*'),
-        # ]
-        # f = tkinter.filedialog.askopenfile(filetypes=myFormats, mode='rb')
-        # if f == None:
-        #     return
-        #
-        # loadedPrefs = self.convertJsonUnicode(json.load(f))
-        # # Load application preferences
-        # if 'preferences' in loadedPrefs:
-        #     self.appPrefs = dict(self.appPrefs.items() + loadedPrefs['preferences'].items())
-        # # Load application filters
-        # if 'filters' in loadedPrefs:
-        #     self.appFilters = dict(self.appFilters.items() + loadedPrefs['filters'].items())
-        # f.close()
 
     def customize_topology(self):
         root = tkinter.Toplevel()
         edit_topology = edit.MiniEdit(root)
-
-
 
 
     def printdata(self):
@@ -1566,28 +1376,6 @@ class MiniNAM(Frame):
             for item in items:
                 data[str('label_' + item)].config(text=str(data[item]))
 
-    '''
-    def startCLI(self):
-        # Don't start a second CLI thread if it already exists
-        if self.cli is None:
-            self.cli = Thread(target=CLI, args=(self.net,))
-            self.cli.daemon = True
-            self.cli.start()
-        elif not self.cli.isAlive():
-            self.cli = Thread(target=CLI, args=(self.net,))
-            self.cli.daemon = True
-            self.cli.start()
-    '''
-
-    # @staticmethod
-    # def ovsShow(_ignore=None):
-    #     call(["xterm -T 'OVS Summary' -sb -sl 2000 -e 'ovs-vsctl show; read -p \"Press Enter to close\"' &"],
-    #          shell=True)
-    #
-    # @staticmethod
-    # def rootTerminal(_ignore=None):
-    #     call(["xterm -T 'Root Terminal' -sb -sl 2000 &"], shell=True)
-
     def do_linkPopup(self, event):
 
         # display the popup menu
@@ -1646,63 +1434,13 @@ class MiniNAM(Frame):
                 # make sure to release the grab (Tk 8.0a1 only)
                 self.switchPopup.grab_release()
 
-    # Model interface
-
-    # def xterm(self, _ignore=None):
-    #     "Make an xterm when a button is pressed."
-    #     if (self.selection is None or
-    #             self.net is None or
-    #             self.selection not in self.itemToWidget):
-    #         return
-    #     name = self.itemToWidget[self.selection]['text']
-    #     print('terminalhost')
-        #if name not in self.net.nameToNode:
-        #    return
-        # term = makeTerm( self.net.nameToNode[ name ], 'Host', term=self.appPrefs['terminalType'] )
-        # if StrictVersion(MININET_VERSION) > StrictVersion('2.0'):
-        #    self.net.terms += term
-        # else:
-        #    self.net.terms.append(term)
-
-    # def iperf(self, _ignore=None):
-    #     "Make an xterm when a button is pressed."
-    #     if (self.selection is None or
-    #             self.net is None or
-    #             self.selection not in self.itemToWidget):
-    #         return
-    #     name = self.itemToWidget[self.selection]['text']
-    #     if name not in self.net.nameToNode:
-    #         return
-    #     self.net.nameToNode[name].cmd('iperf -s -p 5001 &')
-
-    @staticmethod
-    def pathCheck(*args, **kwargs):
-        "Make sure each program in *args can be found in $PATH."
-        moduleName = kwargs.get('moduleName', 'it')
-        for arg in args:
-            '''
-            if not quietRun( 'which ' + arg ):
-                showerror(title="Error",
-                      message= 'Cannot find required executable %s.\n' % arg +
-                       'Please make sure that %s is installed ' % moduleName +
-                       'and available in your $PATH.' )
-            '''
-
     def stop(self):
-
         # Reset the terminal even if CLI wasn't exited properly
         os.system('stty sane')
         # Clear the packet queues
         for q in self.flowQueues:
             self.flowQueues[q].queue.clear()
 
-        # Stop network.
-        #if self.net:
-        #    self.net.stop()
-
-        # cleanUpScreens()
-
-        #self.net = None
 
     def quit(self):
         "Stop our network, if any, then quit."
@@ -1714,8 +1452,6 @@ class MiniNAM(Frame):
         print(host)
         root = tkinter.Toplevel()
         import_packets = p_import_w.PackageImportWindow(root)
-
-
 
 def miniImages():
     "Create and return images for MiniNAM."
@@ -1870,26 +1606,13 @@ iVBORw0KGgoAAAANSUhEUgAAAG8AAABbCAYAAAB9LtvbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
     }
 
 
-
-
 if __name__ == "__main__":
     try:
-
         graph = p.NetworkTopology()
-        # links, nodes = graph.create_topology(2, 4)
-
         app = MiniNAM(net=True)
-
-        # graph.communication_hots(app, 1, 1, 2)
-        # graph.communication_hots(app, 2, 2, 1)
-        # graph.communication_hots(app, 1, 1, 2)
-        # graph.communication_hots(app, 2, 2, 1)
         app.mainloop()
-
     except KeyboardInterrupt:
-        #info( "\n\nKeyboard Interrupt. Shutting down and cleaning up...\n\n")
         app.stop()
-
 
     except Exception:
         # Print exception
