@@ -35,19 +35,28 @@ p = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4
 # pkt = IP()/TCP()
 # wrpcap('./packlist.pcap', pkt, append=True)
 
-scapy_cap = rdpcap('Packages/packlist.pcap')
+# scapy_cap = rdpcap('Packages/packlist.pcap')
+#
+# for packet in scapy_cap:
+#     if 'MAC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
+#
+#         if 'TCP' in packet:
+#             inf = 'TCP'
+#         else:
+#             inf = 'UDP'
+#         # print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
+#         #       packet[IP].dst, 'sport:', packet[inf].sport, 'dport:', packet[inf].sport, type(packet))
+#         p.show()
+#         print('len:', len(packet))
 
-for packet in scapy_cap:
-    if 'MAC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
+packet = sr1(IP(dst="localhost") / ICMP())
+#print('src:', packet[IP].src, 'dst:',packet[IP].dst, packet[ICMP].show())
+packet.show()
 
-        if 'TCP' in packet:
-            inf = 'TCP'
-        else:
-            inf = 'UDP'
-        # print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
-        #       packet[IP].dst, 'sport:', packet[inf].sport, 'dport:', packet[inf].sport, type(packet))
-        p.show()
-        print('len:', len(packet))
+
+
+#ans, unans = sr(IP(dst='localhost')/TCP(dport=80, flags='A'))
+# send(IP()/ICMP(id=1, seq=1))
 
 # print(len(pkt))
 #

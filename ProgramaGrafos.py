@@ -58,6 +58,7 @@ class FlowEntry:
 class NetworkTopology(object):
     def __init__(self):
         self.G = nx.Graph()
+        # self.list_Packets_to_send = {}
         # self.miniNam = None
         # self.MNAM = mn.MiniNAM()
 
@@ -88,6 +89,12 @@ class NetworkTopology(object):
 
     def add_flow_entry_to_node(self, node, flowentry):
         self.G.nodes[node]['flow_table'].append(flowentry)
+
+    # def get_list_packets_to_send(self):
+    #     return self.list_Packets_to_send
+
+    def set_list_packets_to_send(self, list):
+        self.list_Packets_to_send = list
 
     def show_flow_table(self, node):
         print("Tabla de flujo del switch:", node)
@@ -135,6 +142,7 @@ class NetworkTopology(object):
         src_host = None
         dst_host = None
         for i in list(self.G.nodes):
+            print(i)
             if self.G.nodes[i]['ip'] == packet[IP].src:
                 src_host = i
             if self.G.nodes[i]['ip'] == packet[IP].dst:
@@ -160,11 +168,12 @@ class NetworkTopology(object):
 
             if proactive == True and path[i]:
                 # def __init__(self, mac_src, mac_dst, ip_src, ip_dst, transport_protocol,port_src, port_dst, action):
+                miniNAM.displayPacket('c0', path[i], None, True, 'Flow_Mod', 'c0' + '->' + path[i])
                 self.add_flow_entry_to_node(path[i], FlowEntry('*', '*', packet[IP].src,
                                                                packet[IP].dst, protocol ,packet[protocol].sport,
                                                                packet[protocol].dport, path[i + 1]))
                 print('flowMod a ', path[i])
-                miniNAM.displayPacket('c0', path[i], None, True, 'Flow_Mod', 'c0' + '->' + path[i])
+
 
             if path[i] == switch:
                 action = path[i + 1]

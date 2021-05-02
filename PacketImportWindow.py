@@ -9,7 +9,8 @@ from scapy.utils import rdpcap
 
 
 class PackageImportWindow(tk.Frame):
-    def __init__(self, root):
+    def __init__(self, root, master, host, **kw):
+        super().__init__(master, **kw)
         self.port_dst = tk.StringVar()
         self.port_src = tk.StringVar()
         self.ip_dst = tk.StringVar()
@@ -21,6 +22,11 @@ class PackageImportWindow(tk.Frame):
         self.root = root
         self.initialize_user_interface()
         self.list_packets = []
+        self.master = master
+        self.host = host
+
+    def get_list_packets(self):
+        return self.list_packets
 
     def edit(self, mac_src, mac_dst, ip_src, ip_dst, sport, dport, protocol):
         selected_item = self.tree.selection()[0]
@@ -29,12 +35,12 @@ class PackageImportWindow(tk.Frame):
     def delete(self):
         if len(self.tree.selection()) > 0:
             indexes_to_delete = []
-            print('IDs de las tuplas que se van a eliminar: ', self.tree.selection())
+            # print('IDs de las tuplas que se van a eliminar: ', self.tree.selection())
             for selected_packet in self.tree.selection():
                 indexes_to_delete.append(int(selected_packet, 10) - 1)  # Guardamos el valor del índice en entero
             indexes_to_delete = sorted(indexes_to_delete,
                                        reverse=True)  # Ordenamos los índices de mayor a menor antes de borrar
-            print('Índices que se van a borrar de la lista : ', indexes_to_delete)
+            # print('Índices que se van a borrar de la lista : ', indexes_to_delete)
             for index in indexes_to_delete:
                 self.list_packets.pop(index)  # Borramos de la lista local los paquetes indicados
 
@@ -59,11 +65,11 @@ class PackageImportWindow(tk.Frame):
             # self.list_packets = new_list
 
     def load_values(self):
-        print('hola')
+        # print('hola')
         if len(self.tree.selection()) > 0:
-            print('holaas')
+            # print('holaas')
             selected_item = self.tree.selection()[0]
-            print(self.tree.item(selected_item)['values'][1])
+            # print(self.tree.item(selected_item)['values'][1])
             self.mac_src.set(self.tree.item(selected_item)['values'][1])
             self.mac_dst.set(self.tree.item(selected_item)['values'][2])
             self.ip_src.set(self.tree.item(selected_item)['values'][3])
@@ -76,31 +82,33 @@ class PackageImportWindow(tk.Frame):
     def apply_changes(self):
         if len(self.tree.selection()) > 0:
             selected_item = self.tree.selection()[0]
-            item_chain = str(selected_item)[1:]     # Eliminamos la I de la cadena I009 -> 009
+            item_chain = str(selected_item)[1:]  # Eliminamos la I de la cadena I009 -> 009
             for i in item_chain:
                 if i == '0':
                     item_chain = item_chain[1:]
                 else:
                     break
-            print(int(item_chain,16))
+            # print(int(item_chain,16))
             # try:
             self.list_packets[int(item_chain, 16) - 1][Ether].src = self.mac_src.get()
             self.list_packets[int(item_chain, 16) - 1][Ether].dst = self.mac_dst.get()
-            self.list_packets[int(item_chain,16)-1][IP].src = self.ip_src.get()
+            self.list_packets[int(item_chain, 16) - 1][IP].src = self.ip_src.get()
             self.list_packets[int(item_chain, 16) - 1][IP].dst = self.ip_dst.get()
             if 'TCP' in self.list_packets[int(item_chain, 16) - 1]:
                 transport_protocol = 'TCP'
             else:
                 transport_protocol = 'UDP'
 
-            print(transport_protocol, self.port_src.get())
+            # print(transport_protocol, self.port_src.get())
 
             self.list_packets[int(item_chain, 16) - 1][transport_protocol].sport = int(self.port_src.get())
             self.list_packets[int(item_chain, 16) - 1][transport_protocol].dport = int(self.port_dst.get())
 
-            self.tree.item(selected_item, values=(self.tree.item(selected_item)['values'][0], self.mac_src.get(), self.mac_dst.get(), self.ip_src.get(), self.ip_dst.get(), self.port_src.get(), self.port_dst.get(), self.protocol.get()))
+            self.tree.item(selected_item, values=(
+            self.tree.item(selected_item)['values'][0], self.mac_src.get(), self.mac_dst.get(), self.ip_src.get(),
+            self.ip_dst.get(), self.port_src.get(), self.port_dst.get(), self.protocol.get()))
 
-            print('Cambio Correcto')
+            # print('Cambio Correcto')
             # except OSError as error:
             #     print("Error:", error)
 
@@ -108,7 +116,7 @@ class PackageImportWindow(tk.Frame):
             #
             #     for i in sys.exc_info():
             #         print(i)
-                # print("Unexpected error:", sys.exc_info()[2])
+            # print("Unexpected error:", sys.exc_info()[2])
 
             # j = 1
             # for packet in self.list_packets:
@@ -125,13 +133,12 @@ class PackageImportWindow(tk.Frame):
             #         # packet[inf].dport))
             #         j += 1
 
-
     def load_packages(self):
         # Seleccionamos el fichero
         try:
             path = filedialog.askopenfile(title='Load Graph', initialdir='./Packages',
                                           filetypes=(('Files .pcap', '*.pcap'), (('All Files', '*.*'))))
-            print(path.name)
+            # print(path.name)
             scapy_cap = rdpcap(path.name)
             i = 1
             for packet in scapy_cap:
@@ -141,11 +148,11 @@ class PackageImportWindow(tk.Frame):
                         protocol = 'TCP'
                     else:
                         protocol = 'UDP'
-                    print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
-                          packet[IP].dst, 'sport:', packet[protocol].sport, 'dport:', packet[protocol].sport, 'protocol:', protocol)
+                    # print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
+                    #      packet[IP].dst, 'sport:', packet[protocol].sport, 'dport:', packet[protocol].sport, 'protocol:', protocol)
                     self.tree.insert('', 'end', iid=i, values=(
-                    i, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst, packet[protocol].sport,
-                    packet[protocol].dport, protocol))
+                        i, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst, packet[protocol].sport,
+                        packet[protocol].dport, protocol))
                     i += 1
 
         except Exception as er:
@@ -156,10 +163,12 @@ class PackageImportWindow(tk.Frame):
             for i in range(1, self.number_packets.get() + 1):
 
                 if self.protocol.get() == 'TCP':
-                    p = Ether(src=self.mac_src.get(), dst=self.mac_dst.get()) / IP(src=self.ip_src.get(), dst=self.ip_dst.get()) / TCP(
+                    p = Ether(src=self.mac_src.get(), dst=self.mac_dst.get()) / IP(src=self.ip_src.get(),
+                                                                                   dst=self.ip_dst.get()) / TCP(
                         sport=int(self.port_src.get()), dport=int(self.port_dst.get()))
                 else:
-                    p = Ether(src=self.mac_src.get(), dst=self.mac_dst.get()) / IP(src=self.ip_src.get(), dst=self.ip_dst.get()) / UDP(
+                    p = Ether(src=self.mac_src.get(), dst=self.mac_dst.get()) / IP(src=self.ip_src.get(),
+                                                                                   dst=self.ip_dst.get()) / UDP(
                         sport=int(self.port_src.get()), dport=int(self.port_dst.get()))
 
                 self.list_packets.append(p)
@@ -184,12 +193,9 @@ class PackageImportWindow(tk.Frame):
 
             self.list_packets = new_list
 
-
     def initialize_user_interface(self):
-
         # Set the treeview
         self.tree = ttk.Treeview(self.root)
-
 
         self.scroll = tk.Scrollbar(self.root, orient="vertical", command=self.tree.yview)
         self.scroll.grid(column=1, sticky='nsew')
@@ -233,7 +239,6 @@ class PackageImportWindow(tk.Frame):
         tk.Label(campos, text="       Pransport protocol:  ").grid(row=1, column=6, sticky='w')
         tk.Label(campos, text="       Nº of packages to add:  ").grid(row=2, column=6, sticky='w')
 
-
         tk.Entry(campos, textvariable=self.mac_src, width=18).grid(row=1, column=1, sticky='w')
         tk.Entry(campos, textvariable=self.mac_dst, width=18).grid(row=2, column=1, sticky='w')
         tk.Entry(campos, textvariable=self.ip_src, width=16).grid(row=1, column=3, sticky='w')
@@ -248,9 +253,12 @@ class PackageImportWindow(tk.Frame):
         tk.Label(campos, text='     ').grid(row=2, column=8)
         tk.Label(campos, text='     ').grid(row=3, column=8)
 
-        tk.Button(campos, text=" Load values ", command=self.load_values, height=1, width=15).grid(row=1, column=9, sticky='E')
-        tk.Button(campos, text="Apply changes", command=self.apply_changes, height=1, width=15).grid(row=2, column=9, sticky='E')
-        tk.Button(campos, text="Add as new package", command=self.add_packets, height=1, width=15).grid(row=3, column=9, sticky='E')
+        tk.Button(campos, text=" Load values ", command=self.load_values, height=1, width=15).grid(row=1, column=9,
+                                                                                                   sticky='E')
+        tk.Button(campos, text="Apply changes", command=self.apply_changes, height=1, width=15).grid(row=2, column=9,
+                                                                                                     sticky='E')
+        tk.Button(campos, text="Add as new package", command=self.add_packets, height=1, width=15).grid(row=3, column=9,
+                                                                                                        sticky='E')
         tk.Label(campos, text=' ').grid(row=2, column=0)
 
         tk.Label(self.root, text=' ').grid(row=3)
@@ -259,8 +267,10 @@ class PackageImportWindow(tk.Frame):
         botones.grid(row=4, sticky='N')
 
         tk.Button(botones, text="Delete Selected Packet", command=self.delete).grid(row=0, column=0)
-        #tk.Label(botones, text='       ').grid(row=0, column=1)
+        tk.Label(botones, text=' ').grid(row=0, column=1)
         tk.Button(botones, text="Load Packages from...", command=self.load_packages).grid(row=0, column=2)
+        tk.Label(botones, text=' ').grid(row=0, column=3)
+        tk.Button(botones, text="Save Packets", command=self.return_list_packets).grid(row=0, column=4)
         # for i in range(0, 100):
         #     self.treeview.insert('', 'end', text=i, values=('hola1', 'hola2', 'hola3', 'hola4', 'hola5', 'hola6'))
 
@@ -268,10 +278,18 @@ class PackageImportWindow(tk.Frame):
         #     mac_src = self.tree.item(self.tree.selection()[0])['values'][1]
         #     print(mac_src)
 
-    def insert_data(self):
-        self.tree.insert('', 'end', values=('hola', 'hola'))
+    def return_list_packets(self):
+        # TODO Estas dos líneas de abajo pueden ser muy útiles
+        # self.root.deiconify()
+        # self.root.wait_window()
+        print('HELLO')
+        # self.root.destroy()
 
+        self.master.info_window_import[self.host] = self.list_packets
+        # print(self.list_packets)
+        # return self.list_packets
 
-# app = PackageImportWindow(tk.Tk())
-# app.root.resizable(False, False)
-# app.root.mainloop()
+# if __name__ == '__main__':
+#     app = PackageImportWindow(tk.Tk())
+#     app.root.resizable(False, False)
+#     app.root.mainloop()
