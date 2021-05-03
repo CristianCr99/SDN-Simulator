@@ -1502,10 +1502,12 @@ class MiniNAM(Frame):
 
         if len(self.info_window_import) > 0:
             for host in self.info_window_import:
-                print('Enviamos los paquetes del host:',host)
-                for paquet in self.info_window_import[host]:
-                    print('paquete:', paquet)
-                    graph.communication_hots(app, host, paquet)
+                if len(self.info_window_import[host]) > 0:
+                    print('Enviamos los paquetes del host:',host)
+                    for paquet in self.info_window_import[host]:
+                        print('paquete:', paquet)
+                        graph.communication_hots(app, host, paquet)
+                        # self.info_window_import[host].pop(0)
                 # p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / TCP(sport=4000, dport=3000)
                 # graph.communication_hots(app, 'h2', p2)
 
