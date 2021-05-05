@@ -22,6 +22,8 @@ import ProgramaGrafos as p
 import miniEdit as edit
 import InfoSwitchWindow as info_switch
 
+from multiprocessing import Pool
+
 
 class MyEncoder(JSONEncoder):
     def default(self, o):
@@ -428,24 +430,24 @@ class MiniNAM(Frame):
         # Close window gracefully
         Wm.wm_protocol(self.top, name='WM_DELETE_WINDOW', func=self.quit)
 
-    def custom(self, _option, _opt_str, value, _parser):
-        "Parse custom file and add params."
-        files = []
-        if os.path.isfile(value):
-            # Accept any single file (including those with commas)
-            files.append(value)
-        else:
-            # Accept a comma-separated list of filenames
-            files += value.split(',')
+    # def custom(self, _option, _opt_str, value, _parser):
+    #     "Parse custom file and add params."
+    #     files = []
+    #     if os.path.isfile(value):
+    #         # Accept any single file (including those with commas)
+    #         files.append(value)
+    #     else:
+    #         # Accept a comma-separated list of filenames
+    #         files += value.split(',')
 
-        for fileName in files:
-            customs = {}
-            if os.path.isfile(fileName):
-                exec(fileName, customs, customs)
-                for name, val in customs.iteritems():
-                    self.setCustom(name, val)
-            else:
-                raise Exception('could not find custom file: %s' % fileName)
+    #     for fileName in files:
+    #         customs = {}
+    #         if os.path.isfile(fileName):
+    #             exec(fileName, customs, customs)
+    #             for name, val in customs.iteritems():
+    #                 self.setCustom(name, val)
+    #         else:
+    #             raise Exception('could not find custom file: %s' % fileName)
 
     def setCustom(self, name, value):
         "Set custom parameters for Mininet."
@@ -642,7 +644,7 @@ class MiniNAM(Frame):
                 angle = 180 * angle / pi
                 draw.text((0, 0), h_src_dst)
                 packetImage = itk.PhotoImage(image1)
-                #dx, dy = 0, 0
+                # dx, dy = 0, 0
             self.packetImage.append(packetImage)
             packet = c.create_image(srcx + dx, srcy + dy, image=packetImage)
             deltax = (dstx - srcx) / 50
@@ -1249,7 +1251,7 @@ class MiniNAM(Frame):
         # TODO VER COMO HACER PARA DESACER EL .wait_window()
         self.top.wait_window()
         self.top.doRun()
-        #self.top.
+        # self.top.
 
     def doRun(self, menu):
         "Run command."
@@ -1498,15 +1500,22 @@ class MiniNAM(Frame):
         # print(graph.get_list_packets_to_send()[host])
 
     def run_simulation(self):
-        self.info_window_import
+        # self.info_window_import
+        # p1 = Process(target=method1)  # create a process object p1
+        # p1.start()  # starts the process p1
+        # p2 = Process(target=method2)
+        # p2.start()
 
         if len(self.info_window_import) > 0:
             for host in self.info_window_import:
                 if len(self.info_window_import[host]) > 0:
-                    print('Enviamos los paquetes del host:',host)
-                    for paquet in self.info_window_import[host]:
+                    print('Enviamos los paquetes del host:', host)
+                    cola_eventos = self.info_window_import[host]
+                    for paquet in cola_eventos:
                         print('paquete:', paquet)
                         graph.communication_hots(app, host, paquet)
+                        # p = Pool(3)
+                        # p.map(graph.communication_hots, [app, host, paquet])
                         # self.info_window_import[host].pop(0)
                 # p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / TCP(sport=4000, dport=3000)
                 # graph.communication_hots(app, 'h2', p2)

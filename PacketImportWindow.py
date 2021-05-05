@@ -21,10 +21,10 @@ class PackageImportWindow(tk.Frame):
         self.number_packets = tk.IntVar()
         self.root = root
         self.host = host
-        self.initialize_user_interface()
         self.list_packets = []
         self.master = master
         self.index = 1
+        self.initialize_user_interface()
 
     def get_list_packets(self):
         return self.list_packets
@@ -49,23 +49,20 @@ class PackageImportWindow(tk.Frame):
             for child in self.tree.get_children():
                 self.tree.delete(child)  # Vaciamos el árbol
 
-
-
+            i = 1
             for packet in self.list_packets:
-                if 'MAC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
-                    # new_list.append(packet)
+                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and ('TCP' in packet or 'UDP' in packet):
                     if 'TCP' in packet:
                         protocol = 'TCP'
                     else:
                         protocol = 'UDP'
                     # Reinsertamos los paquetes actualizados
-                    self.tree.insert('', 'end', iid=self.index, values=(
-                        self.index, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
+                    self.tree.insert('', 'end', iid=i, values=(
+                        i, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
                         packet[protocol].sport,
                         packet[protocol].dport, protocol))
-                    self.index += 1
+                    i += 1
 
-            # self.list_packets = new_list
 
     def load_values(self):
         # print('hola')
@@ -84,32 +81,33 @@ class PackageImportWindow(tk.Frame):
 
     def apply_changes(self):
         if len(self.tree.selection()) > 0:
-            selected_item = self.tree.selection()[0]
-            item_chain = str(selected_item)[1:]  # Eliminamos la I de la cadena I009 -> 009
-            for i in item_chain:
-                if i == '0':
-                    item_chain = item_chain[1:]
-                else:
-                    break
-            # print(int(item_chain,16))
+            selected_item = int(self.tree.selection()[0])
+            # item_chain = str(selected_item)[1:]  # Eliminamos la I de la cadena I009 -> 009
+            # for i in item_chain:
+            #     if i == '0':
+            #         item_chain = item_chain[1:]
+            #     else:
+            #         break
+            # item_chain = int(selected_item)
+            # print(item_chain)
             # try:
-            self.list_packets[int(item_chain, 16) - 1][Ether].src = self.mac_src.get()
-            self.list_packets[int(item_chain, 16) - 1][Ether].dst = self.mac_dst.get()
-            self.list_packets[int(item_chain, 16) - 1][IP].src = self.ip_src.get()
-            self.list_packets[int(item_chain, 16) - 1][IP].dst = self.ip_dst.get()
-            if 'TCP' in self.list_packets[int(item_chain, 16) - 1]:
+            self.list_packets[selected_item][Ether].src = self.mac_src.get()
+            self.list_packets[selected_item][Ether].dst = self.mac_dst.get()
+            self.list_packets[selected_item][IP].src = self.ip_src.get()
+            self.list_packets[selected_item][IP].dst = self.ip_dst.get()
+            if 'TCP' in self.list_packets[selected_item]:
                 transport_protocol = 'TCP'
             else:
                 transport_protocol = 'UDP'
 
             # print(transport_protocol, self.port_src.get())
 
-            self.list_packets[int(item_chain, 16) - 1][transport_protocol].sport = int(self.port_src.get())
-            self.list_packets[int(item_chain, 16) - 1][transport_protocol].dport = int(self.port_dst.get())
+            self.list_packets[selected_item][transport_protocol].sport = int(self.port_src.get())
+            self.list_packets[selected_item][transport_protocol].dport = int(self.port_dst.get())
 
             self.tree.item(selected_item, values=(
-            self.tree.item(selected_item)['values'][0], self.mac_src.get(), self.mac_dst.get(), self.ip_src.get(),
-            self.ip_dst.get(), self.port_src.get(), self.port_dst.get(), self.protocol.get()))
+                self.tree.item(selected_item)['values'][0], self.mac_src.get(), self.mac_dst.get(), self.ip_src.get(),
+                self.ip_dst.get(), self.port_src.get(), self.port_dst.get(), self.protocol.get()))
 
             # print('Cambio Correcto')
             # except OSError as error:
@@ -145,8 +143,9 @@ class PackageImportWindow(tk.Frame):
             scapy_cap = rdpcap(path.name)
 
             for packet in scapy_cap:
-                if 'MAC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
+                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and ('TCP' in packet or 'UDP' in packet):
                     self.list_packets.append(packet)
+                    packet.show()
                     if 'TCP' in packet:
                         protocol = 'TCP'
                     else:
@@ -154,7 +153,8 @@ class PackageImportWindow(tk.Frame):
                     # print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
                     #      packet[IP].dst, 'sport:', packet[protocol].sport, 'dport:', packet[protocol].sport, 'protocol:', protocol)
                     self.tree.insert('', 'end', iid=self.index, values=(
-                        self.index, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst, packet[protocol].sport,
+                        self.index, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
+                        packet[protocol].sport,
                         packet[protocol].dport, protocol))
                     self.index += 1
 
@@ -258,25 +258,28 @@ class PackageImportWindow(tk.Frame):
         tk.Button(botones, text="Load Packages from...", command=self.load_packages).grid(row=0, column=2)
         tk.Label(botones, text=' ').grid(row=0, column=3)
         tk.Button(botones, text="Save Packets", command=self.return_list_packets).grid(row=0, column=4)
-        # for i in range(0, 100):
-        #     self.treeview.insert('', 'end', text=i, values=('hola1', 'hola2', 'hola3', 'hola4', 'hola5', 'hola6'))
 
         # if len(self.tree.selection()) > 0:
         #     mac_src = self.tree.item(self.tree.selection()[0])['values'][1]
         #     print(mac_src)
-        print(len(self.master.info_window_import) > 0 and len(self.master.info_window_import[self.host]) > 0)
+        # print(len(self.master.info_window_import) > 0 and len(self.master.info_window_import[self.host]) > 0)
         if len(self.master.info_window_import) > 0 and len(self.master.info_window_import[self.host]) > 0:
-            #self.list_packets = self.master.info_window_import[self.host]
+            # self.list_packets = self.master.info_window_import[self.host]
             # print(len(self.list_packets))
-            for packet in self.master.info_window_import[self.host]:
-                if 'MAC' in packet and 'IP' in packet and ('TCP' in packet or 'UDP' in packet):
-
+            # list = self.master.info_window_import[self.host]
+            # for i in range(1,len(self.master.info_window_import[self.host])):
+            #     self.master.info_window_import[self.host][i].show()
+            # print(list)
+            print(self.list_packets)
+            for i in range(1, len(self.master.info_window_import[self.host])):
+                packet = self.master.info_window_import[self.host][i]
+                packet.show()
+                print('MAC' in packet, 'Ethernet' in packet, 'IP' in packet, 'TCP' in packet, 'UDP' in packet)
+                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and ('TCP' in packet or 'UDP' in packet):
                     if 'TCP' in packet:
                         protocol = 'TCP'
                     else:
                         protocol = 'UDP'
-                    # print('src MAC:', packet[Ether].src, 'dst MAC', packet[Ether].dst, 'src:', packet[IP].src, 'dst:',
-                    #      packet[IP].dst, 'sport:', packet[protocol].sport, 'dport:', packet[protocol].sport, 'protocol:', protocol)
                     self.list_packets.append(packet)
                     self.tree.insert('', 'end', iid=self.index, values=(
                         self.index, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
@@ -289,9 +292,8 @@ class PackageImportWindow(tk.Frame):
         # self.root.deiconify()
         # self.root.wait_window()
         print('HELLO')
-        # self.root.destroy()
-
         self.master.info_window_import[self.host] = self.list_packets
+        self.root.destroy()
         # print(self.list_packets)
         # return self.list_packets
 
