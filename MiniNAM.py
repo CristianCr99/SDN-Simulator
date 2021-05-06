@@ -305,7 +305,7 @@ class MiniNAM(Frame):
         self.appPrefs = {
             'flowTime': FLOWTIME[FLOWTIMEDEF],
             'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown',
-                           'Packet_In': 'Cyan', 'Packet_Out': 'Gren', 'Flow_Mod': 'Red'},
+                           'Packet_In': 'Cyan', 'Packet_Out': 'Green', 'Flow_Mod': 'Red'},
             'showAddr': 'Source and destination',
             'showNodeStats': 1
         }
@@ -609,7 +609,7 @@ class MiniNAM(Frame):
                 color_by_type_packet = self.appPrefs['typeColors']['Usertraffic']
 
             draw.polygon([(15, 0), (15, 15), (45, 15), (45, 0)], color_by_type_packet)
-
+            print('1')
             if not is_openflow:
                 try:
                     if 'UDP' in Packet:
@@ -624,10 +624,11 @@ class MiniNAM(Frame):
                     ip_color = self.appPrefs['typeColors'][type_openflow]
                 except:
                     ip_color = 'pink'
-
+            print('2')
+            print(ip_color is not None)
             if ip_color is not None:
                 draw.polygon([(0, 0), (0, 15), (15, 15), (15, 0)], ip_color)
-
+            print('3')
             # If IP address is not displayed then rotate the packet along the link
             if self.appPrefs['showAddr'] == 'None':
                 angle = -1 * atan2(dsty - srcy, dstx - srcx)
@@ -656,13 +657,13 @@ class MiniNAM(Frame):
             deltax = (dstx - srcx) / 50
             deltay = (dsty - srcy) / 50
             delta = deltax, deltay
-
+            print('4')
             # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
             t = float(self.appPrefs['flowTime']) * float(100) / 50000  # 1000 for ms and 50 for steps
             self.movePacket(packet, packetImage, delta, t)
 
         except Exception:
-            pass
+            print('Excepción!!!!')
 
     def movePacket(self, packet, image, delta, t):
         c = self.canvas

@@ -1,7 +1,7 @@
 import sys
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, W
 
 from scapy.layers.inet import *
 from scapy.layers.l2 import Ether
@@ -19,6 +19,8 @@ class PackageImportWindow(tk.Frame):
         self.mac_src = tk.StringVar()
         self.protocol = tk.StringVar()
         self.number_packets = tk.IntVar()
+        self.host_src = tk.StringVar()
+        self.host_dst = tk.StringVar()
         self.root = root
         self.host = host
         self.list_packets = []
@@ -52,7 +54,8 @@ class PackageImportWindow(tk.Frame):
 
             i = 1
             for packet in self.list_packets:
-                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and ('TCP' in packet or 'UDP' in packet):
+                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
+                        'TCP' in packet or 'UDP' in packet):
                     if 'TCP' in packet:
                         protocol = 'TCP'
                     else:
@@ -63,7 +66,6 @@ class PackageImportWindow(tk.Frame):
                         packet[protocol].sport,
                         packet[protocol].dport, protocol))
                     i += 1
-
 
     def load_values(self):
         # print('hola')
@@ -144,7 +146,8 @@ class PackageImportWindow(tk.Frame):
             scapy_cap = rdpcap(path.name)
 
             for packet in scapy_cap:
-                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and ('TCP' in packet or 'UDP' in packet):
+                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
+                        'TCP' in packet or 'UDP' in packet):
                     self.list_packets.append(packet)
                     packet.show()
                     if 'TCP' in packet:
@@ -180,6 +183,11 @@ class PackageImportWindow(tk.Frame):
                     p[self.protocol.get()].sport,
                     p[self.protocol.get()].dport, self.protocol.get()))
                 self.index += 1
+
+    def update_values(self, event):
+        print(self.showaddrOption)
+        self.mac_dst.set(self.graph.get_graph().nodes[self.showAddrVar.get()]['mac'])
+        self.ip_dst.set(self.graph.get_graph().nodes[self.showAddrVar.get()]['ip'])
 
     def initialize_user_interface(self):
         # Set the treeview
@@ -218,38 +226,53 @@ class PackageImportWindow(tk.Frame):
         campos.grid(row=2)
 
         tk.Label(campos, text=' ').grid(row=0, column=0)
-        tk.Label(campos, text="       MAC src:  ").grid(row=1, column=0, sticky='w')
-        tk.Label(campos, text="       MAC dst:  ").grid(row=2, column=0, sticky='w')
-        tk.Label(campos, text="       IP src:  ").grid(row=1, column=2, sticky='w')
-        tk.Label(campos, text="       IP dst:  ").grid(row=2, column=2, sticky='w')
-        tk.Label(campos, text="       Port src:  ").grid(row=1, column=4, sticky='w')
-        tk.Label(campos, text="       Port dst:  ").grid(row=2, column=4, sticky='w')
-        tk.Label(campos, text="       Pransport protocol:  ").grid(row=1, column=6, sticky='w')
-        tk.Label(campos, text="       Nº of packages to add:  ").grid(row=2, column=6, sticky='w')
+        tk.Label(campos, text="       Host src:  ").grid(row=1, column=0, sticky='w')
+        tk.Label(campos, text="       Host dst:  ").grid(row=2, column=0, sticky='w')
+        mac_label = tk.Label(campos, text="       MAC src:  ").grid(row=1, column=2, sticky='w')
+        tk.Label(campos, text="       MAC dst:  ").grid(row=2, column=2, sticky='w')
+        tk.Label(campos, text="       IP src:  ").grid(row=1, column=4, sticky='w')
+        tk.Label(campos, text="       IP dst:  ").grid(row=2, column=4, sticky='w')
+        tk.Label(campos, text="       Port src:  ").grid(row=1, column=6, sticky='w')
+        tk.Label(campos, text="       Port dst:  ").grid(row=2, column=6, sticky='w')
+        tk.Label(campos, text="       Pransport protocol:  ").grid(row=1, column=8, sticky='w')
+        tk.Label(campos, text="       Nº of packages to add:  ").grid(row=2, column=8, sticky='w')
+        self.host_src.set(self.host)
+        tk.Entry(campos, textvariable=self.host_src, width=10, state='disabled').grid(row=1, column=1, sticky='w')
+        tk.Entry(campos, textvariable=self.mac_src, width=18, state='disabled').grid(row=1, column=3, sticky='w')
+        tk.Entry(campos, textvariable=self.mac_dst, width=18, state='disabled').grid(row=2, column=3, sticky='w')
+        tk.Entry(campos, textvariable=self.ip_src, width=16, state='disabled').grid(row=1, column=5, sticky='w')
+        tk.Entry(campos, textvariable=self.ip_dst, width=16, state='disabled').grid(row=2, column=5, sticky='w')
 
-        tk.Entry(campos, textvariable=self.mac_src, width=18).grid(row=1, column=1, sticky='w')
-        tk.Entry(campos, textvariable=self.mac_dst, width=18).grid(row=2, column=1, sticky='w')
-        tk.Entry(campos, textvariable=self.ip_src, width=16).grid(row=1, column=3, sticky='w')
-        tk.Entry(campos, textvariable=self.ip_dst, width=16).grid(row=2, column=3, sticky='w')
-        tk.Entry(campos, textvariable=self.port_src, width=10).grid(row=1, column=5, sticky='w')
-        tk.Entry(campos, textvariable=self.port_dst, width=10).grid(row=2, column=5, sticky='w')
-        tk.Entry(campos, textvariable=self.protocol, width=10).grid(row=1, column=7, sticky='w')
-        tk.Entry(campos, textvariable=self.number_packets, width=10).grid(row=2, column=7, sticky='w')
+        list_ip = []
+        for i in list(self.graph.get_graph().nodes):
+            if i[0] == 'h' and i != self.host:
+                list_ip.append(i)
 
-        tk.Label(campos, text='     ').grid(row=3, column=6)
-        tk.Label(campos, text='     ').grid(row=1, column=8)
-        tk.Label(campos, text='     ').grid(row=2, column=8)
+        self.showAddrVar = tk.StringVar(campos)
+        self.showaddrOption = tk.OptionMenu(campos, self.showAddrVar, *list_ip, command=self.update_values)
+        self.showaddrOption.grid(row=2, column=1, sticky='W', ipadx=0.1, ipady=0.1)
+        # must be -column, -columnspan, -in, -ipadx, -ipady, -padx, -pady, -row, -rowspan, or -sticky
+
+        tk.Entry(campos, textvariable=self.port_src, width=10).grid(row=1, column=7, sticky='w')
+        tk.Entry(campos, textvariable=self.port_dst, width=10).grid(row=2, column=7, sticky='w')
+        tk.Entry(campos, textvariable=self.protocol, width=10).grid(row=1, column=9, sticky='w')
+        tk.Entry(campos, textvariable=self.number_packets, width=10).grid(row=2, column=9, sticky='w')
+
         tk.Label(campos, text='     ').grid(row=3, column=8)
+        tk.Label(campos, text='     ').grid(row=1, column=10)
+        tk.Label(campos, text='     ').grid(row=2, column=10)
+        tk.Label(campos, text='     ').grid(row=3, column=10)
 
-        tk.Button(campos, text=" Load values ", command=self.load_values, height=1, width=15).grid(row=1, column=9,
+        tk.Button(campos, text=" Load values ", command=self.load_values, height=1, width=15).grid(row=1, column=11,
                                                                                                    sticky='E')
-        tk.Button(campos, text="Apply changes", command=self.apply_changes, height=1, width=15).grid(row=2, column=9,
+        tk.Button(campos, text="Apply changes", command=self.apply_changes, height=1, width=15).grid(row=2, column=11,
                                                                                                      sticky='E')
-        tk.Button(campos, text="Add as new package", command=self.add_packets, height=1, width=15).grid(row=3, column=9,
+        tk.Button(campos, text="Add as new package", command=self.add_packets, height=1, width=15).grid(row=3,
+                                                                                                        column=11,
                                                                                                         sticky='E')
-        tk.Label(campos, text=' ').grid(row=2, column=0)
+        # tk.Label(campos, text=' ').grid(row=2, column=0)
 
-        tk.Label(self.root, text=' ').grid(row=3)
+        tk.Label(self.root, text=' ').grid(row=3, column=0)
 
         botones = tk.LabelFrame(self.root, height=1000)
         botones.grid(row=4, sticky='N')
@@ -265,10 +288,10 @@ class PackageImportWindow(tk.Frame):
         #     print(mac_src)
         # print(len(self.master.info_window_import) > 0 and len(self.master.info_window_import[self.host]) > 0)
 
-        self.ip_src.set(self.graph.get_graph()[self.host]['ip'])
-        self.mac_dst.set(self.graph.get_graph()[self.host]['mac'])
+        self.ip_src.set(self.graph.get_graph().nodes[self.host]['ip'])
+        self.mac_src.set(self.graph.get_graph().nodes[self.host]['mac'])
 
-        if len(self.master.info_window_import) > 0 and len(self.master.info_window_import[self.host]) > 0:
+        if len(self.master.info_window_import) > 0 and self.host in self.master.info_window_import and len(self.master.info_window_import[self.host]) > 0:
             # self.list_packets = self.master.info_window_import[self.host]
             # print(len(self.list_packets))
             # list = self.master.info_window_import[self.host]
@@ -276,11 +299,13 @@ class PackageImportWindow(tk.Frame):
             #     self.master.info_window_import[self.host][i].show()
             # print(list)
             print(self.list_packets)
-            for i in range(1, len(self.master.info_window_import[self.host])):
+            print('longitusd:',len(self.master.info_window_import[self.host]))
+            for i in range(0, len(self.master.info_window_import[self.host])):
                 packet = self.master.info_window_import[self.host][i]
                 packet.show()
                 print('MAC' in packet, 'Ethernet' in packet, 'IP' in packet, 'TCP' in packet, 'UDP' in packet)
-                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and ('TCP' in packet or 'UDP' in packet):
+                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
+                        'TCP' in packet or 'UDP' in packet):
                     if 'TCP' in packet:
                         protocol = 'TCP'
                     else:

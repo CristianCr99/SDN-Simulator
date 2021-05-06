@@ -24,9 +24,12 @@ class InfoSwitchWindow(tk.Frame):
         tk.Label(campos, text="       MAC Address:  ").grid(row=1, column=0, sticky='w')
         tk.Label(campos, text="       IP Address:  ").grid(row=1, column=2, sticky='w')
         tk.Label(campos, text="       Port:  ").grid(row=1, column=4, sticky='w')
-        tk.Label(campos, text=self.switch_data['mac']).grid(row=1, column=1, sticky='w')
-        tk.Label(campos, text=self.switch_data['ip']).grid(row=1, column=3, sticky='w')
-        tk.Label(campos, text=self.switch_data['port']).grid(row=1, column=5, sticky='w')
+        if 'mac' in self.switch_data:
+            tk.Label(campos, text=self.switch_data['mac']).grid(row=1, column=1, sticky='w')
+        if 'ip' in self.switch_data:
+            tk.Label(campos, text=self.switch_data['ip']).grid(row=1, column=3, sticky='w')
+        if 'port' in self.switch_data:
+            tk.Label(campos, text=self.switch_data['port']).grid(row=1, column=5, sticky='w')
 
         # tk.Label(campos, text='     ').grid(row=2, column=0)
         # tk.Label(campos, text='     ').grid(row=4, column=0)

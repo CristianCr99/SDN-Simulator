@@ -142,11 +142,11 @@ class NetworkTopology(object):
         src_host = None
         dst_host = None
         for i in list(self.G.nodes):
-            print(i)
-            if self.G.nodes[i]['ip'] == packet[IP].src:
-                src_host = i
-            if self.G.nodes[i]['ip'] == packet[IP].dst:
-                dst_host = i
+            if i[0] == 'h':
+                if self.G.nodes[i]['ip'] == packet[IP].src:
+                    src_host = i
+                if self.G.nodes[i]['ip'] == packet[IP].dst:
+                    dst_host = i
         return src_host, dst_host
 
     def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
