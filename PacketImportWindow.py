@@ -9,7 +9,7 @@ from scapy.utils import rdpcap
 
 
 class PackageImportWindow(tk.Frame):
-    def __init__(self, root, master, host, **kw):
+    def __init__(self, root, master, host, graph, **kw):
         super().__init__(master, **kw)
         self.port_dst = tk.StringVar()
         self.port_src = tk.StringVar()
@@ -24,6 +24,7 @@ class PackageImportWindow(tk.Frame):
         self.list_packets = []
         self.master = master
         self.index = 1
+        self.graph = graph
         self.initialize_user_interface()
 
     def get_list_packets(self):
@@ -263,6 +264,10 @@ class PackageImportWindow(tk.Frame):
         #     mac_src = self.tree.item(self.tree.selection()[0])['values'][1]
         #     print(mac_src)
         # print(len(self.master.info_window_import) > 0 and len(self.master.info_window_import[self.host]) > 0)
+
+        self.ip_src.set(self.graph.get_graph()[self.host]['ip'])
+        self.mac_dst.set(self.graph.get_graph()[self.host]['mac'])
+
         if len(self.master.info_window_import) > 0 and len(self.master.info_window_import[self.host]) > 0:
             # self.list_packets = self.master.info_window_import[self.host]
             # print(len(self.list_packets))

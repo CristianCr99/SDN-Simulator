@@ -528,9 +528,15 @@ class MiniNAM(Frame):
         for i in graph.get_graph().nodes():
             print(i[0])
             if i[0] == 'c':
+                ip = ''
+                port = ''
+                if 'ip' in graph.get_graph().nodes()[i]:
+                    ip = graph.get_graph().nodes()[i]['ip']
+                if 'port' in graph.get_graph().nodes()[i]:
+                    port = graph.get_graph().nodes()[i]['port']
                 self.Nodes.append(
-                    {'name': i, 'widget': None, 'type': 'Controlador', 'ip': graph.get_graph().nodes()[i]['ip'],
-                     'port': graph.get_graph().nodes()[i]['port'],
+                    {'name': i, 'widget': None, 'type': 'Controlador', 'ip': ip,
+                     'port': port,
                      'color': self.Controller_Color})
             elif i[0] == 's':
                 self.Nodes.append(
@@ -1156,37 +1162,55 @@ class MiniNAM(Frame):
         g = nx.Graph()
         if 'hosts' in edit_topo:
             for i in edit_topo['hosts']:
-                # print(i['opts']['mac'])
-                g.add_node(i['opts']['hostname'])
-                g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
-                g.nodes[i['opts']['hostname']]['ip'] = i['opts']['ip']
-                g.nodes[i['opts']['hostname']]['port'] = i['opts']['port']
-                g.nodes[i['opts']['hostname']]['x'] = i['x']
-                g.nodes[i['opts']['hostname']]['y'] = i['y']
+                if 'hostname' in i['opts']:
+                    g.add_node(i['opts']['hostname'])
+                if 'mac' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
+                if 'ip' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['ip'] = i['opts']['ip']
+                if 'port' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['port'] = i['opts']['port']
+                if 'x' in i:
+                    g.nodes[i['opts']['hostname']]['x'] = i['x']
+                if 'y' in i:
+                    g.nodes[i['opts']['hostname']]['y'] = i['y']
                 print('info', g.nodes[i['opts']['hostname']])
 
         if 'controllers' in edit_topo:
             for i in edit_topo['controllers']:
-                # print(i['opts']['mac'])
-                g.add_node(i['opts']['hostname'])
-                g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
-                g.nodes[i['opts']['hostname']]['ip'] = i['opts']['remoteIP']
-                g.nodes[i['opts']['hostname']]['port'] = str(i['opts']['remotePort'])
-                g.nodes[i['opts']['hostname']]['x'] = i['x']
-                g.nodes[i['opts']['hostname']]['y'] = i['y']
+                if 'hostname' in i['opts']:
+                    g.add_node(i['opts']['hostname'])
+                if 'mac' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
+                if 'ip' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['ip'] = i['opts']['remoteIP']
+                if 'port' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['port'] = str(i['opts']['remotePort'])
+                if 'x' in i:
+                    g.nodes[i['opts']['hostname']]['x'] = i['x']
+                if 'y' in i:
+                    g.nodes[i['opts']['hostname']]['y'] = i['y']
                 print('info', g.nodes[i['opts']['hostname']])
+
 
         if 'switches' in edit_topo:
             for i in edit_topo['switches']:
                 # print(i['opts']['mac'])
-                g.add_node(i['opts']['hostname'])
-                g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
-                g.nodes[i['opts']['hostname']]['ip'] = i['opts']['ip']
-                g.nodes[i['opts']['hostname']]['port'] = str(i['opts']['port'])
+                if 'hostname' in i['opts']:
+                    g.add_node(i['opts']['hostname'])
+                if 'mac' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['mac'] = i['opts']['mac']
+                if 'ip' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['ip'] = i['opts']['ip']
+                if 'port' in i['opts']:
+                    g.nodes[i['opts']['hostname']]['port'] = str(i['opts']['port'])
                 g.nodes[i['opts']['hostname']]['flow_table'] = []
-                g.nodes[i['opts']['hostname']]['x'] = i['x']
-                g.nodes[i['opts']['hostname']]['y'] = i['y']
-                g.add_edges_from([(i['opts']['hostname'], i['opts']['controllers'][0], {'weight': sys.maxsize})])
+                if 'x' in i:
+                    g.nodes[i['opts']['hostname']]['x'] = i['x']
+                if 'y' in i:
+                    g.nodes[i['opts']['hostname']]['y'] = i['y']
+                if 'controllers' in i['opts']:
+                    g.add_edges_from([(i['opts']['hostname'], i['opts']['controllers'][0], {'weight': sys.maxsize})])
                 print('info', g.nodes[i['opts']['hostname']])
 
         if 'links' in edit_topo:
@@ -1493,7 +1517,7 @@ class MiniNAM(Frame):
         # self.top.wait_variable()
         name = self.itemToWidget[self.selection]['text']
         print(name)
-        p_import_w.PackageImportWindow(root=root, master=self, host=name)
+        p_import_w.PackageImportWindow(root=root, master=self, host=name, graph=graph)
         # print(list_packets)
 
         # graph.get_list_packets_to_send()[host] = list_packets
