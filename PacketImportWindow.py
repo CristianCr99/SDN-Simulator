@@ -1,11 +1,12 @@
-import sys
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter import filedialog, messagebox, W
+from tkinter import filedialog, messagebox
 
 from scapy.layers.inet import *
 from scapy.layers.l2 import Ether
 from scapy.utils import rdpcap
+
+from Utilities import Utilities
 
 
 class PackageImportWindow(tk.Frame):
@@ -18,6 +19,7 @@ class PackageImportWindow(tk.Frame):
         self.mac_dst = tk.StringVar()
         self.mac_src = tk.StringVar()
         self.protocol = tk.StringVar()
+        self.protocol.set('TCP')
         self.number_packets = tk.IntVar()
         self.host_src = tk.StringVar()
         self.host_dst = tk.StringVar()
@@ -27,6 +29,7 @@ class PackageImportWindow(tk.Frame):
         self.master = master
         self.index = 1
         self.graph = graph
+        self.showProtocolsOption = None
         self.initialize_user_interface()
 
     def get_list_packets(self):
@@ -166,28 +169,46 @@ class PackageImportWindow(tk.Frame):
             messagebox.showwarning(er)
 
     def add_packets(self):
+        utilities = Utilities()
         if self.number_packets.get() > 0:
-            for i in range(1, self.number_packets.get() + 1):
+            if utilities.port_check(self.port_src.get()) and utilities.port_check(self.port_dst.get()):
+                for i in range(1, self.number_packets.get() + 1):
 
-                if self.protocol.get() == 'TCP':
-                    p = Ether(src=self.mac_src.get(), dst=self.mac_dst.get()) / IP(src=self.ip_src.get(),
-                                                                                   dst=self.ip_dst.get()) / TCP(
-                        sport=int(self.port_src.get()), dport=int(self.port_dst.get()))
-                else:
-                    p = Ether(src=self.mac_src.get(), dst=self.mac_dst.get()) / IP(src=self.ip_src.get(),
-                                                                                   dst=self.ip_dst.get()) / UDP(
-                        sport=int(self.port_src.get()), dport=int(self.port_dst.get()))
-                self.list_packets.append(p)
-                self.tree.insert('', 'end', iid=self.index, values=(
-                    self.index, p[Ether].src, p[Ether].dst, p[IP].src, p[IP].dst,
-                    p[self.protocol.get()].sport,
-                    p[self.protocol.get()].dport, self.protocol.get()))
-                self.index += 1
+                    if self.protocol.get() == 'TCP':
+                        p = Ether(src=self.mac_src.get(), dst=self.mac_dst.get()) / IP(src=self.ip_src.get(),
+                                                                                       dst=self.ip_dst.get()) / TCP(
+                            sport=int(self.port_src.get()), dport=int(self.port_dst.get()))
+                    else:
+                        p = Ether(src=self.mac_src.get(), dst=self.mac_dst.get()) / IP(src=self.ip_src.get(),
+                                                                                       dst=self.ip_dst.get()) / UDP(
+                            sport=int(self.port_src.get()), dport=int(self.port_dst.get()))
 
-    def update_values(self, event):
-        print(self.showaddrOption)
-        self.mac_dst.set(self.graph.get_graph().nodes[self.showAddrVar.get()]['mac'])
-        self.ip_dst.set(self.graph.get_graph().nodes[self.showAddrVar.get()]['ip'])
+                    self.list_packets.append(p)
+                    self.tree.insert('', 'end', iid=self.index, values=(
+                        self.index, p[Ether].src, p[Ether].dst, p[IP].src, p[IP].dst,
+                        p[self.protocol.get()].sport,
+                        p[self.protocol.get()].dport, self.protocol.get()))
+                    self.index += 1
+            else:
+                message = ''
+                # TODO esto no va bien :)
+                if utilities.port_check(self.port_src.get()):
+                    message += self.port_src.get()
+                if utilities.port_check(self.port_dst.get()):
+                    message += self.port_dst.get()
+
+                message_final = 'Error, (' + message + ') values are not valid. \n\no   Port must be a value between 1 and 65535.'
+                messagebox.showerror("Error", message_final)
+        else:
+            messagebox.showerror("Error", 'The number of packages to insert must be greater than 0')
+
+    def update_values_hosts(self, event):
+        print(self.showHostsOption)
+        self.mac_dst.set(self.graph.get_graph().nodes[self.showHosts.get()]['mac'])
+        self.ip_dst.set(self.graph.get_graph().nodes[self.showHosts.get()]['ip'])
+
+    def update_values_protocols(self, event):
+        self.protocol.set(self.showProtocols.get())
 
     def initialize_user_interface(self):
         # Set the treeview
@@ -248,14 +269,21 @@ class PackageImportWindow(tk.Frame):
             if i[0] == 'h' and i != self.host:
                 list_ip.append(i)
 
-        self.showAddrVar = tk.StringVar(campos)
-        self.showaddrOption = tk.OptionMenu(campos, self.showAddrVar, *list_ip, command=self.update_values)
-        self.showaddrOption.grid(row=2, column=1, sticky='W', ipadx=0.1, ipady=0.1)
+        self.showHosts = tk.StringVar(campos)
+        self.showHostsOption = tk.OptionMenu(campos, self.showHosts, *list_ip, command=self.update_values_hosts)
+        self.showHostsOption.grid(row=2, column=1, sticky='W')
         # must be -column, -columnspan, -in, -ipadx, -ipady, -padx, -pady, -row, -rowspan, or -sticky
 
         tk.Entry(campos, textvariable=self.port_src, width=10).grid(row=1, column=7, sticky='w')
         tk.Entry(campos, textvariable=self.port_dst, width=10).grid(row=2, column=7, sticky='w')
-        tk.Entry(campos, textvariable=self.protocol, width=10).grid(row=1, column=9, sticky='w')
+        # tk.Entry(campos, textvariable=self.protocol, width=10).grid(row=1, column=9, sticky='w')
+        self.showProtocols = tk.StringVar(campos)
+        self.showProtocols.set('TCP')
+        list_protocols = ['TCP', 'UDP']
+        self.showProtocolsOption = tk.OptionMenu(campos, self.showProtocols, *list_protocols,
+                                                 command=self.update_values_protocols)
+        self.showProtocolsOption.grid(row=1, column=9, sticky='W')
+
         tk.Entry(campos, textvariable=self.number_packets, width=10).grid(row=2, column=9, sticky='w')
 
         tk.Label(campos, text='     ').grid(row=3, column=8)
@@ -291,7 +319,8 @@ class PackageImportWindow(tk.Frame):
         self.ip_src.set(self.graph.get_graph().nodes[self.host]['ip'])
         self.mac_src.set(self.graph.get_graph().nodes[self.host]['mac'])
 
-        if len(self.master.info_window_import) > 0 and self.host in self.master.info_window_import and len(self.master.info_window_import[self.host]) > 0:
+        if len(self.master.info_window_import) > 0 and self.host in self.master.info_window_import and len(
+                self.master.info_window_import[self.host]) > 0:
             # self.list_packets = self.master.info_window_import[self.host]
             # print(len(self.list_packets))
             # list = self.master.info_window_import[self.host]
@@ -299,7 +328,7 @@ class PackageImportWindow(tk.Frame):
             #     self.master.info_window_import[self.host][i].show()
             # print(list)
             print(self.list_packets)
-            print('longitusd:',len(self.master.info_window_import[self.host]))
+            print('longitusd:', len(self.master.info_window_import[self.host]))
             for i in range(0, len(self.master.info_window_import[self.host])):
                 packet = self.master.info_window_import[self.host][i]
                 packet.show()

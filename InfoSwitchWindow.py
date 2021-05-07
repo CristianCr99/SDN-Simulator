@@ -1,11 +1,5 @@
-import sys
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter import filedialog, messagebox
-import ProgramaGrafos
-from scapy.layers.inet import *
-from scapy.layers.l2 import Ether
-from scapy.utils import rdpcap
 
 
 class InfoSwitchWindow(tk.Frame):
