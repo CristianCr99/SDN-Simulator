@@ -155,7 +155,8 @@ class NetworkTopology(object):
 
         #all_path = dict(nx.all_pairs_dijkstra_path(self.G, cutoff=None, weight='weight'))
 
-        path = nx.dijkstra_path(self.G, src_host, dst_host, 'weight')
+        path = nx.dijkstra_path(self.G, src_host, dst_host, weight='bw')
+        print(path)
 
         # Enviamos a cada Switch un flowMod (Enviar graficamente)
 

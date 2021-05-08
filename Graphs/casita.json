@@ -2,13 +2,15 @@
     "controllers": [
         {
             "opts": {
+                "controllerProtocol": "tcp",
+                "controllerType": "ref",
                 "hostname": "c0",
-                "mac": "777",
-                "remoteIP": "666",
-                "remotePort": 888
+                "mac": "",
+                "remoteIP": "127.0.0.1",
+                "remotePort": 6633
             },
-            "x": "440.0",
-            "y": "68.0"
+            "x": "388.0",
+            "y": "88.0"
         }
     ],
     "hosts": [
@@ -16,51 +18,67 @@
             "number": "1",
             "opts": {
                 "hostname": "h1",
-                "ip": "999",
-                "mac": "999",
                 "nodeNum": 1,
-                "port": "999"
+                "sched": "host"
             },
-            "x": "205.0",
-            "y": "515.0"
+            "x": "123.0",
+            "y": "461.0"
         },
         {
             "number": "2",
             "opts": {
                 "hostname": "h2",
-                "ip": "10",
-                "mac": "10",
                 "nodeNum": 2,
-                "port": "10"
+                "sched": "host"
             },
-            "x": "756.0",
-            "y": "514.0"
+            "x": "672.0",
+            "y": "485.0"
         }
     ],
     "links": [
         {
             "dest": "s3",
-            "opts": {},
+            "opts": {
+                "bw": 20,
+                "distance": 1,
+                "propagation_speed": 240000000
+            },
             "src": "s1"
         },
         {
             "dest": "s2",
-            "opts": {},
-            "src": "s1"
+            "opts": {
+                "bw": 1000,
+                "distance": 1,
+                "propagation_speed": 240000000
+            },
+            "src": "s3"
         },
         {
-            "dest": "s3",
-            "opts": {},
+            "dest": "s1",
+            "opts": {
+                "bw": 40000,
+                "distance": 1,
+                "propagation_speed": 240000000
+            },
             "src": "s2"
         },
         {
             "dest": "h1",
-            "opts": {},
+            "opts": {
+                "bw": 1000,
+                "distance": 1,
+                "propagation_speed": 240000000
+            },
             "src": "s1"
         },
         {
             "dest": "h2",
-            "opts": {},
+            "opts": {
+                "bw": 1000,
+                "distance": 1,
+                "propagation_speed": 240000000
+            },
             "src": "s2"
         }
     ],
@@ -72,13 +90,11 @@
                     "c0"
                 ],
                 "hostname": "s1",
-                "ip": "111",
-                "mac": "111",
                 "nodeNum": 1,
-                "port": "111"
+                "switchType": "default"
             },
-            "x": "252.0",
-            "y": "379.0"
+            "x": "171.0",
+            "y": "254.0"
         },
         {
             "number": "2",
@@ -87,13 +103,11 @@
                     "c0"
                 ],
                 "hostname": "s2",
-                "ip": "111",
-                "mac": "111",
                 "nodeNum": 2,
-                "port": "111"
+                "switchType": "default"
             },
-            "x": "712.0",
-            "y": "360.0"
+            "x": "753.0",
+            "y": "241.0"
         },
         {
             "number": "3",
@@ -102,13 +116,11 @@
                     "c0"
                 ],
                 "hostname": "s3",
-                "ip": "333",
-                "mac": "333",
                 "nodeNum": 3,
-                "port": "333"
+                "switchType": "default"
             },
-            "x": "429.0",
-            "y": "261.0"
+            "x": "389.0",
+            "y": "480.0"
         }
     ]
 }

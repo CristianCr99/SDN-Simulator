@@ -1,0 +1,39 @@
+{
+    "controllers": [],
+    "hosts": [
+        {
+            "number": "1",
+            "opts": {
+                "hostname": "h1",
+                "nodeNum": 1,
+                "sched": "host"
+            },
+            "x": "181.0",
+            "y": "212.0"
+        }
+    ],
+    "links": [
+        {
+            "dest": "s1",
+            "opts": {
+                "bw": "1000",
+                "distance": 1,
+                "propagation_speed": 240000000
+            },
+            "src": "h1"
+        }
+    ],
+    "switches": [
+        {
+            "number": "1",
+            "opts": {
+                "controllers": [],
+                "hostname": "s1",
+                "nodeNum": 1,
+                "switchType": "default"
+            },
+            "x": "489.0",
+            "y": "220.0"
+        }
+    ]
+}

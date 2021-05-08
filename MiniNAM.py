@@ -1211,16 +1211,17 @@ class MiniNAM(Frame):
                 if 'y' in i:
                     g.nodes[i['opts']['hostname']]['y'] = i['y']
                 if 'controllers' in i['opts']:
-                    g.add_edges_from([(i['opts']['hostname'], i['opts']['controllers'][0], {'weight': sys.maxsize})])
+                    g.add_edges_from([(i['opts']['hostname'], i['opts']['controllers'][0], {'bw': sys.maxsize})])
                 print('info', g.nodes[i['opts']['hostname']])
 
         if 'links' in edit_topo:
             for i in edit_topo['links']:
-                # print(i['opts']['mac'])
-                if 'weight' in i['opts']:
-                    g.add_edges_from([(i['src'], i['dest'], {'weight': int(i['opts']['weight'])})])
-                else:
-                    g.add_edges_from([(i['src'], i['dest'], {'weight': 1})])
+
+                print('hola',i)
+                if 'bw' in i['opts'] and 'distance' in i['opts'] and 'propagation_speed' in i['opts']:
+                    g.add_edges_from([(i['src'], i['dest'], {'bw': int(i['opts']['bw']), 'distance': int(i['opts']['distance']), 'propagation_speed': int(i['opts']['propagation_speed'])})])
+                # else:
+                #     g.add_edges_from([(i['src'], i['dest'], {'bw': 1})])
 
                 print('info', list(g.edges))
 

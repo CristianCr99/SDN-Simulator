@@ -5,7 +5,7 @@ from tkinter import (Frame, Label, LabelFrame, Entry, OptionMenu,
                      Menu, Toplevel, Button, BitmapImage,
                      PhotoImage, Canvas, Scrollbar, Wm, TclError,
                      StringVar, E, W, NW, Y, VERTICAL, SOLID,
-                     RIGHT, LEFT, BOTH, TRUE, FALSE)
+                     RIGHT, LEFT, BOTH, TRUE, FALSE, IntVar)
 from tkinter import filedialog as tkFileDialog
 from tkinter import font as tkFont
 from tkinter import simpledialog as tkSimpleDialog
@@ -261,66 +261,97 @@ class LinkDialog(tkSimpleDialog.Dialog):
     def __init__(self, parent, title, linkDefaults):
 
         self.linkValues = linkDefaults
+        self.show_band = StringVar()
+        self.show_band_width = StringVar()
 
         tkSimpleDialog.Dialog.__init__(self, parent, title)
 
+    def update_value_bandwidth(self, event):
+        self.show_band_width.set(self.show_band_width.get())
+
     def body(self, master):
 
-        self.var = StringVar(master)
-        Label(master, text="Bandwidth:").grid(row=0, sticky=E)
-        self.e1 = Entry(master)
+        list_band_width = [10, 20, 100, 1000, 10000, 40000]
+
+        # self.showProtocolsOption = OptionMenu(master, self.showProtocols, *list_band_width)
+        # self.showProtocolsOption.grid(row=0, column=1, sticky='W')
+        # self.bandwidth = IntVar()
+        # self.bandwidth.set(1000)
+        Label(master, text="Bandwidth:").grid(row=0, sticky=W)
+        self.e1 = OptionMenu(master, self.show_band_width, *list_band_width, command=self.update_value_bandwidth)
         self.e1.grid(row=0, column=1)
-        Label(master, text="Mbit").grid(row=0, column=2, sticky=W)
+        Label(master, text="Mbps").grid(row=0, column=2, sticky=W)
         if 'bw' in self.linkValues:
-            self.e1.insert(0, str(self.linkValues['bw']))
+            self.show_band_width.set(self.linkValues['bw'])
+        else:
+            self.show_band_width.set(list_band_width[3])
 
-        Label(master, text="Delay:").grid(row=1, sticky=E)
-        self.e2 = Entry(master)
+        self.distance = IntVar()
+        self.distance.set(1)
+        Label(master, text="Distance:").grid(row=1, sticky=W)
+        self.e2 = Entry(master, textvariable=self.distance, state='disable')
         self.e2.grid(row=1, column=1)
-        if 'delay' in self.linkValues:
-            self.e2.insert(0, self.linkValues['delay'])
+        Label(master, text="m").grid(row=1, column=2, sticky=W)
+        if 'distance' in self.linkValues:
+            self.e2.insert(0, str(self.linkValues['distance']))
 
-        Label(master, text="Loss:").grid(row=2, sticky=E)
-        self.e3 = Entry(master)
+        self.propagation_speed = IntVar()
+        self.propagation_speed.set(240000000)
+        Label(master, text="Propagation Speed:").grid(row=2, sticky=W)
+        self.e3 = Entry(master,textvariable=self.propagation_speed, state='disable')
         self.e3.grid(row=2, column=1)
-        Label(master, text="%").grid(row=2, column=2, sticky=W)
-        if 'loss' in self.linkValues:
-            self.e3.insert(0, str(self.linkValues['loss']))
+        Label(master, text="m/s").grid(row=2, column=2, sticky=W)
+        if 'propagation_speed' in self.linkValues:
+            self.e3.insert(0, str(self.linkValues['propagation_speed']))
 
-        Label(master, text="Max Queue size:").grid(row=3, sticky=E)
-        self.e4 = Entry(master)
-        self.e4.grid(row=3, column=1)
-        if 'max_queue_size' in self.linkValues:
-            self.e4.insert(0, str(self.linkValues['max_queue_size']))
 
-        Label(master, text="Jitter:").grid(row=4, sticky=E)
-        self.e5 = Entry(master)
-        self.e5.grid(row=4, column=1)
-        if 'jitter' in self.linkValues:
-            self.e5.insert(0, self.linkValues['jitter'])
-
-        Label(master, text="Speedup:").grid(row=5, sticky=E)
-        self.e6 = Entry(master)
-        self.e6.grid(row=5, column=1)
-        if 'speedup' in self.linkValues:
-            self.e6.insert(0, str(self.linkValues['speedup']))
+        # Label(master, text="Delay:").grid(row=1, sticky=E)
+        # self.e2 = Entry(master)
+        # self.e2.grid(row=1, column=1)
+        # if 'delay' in self.linkValues:
+        #     self.e2.insert(0, self.linkValues['delay'])
+        #
+        # Label(master, text="Loss:").grid(row=2, sticky=E)
+        # self.e3 = Entry(master)
+        # self.e3.grid(row=2, column=1)
+        # Label(master, text="%").grid(row=2, column=2, sticky=W)
+        # if 'loss' in self.linkValues:
+        #     self.e3.insert(0, str(self.linkValues['loss']))
+        #
+        # Label(master, text="Max Queue size:").grid(row=3, sticky=E)
+        # self.e4 = Entry(master)
+        # self.e4.grid(row=3, column=1)
+        # if 'max_queue_size' in self.linkValues:
+        #     self.e4.insert(0, str(self.linkValues['max_queue_size']))
+        #
+        # Label(master, text="Jitter:").grid(row=4, sticky=E)
+        # self.e5 = Entry(master)
+        # self.e5.grid(row=4, column=1)
+        # if 'jitter' in self.linkValues:
+        #     self.e5.insert(0, self.linkValues['jitter'])
+        #
+        # Label(master, text="Speedup:").grid(row=5, sticky=E)
+        # self.e6 = Entry(master)
+        # self.e6.grid(row=5, column=1)
+        # if 'speedup' in self.linkValues:
+        #     self.e6.insert(0, str(self.linkValues['speedup']))
 
         return self.e1  # initial focus
 
     def apply(self):
         self.result = {}
-        if len(self.e1.get()) > 0:
-            self.result['bw'] = int(self.e1.get())
+
+        self.result['bw'] = int(self.show_band_width.get())
         if len(self.e2.get()) > 0:
-            self.result['delay'] = self.e2.get()
+            self.result['distance'] = int(self.e2.get())
         if len(self.e3.get()) > 0:
-            self.result['loss'] = int(self.e3.get())
-        if len(self.e4.get()) > 0:
-            self.result['max_queue_size'] = int(self.e4.get())
-        if len(self.e5.get()) > 0:
-            self.result['jitter'] = self.e5.get()
-        if len(self.e6.get()) > 0:
-            self.result['speedup'] = int(self.e6.get())
+            self.result['propagation_speed'] = int(self.e3.get())
+        # if len(self.e4.get()) > 0:
+        #     self.result['max_queue_size'] = int(self.e4.get())
+        # if len(self.e5.get()) > 0:
+        #     self.result['jitter'] = self.e5.get()
+        # if len(self.e6.get()) > 0:
+        #     self.result['speedup'] = int(self.e6.get())
 
 
 class ControllerDialog(tkSimpleDialog.Dialog):
@@ -828,6 +859,8 @@ class MiniEdit(Frame):
             self.link = self.canvas.create_line(sx, sy, dx, dy, width=4,
                                                 fill='blue', tag='link')
             c.itemconfig(self.link, tags=c.gettags(self.link) + ('data',))
+            print('opts:',link['opts'])
+
             self.addLink(src, dest, linkopts=link['opts'])
             self.createDataLinkBindings()
             self.link = self.linkWidget = None
@@ -862,11 +895,6 @@ class MiniEdit(Frame):
         self.appPrefs["ipBase"] = self.defaultIpBase
 
     def saveTopology(self):
-        "Save command."
-        myFormats = [
-            ('Mininet Topology', '*.mn'),
-            ('All Files', '*'),
-        ]
 
         savingDictionary = {}
         fileName = tkFileDialog.asksaveasfilename(title='Save the topology as...', initialdir='./Graphs',
@@ -913,12 +941,15 @@ class MiniEdit(Frame):
             for link in self.links.values():
                 src = link['src']
                 dst = link['dest']
-                linkopts = link['linkOpts']
+                linkopts = link['opts']
 
                 srcName, dstName = src['text'], dst['text']
                 linkToSave = {'src': srcName,
                               'dest': dstName,
                               'opts': linkopts}
+                # linkToSave['opts']['bw'] = linkopts['bw']
+                # linkToSave['opts']['distance'] = linkopts['distance']
+                # linkToSave['opts']['propagation_speed'] = linkopts['propagation_speed']
                 if link['type'] == 'data':
                     linksToSave.append(linkToSave)
             savingDictionary['links'] = linksToSave
@@ -1432,10 +1463,11 @@ class MiniEdit(Frame):
         linkDetail = self.links[link]
         # src = linkDetail['src']
         # dest = linkDetail['dest']
-        linkopts = linkDetail['linkOpts']
+        linkopts = linkDetail['opts']
         linkBox = LinkDialog(self, title='Link Details', linkDefaults=linkopts)
         if linkBox.result is not None:
-            linkDetail['linkOpts'] = linkBox.result
+            linkDetail['opts'] = linkBox.result
+
 
     def controllerDetails(self, _ignore=None):
         if (self.selection is None or
@@ -1522,13 +1554,15 @@ class MiniEdit(Frame):
     def addLink(self, source, dest, linktype='data', linkopts=None):
         "Add link to model."
         if linkopts is None:
-            linkopts = {}
+            linkopts = {'bw': 1000,
+                        'distance': 1,
+                        'propagation_speed': 240000000}
         source.links[dest] = self.link
         dest.links[source] = self.link
         self.links[self.link] = {'type': linktype,
                                  'src': source,
                                  'dest': dest,
-                                 'linkOpts': linkopts}
+                                 'opts': linkopts}
 
     def deleteLink(self, link):
         "Delete link from model."
@@ -1601,7 +1635,7 @@ class MiniEdit(Frame):
             if 'data' in tags:
                 src = link['src']
                 dst = link['dest']
-                linkopts = link['linkOpts']
+                linkopts = link['opts']
                 srcName, dstName = src['text'], dst['text']
                 srcNode, dstNode = net.nameToNode[srcName], net.nameToNode[dstName]
 

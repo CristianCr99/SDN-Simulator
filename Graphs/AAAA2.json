@@ -9,8 +9,8 @@
                 "remoteIP": "127.0.0.1",
                 "remotePort": 6633
             },
-            "x": "853.0",
-            "y": "206.0"
+            "x": "784.0",
+            "y": "44.0"
         }
     ],
     "hosts": [
@@ -19,88 +19,73 @@
             "opts": {
                 "hostname": "h1",
                 "ip": "10.0.0.1",
-                "mac": "00:1B:44:11:3A:B1",
+                "mac": "00:1B:44:11:3A:B7",
                 "nodeNum": 1,
                 "port": "1"
             },
-            "x": "49.0",
-            "y": "83.0"
+            "x": "94.0",
+            "y": "508.0"
         },
         {
             "number": "2",
             "opts": {
                 "hostname": "h2",
                 "ip": "10.0.0.2",
-                "mac": "00:1B:44:11:3A:B2",
+                "mac": "00:1B:44:11:3A:B8",
                 "nodeNum": 2,
                 "port": "2"
             },
-            "x": "943.0",
-            "y": "387.0"
+            "x": "86.0",
+            "y": "64.0"
         },
         {
             "number": "3",
             "opts": {
                 "hostname": "h3",
                 "ip": "10.0.0.3",
-                "mac": "00:1B:44:11:3A:B3",
+                "mac": "00:1B:44:11:3A:B9",
                 "nodeNum": 3,
-                "port": "3"
+                "port": "23"
             },
-            "x": "36.0",
-            "y": "538.0"
+            "x": "932.0",
+            "y": "521.0"
         }
     ],
     "links": [
         {
-            "dest": "h1",
-            "opts": {
-                "bw": 1000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
+            "dest": "s4",
+            "opts": {},
             "src": "s1"
         },
         {
-            "dest": "h2",
-            "opts": {
-                "bw": 1000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
-            "src": "s2"
+            "dest": "s3",
+            "opts": {},
+            "src": "s4"
+        },
+        {
+            "dest": "s2",
+            "opts": {},
+            "src": "s5"
         },
         {
             "dest": "s1",
-            "opts": {
-                "bw": 1000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
-            "src": "s4"
+            "opts": {},
+            "src": "s2"
         },
         {
-            "dest": "s2",
-            "opts": {
-                "bw": 10000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
-            "src": "s4"
+            "dest": "s6",
+            "opts": {},
+            "src": "s5"
         },
         {
-            "dest": "s5",
-            "opts": {
-                "bw": 1000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
-            "src": "s3"
+            "dest": "s3",
+            "opts": {},
+            "src": "s6"
         },
         {
-            "dest": "s2",
+            "dest": "s4",
             "opts": {
-                "bw": 1000,
+                "bw": 40000,
                 "distance": 1,
                 "propagation_speed": 240000000
             },
@@ -108,57 +93,23 @@
         },
         {
             "dest": "s6",
-            "opts": {
-                "bw": 10000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
+            "opts": {},
             "src": "s1"
         },
         {
-            "dest": "s3",
-            "opts": {
-                "bw": 1000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
-            "src": "s6"
+            "dest": "s4",
+            "opts": {},
+            "src": "h2"
         },
         {
-            "dest": "s3",
-            "opts": {
-                "bw": 1000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
+            "dest": "s6",
+            "opts": {},
             "src": "h3"
         },
         {
-            "dest": "s5",
-            "opts": {
-                "bw": 1000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
-            "src": "s6"
-        },
-        {
-            "dest": "s5",
-            "opts": {
-                "bw": 40000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
-            "src": "s4"
-        },
-        {
-            "dest": "s4",
-            "opts": {
-                "bw": 1000,
-                "distance": 1,
-                "propagation_speed": 240000000
-            },
-            "src": "s6"
+            "dest": "s2",
+            "opts": {},
+            "src": "h1"
         }
     ],
     "switches": [
@@ -172,8 +123,8 @@
                 "nodeNum": 1,
                 "switchType": "default"
             },
-            "x": "212.0",
-            "y": "85.0"
+            "x": "150.0",
+            "y": "185.0"
         },
         {
             "number": "2",
@@ -185,8 +136,8 @@
                 "nodeNum": 2,
                 "switchType": "default"
             },
-            "x": "792.0",
-            "y": "382.0"
+            "x": "139.0",
+            "y": "363.0"
         },
         {
             "number": "3",
@@ -198,8 +149,8 @@
                 "nodeNum": 3,
                 "switchType": "default"
             },
-            "x": "182.0",
-            "y": "537.0"
+            "x": "862.0",
+            "y": "217.0"
         },
         {
             "number": "4",
@@ -211,8 +162,8 @@
                 "nodeNum": 4,
                 "switchType": "default"
             },
-            "x": "602.0",
-            "y": "73.0"
+            "x": "268.0",
+            "y": "56.0"
         },
         {
             "number": "5",
@@ -224,8 +175,8 @@
                 "nodeNum": 5,
                 "switchType": "default"
             },
-            "x": "534.0",
-            "y": "525.0"
+            "x": "242.0",
+            "y": "482.0"
         },
         {
             "number": "6",
@@ -237,8 +188,8 @@
                 "nodeNum": 6,
                 "switchType": "default"
             },
-            "x": "85.0",
-            "y": "321.0"
+            "x": "758.0",
+            "y": "437.0"
         }
     ]
 }
