@@ -319,10 +319,10 @@ class MiniNAM(Frame):
         }
 
         # Style
-        self.fixedFont = tkinter.font.Font(family="DejaVu Sans Mono", size="14")
-        self.font = ('Geneva', 9)
-        self.smallFont = ('Geneva', 7)
-        self.bg = 'white'
+        # self.fixedFont = tkinter.font.Font(family="DejaVu Sans Mono", size="14")
+        # self.font = ('Geneva', 9)
+        # self.smallFont = ('Geneva', 7)
+        # self.bg = 'white'
         # If more hosts than this list then random colors are assigned to remaining hosts
         self.HOST_COLORS = ['#E57300', '#FF66B2', '#fa0004', '#b1b106', '#957aff', '#FF00FF', '#2f90d0', '#818c8d',
                             '#A93226', '#1b2ef8', '#3ef979', '#7c2ff9']
@@ -373,30 +373,29 @@ class MiniNAM(Frame):
         self.focus()
         self.canvas.bind('<Button-1>', self.setFocus)
         self.hostPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.hostPopup.add_command(label='Host Details', font=self.font)
-        self.hostPopup.add_command(label='Traffic Insertion', font=self.font,
-                                   command=self.traffic_insertion)
+        self.hostPopup.add_command(label='Host Details')
+        self.hostPopup.add_command(label='Traffic Insertion', command=self.traffic_insertion)
         # self.hostPopup.add_separator()
         # self.hostPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
         self.hostPopup.bind("<FocusOut>", self.popupFocusOut)
 
         self.legacyRouterPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.legacyRouterPopup.add_command(label='Router Options', font=self.font)
+        self.legacyRouterPopup.add_command(label='Router Options')
         self.legacyRouterPopup.add_separator()
         # self.legacyRouterPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
         self.legacyRouterPopup.bind("<FocusOut>", self.popupFocusOut)
 
         self.switchPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.switchPopup.add_command(label='Switch Details', font=self.font, command=self.show_switch_info)
+        self.switchPopup.add_command(label='Switch Details', command=self.show_switch_info)
         # self.switchPopup.add_separator()
         # self.switchPopup.add_command(label='List bridge details', font=self.font, command=self.listBridge)
         # self.switchPopup.bind("<FocusOut>", self.popupFocusOut)
 
         self.linkPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.linkPopup.add_command(label='Link Details', font=self.font, command=self.link_details)
+        self.linkPopup.add_command(label='Link Details', command=self.link_details)
         self.linkPopup.add_separator()
-        self.linkPopup.add_command(label='Link Up', font=self.font, command=self.linkUp)
-        self.linkPopup.add_command(label='Link Down', font=self.font, command=self.linkDown)
+        self.linkPopup.add_command(label='Link Up', command=self.linkUp)
+        self.linkPopup.add_command(label='Link Down', command=self.linkDown)
         self.linkPopup.bind("<FocusOut>", self.popupFocusOut)
 
         # Event handling initalization
@@ -751,8 +750,7 @@ class MiniNAM(Frame):
         "Create and return our scrolling canvas frame."
         f = Frame(self)
 
-        canvas = Canvas(f, width=self.cwidth, height=self.cheight,
-                        bg=self.bg)
+        canvas = Canvas(f, width=self.cwidth, height=self.cheight)
 
         # Scroll bars
         xbar = Scrollbar(f, orient='horizontal', command=canvas.xview)
@@ -1093,40 +1091,39 @@ class MiniNAM(Frame):
     def createMenubar(self):
         "Create our menu bar."
 
-        font = self.font
+        # font = self.font
 
-        mbar = Menu(self.top, font=font)
+        mbar = Menu(self.top)
         self.top.configure(menu=mbar)
 
         fileMenu = Menu(mbar, tearoff=False)
-        mbar.add_cascade(label="File", font=font, menu=fileMenu)
-        fileMenu.add_command(label="Load topology", font=font, command=self.loadGraph)
-        fileMenu.add_command(label="Save topology", font=font, command=self.saveGraph)
-        fileMenu.add_command(label="Customize topology", font=font, command=self.customize_topology)
+        mbar.add_cascade(label="File", menu=fileMenu)
+        fileMenu.add_command(label="Load topology", command=self.loadGraph)
+        fileMenu.add_command(label="Save topology", command=self.saveGraph)
+        fileMenu.add_command(label="Customize topology", command=self.customize_topology)
         fileMenu.add_separator()
-        fileMenu.add_command(label='Quit', command=self.quit, font=font)
+        fileMenu.add_command(label='Quit', command=self.quit)
 
         editMenu = Menu(mbar, tearoff=False)
-        mbar.add_cascade(label="Edit", font=font, menu=editMenu)
-        editMenu.add_command(label="Preferences", font=font, command=self.prefDetails)
-        editMenu.add_command(label="Filters", font=font, command=self.filterDetails)
+        mbar.add_cascade(label="Edit", menu=editMenu)
+        editMenu.add_command(label="Preferences",command=self.prefDetails)
+        editMenu.add_command(label="Filters", command=self.filterDetails)
 
         runMenu = Menu(mbar, tearoff=False)
-        mbar.add_cascade(label="Run", font=font, menu=runMenu)
-        runMenu.add_command(label="Run Simulation", font=font, command=self.run_simulation)
-        runMenu.add_command(label="Pause", font=font, command=lambda: self.doRun(runMenu))
-        runMenu.add_command(label="Pause2", font=font, command=self.pause)
-        runMenu.add_command(label="Clear", font=font, command=self.clearQueue)
+        mbar.add_cascade(label="Run", menu=runMenu)
+        runMenu.add_command(label="Run Simulation", command=self.run_simulation)
+        runMenu.add_command(label="Pause", command=lambda: self.doRun(runMenu))
+        runMenu.add_command(label="Pause2", command=self.pause)
+        runMenu.add_command(label="Clear", command=self.clearQueue)
         fileMenu.add_separator()
-        runMenu.add_command(label='Show Interfaces Summary', font=font, command=self.intfInfo)
+        runMenu.add_command(label='Show Interfaces Summary', command=self.intfInfo)
         # runMenu.add_command(label='Show OVS Summary', font=font, command=self.ovsShow)
         # runMenu.add_command(label='Root Terminal', font=font, command=self.rootTerminal)
 
         # Application menu
         appMenu = Menu(mbar, tearoff=False)
-        mbar.add_cascade(label="Help", font=font, menu=appMenu)
-        appMenu.add_command(label='About MiniNAM', command=self.about,
-                            font=font)
+        mbar.add_cascade(label="Help", menu=appMenu)
+        appMenu.add_command(label='About MiniNAM', command=self.about)
 
     def convertJsonUnicode(self, text):
         "Some part of Mininet doesn't like Unicode"
@@ -1719,9 +1716,9 @@ iVBORw0KGgoAAAANSUhEUgAAAG8AAABbCAYAAAB9LtvbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
 if __name__ == "__main__":
     try:
         graph = p.NetworkTopology()
-        style = Style(theme='darkly')
+        style = Style(theme='flatly')
         window = style.master
-        app = MiniNAM(parent=window)
+        app = MiniNAM()
         app.mainloop()
     except KeyboardInterrupt:
         app.stop()
