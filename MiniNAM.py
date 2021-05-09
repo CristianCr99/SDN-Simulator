@@ -21,7 +21,8 @@ import PacketImportWindow as p_import_w
 import ProgramaGrafos as p
 import miniEdit as edit
 import InfoSwitchWindow as info_switch
-
+import InfoLinkWindow as info_link
+from ttkbootstrap import Style
 from multiprocessing import Pool
 
 
@@ -301,6 +302,7 @@ class MiniNAM(Frame):
         self.action = None
         self.info_window_import = {}
 
+
         # Defaults for preferences and filters
         self.appPrefs = {
             'flowTime': FLOWTIME[FLOWTIMEDEF],
@@ -385,13 +387,13 @@ class MiniNAM(Frame):
         self.legacyRouterPopup.bind("<FocusOut>", self.popupFocusOut)
 
         self.switchPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.switchPopup.add_command(label='Switch Options', font=self.font, command=self.show_switch_info)
-        self.switchPopup.add_separator()
-        self.switchPopup.add_command(label='List bridge details', font=self.font, command=self.listBridge)
-        self.switchPopup.bind("<FocusOut>", self.popupFocusOut)
+        self.switchPopup.add_command(label='Switch Details', font=self.font, command=self.show_switch_info)
+        # self.switchPopup.add_separator()
+        # self.switchPopup.add_command(label='List bridge details', font=self.font, command=self.listBridge)
+        # self.switchPopup.bind("<FocusOut>", self.popupFocusOut)
 
         self.linkPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.linkPopup.add_command(label='Link Options', font=self.font)
+        self.linkPopup.add_command(label='Link Details', font=self.font, command=self.link_details)
         self.linkPopup.add_separator()
         self.linkPopup.add_command(label='Link Up', font=self.font, command=self.linkUp)
         self.linkPopup.add_command(label='Link Down', font=self.font, command=self.linkDown)
@@ -985,11 +987,11 @@ class MiniNAM(Frame):
         def highlight(_event, link=self.link):
             "Highlight item on mouse entry."
             self.selectItem(link)
-            self.canvas.itemconfig(link, fill='green')
+            self.canvas.itemconfig(link, fill='#29D3A7')
 
         def unhighlight(_event, link=self.link):
             "Unhighlight item on mouse exit."
-            self.canvas.itemconfig(link, fill='red')
+            self.canvas.itemconfig(link, fill='purple')
 
         self.canvas.tag_bind(self.link, '<Enter>', highlight)
         self.canvas.tag_bind(self.link, '<Leave>', unhighlight)
@@ -1193,7 +1195,6 @@ class MiniNAM(Frame):
                     g.nodes[i['opts']['hostname']]['y'] = i['y']
                 print('info', g.nodes[i['opts']['hostname']])
 
-
         if 'switches' in edit_topo:
             for i in edit_topo['switches']:
                 # print(i['opts']['mac'])
@@ -1217,9 +1218,11 @@ class MiniNAM(Frame):
         if 'links' in edit_topo:
             for i in edit_topo['links']:
 
-                print('hola',i)
+                print('hola', i)
                 if 'bw' in i['opts'] and 'distance' in i['opts'] and 'propagation_speed' in i['opts']:
-                    g.add_edges_from([(i['src'], i['dest'], {'bw': int(i['opts']['bw']), 'distance': int(i['opts']['distance']), 'propagation_speed': int(i['opts']['propagation_speed'])})])
+                    g.add_edges_from([(i['src'], i['dest'],
+                                       {'bw': int(i['opts']['bw']), 'distance': int(i['opts']['distance']),
+                                        'propagation_speed': int(i['opts']['propagation_speed'])})])
                 # else:
                 #     g.add_edges_from([(i['src'], i['dest'], {'bw': 1})])
 
@@ -1319,6 +1322,19 @@ class MiniNAM(Frame):
             Wm.wm_protocol(about, name='WM_DELETE_WINDOW', func=hide)
         # Show (existing) window
         about.deiconify()
+
+    def link_details(self):
+        if self.selection is None:
+            return
+        link = self.selection
+        linkDetail = self.links[link]
+        src = linkDetail['src']
+        dst = linkDetail['dest']
+        srcName, dstName = src['text'], dst['text']
+        root = tkinter.Toplevel()
+        print(srcName,dstName)
+        info_s = info_link.InfoLinkWindow(root, graph.get_graph().edges[srcName, dstName], srcName + ',' + dstName)
+        info_s.initialize_user_interface()
 
     def linkUp(self):
         if self.selection is None:
@@ -1703,7 +1719,9 @@ iVBORw0KGgoAAAANSUhEUgAAAG8AAABbCAYAAAB9LtvbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
 if __name__ == "__main__":
     try:
         graph = p.NetworkTopology()
-        app = MiniNAM()
+        style = Style(theme='darkly')
+        window = style.master
+        app = MiniNAM(parent=window)
         app.mainloop()
     except KeyboardInterrupt:
         app.stop()

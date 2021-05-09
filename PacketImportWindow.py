@@ -247,8 +247,8 @@ class PackageImportWindow(tk.Frame):
         campos.grid(row=2)
 
         tk.Label(campos, text=' ').grid(row=0, column=0)
-        tk.Label(campos, text="       Host src:  ").grid(row=1, column=0, sticky='w')
-        tk.Label(campos, text="       Host dst:  ").grid(row=2, column=0, sticky='w')
+        tk.Label(campos, text="   Host src:  ").grid(row=1, column=0, sticky='w')
+        tk.Label(campos, text="   Host dst:  ").grid(row=2, column=0, sticky='w')
         mac_label = tk.Label(campos, text="       MAC src:  ").grid(row=1, column=2, sticky='w')
         tk.Label(campos, text="       MAC dst:  ").grid(row=2, column=2, sticky='w')
         tk.Label(campos, text="       IP src:  ").grid(row=1, column=4, sticky='w')
@@ -259,10 +259,10 @@ class PackageImportWindow(tk.Frame):
         tk.Label(campos, text="       Nº of packages to add:  ").grid(row=2, column=8, sticky='w')
         self.host_src.set(self.host)
         tk.Entry(campos, textvariable=self.host_src, width=10, state='disabled').grid(row=1, column=1, sticky='w')
-        tk.Entry(campos, textvariable=self.mac_src, width=18, state='disabled').grid(row=1, column=3, sticky='w')
-        tk.Entry(campos, textvariable=self.mac_dst, width=18, state='disabled').grid(row=2, column=3, sticky='w')
-        tk.Entry(campos, textvariable=self.ip_src, width=16, state='disabled').grid(row=1, column=5, sticky='w')
-        tk.Entry(campos, textvariable=self.ip_dst, width=16, state='disabled').grid(row=2, column=5, sticky='w')
+        tk.Entry(campos, textvariable=self.mac_src, width=16, state='disabled').grid(row=1, column=3, sticky='w')
+        tk.Entry(campos, textvariable=self.mac_dst, width=16, state='disabled').grid(row=2, column=3, sticky='w')
+        tk.Entry(campos, textvariable=self.ip_src, width=14, state='disabled').grid(row=1, column=5, sticky='w')
+        tk.Entry(campos, textvariable=self.ip_dst, width=14, state='disabled').grid(row=2, column=5, sticky='w')
 
         list_ip = []
         for i in list(self.graph.get_graph().nodes):
@@ -274,8 +274,8 @@ class PackageImportWindow(tk.Frame):
         self.showHostsOption.grid(row=2, column=1, sticky='W')
         # must be -column, -columnspan, -in, -ipadx, -ipady, -padx, -pady, -row, -rowspan, or -sticky
 
-        tk.Entry(campos, textvariable=self.port_src, width=10).grid(row=1, column=7, sticky='w')
-        tk.Entry(campos, textvariable=self.port_dst, width=10).grid(row=2, column=7, sticky='w')
+        tk.Entry(campos, textvariable=self.port_src, width=7).grid(row=1, column=7, sticky='w')
+        tk.Entry(campos, textvariable=self.port_dst, width=7).grid(row=2, column=7, sticky='w')
         # tk.Entry(campos, textvariable=self.protocol, width=10).grid(row=1, column=9, sticky='w')
         self.showProtocols = tk.StringVar(campos)
         self.showProtocols.set('TCP')
