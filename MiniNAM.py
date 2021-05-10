@@ -1716,7 +1716,7 @@ iVBORw0KGgoAAAANSUhEUgAAAG8AAABbCAYAAAB9LtvbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
 if __name__ == "__main__":
     try:
         graph = p.NetworkTopology()
-        style = Style(theme='flatly')
+        style = Style(theme='TFG')
         window = style.master
         app = MiniNAM()
         app.mainloop()

@@ -1,26 +1,29 @@
 import json
 import os
 from subprocess import call
-from tkinter import (Frame, Label, LabelFrame, Entry, OptionMenu,
-                     Menu, Toplevel, Button, BitmapImage,
+from tkinter import (Frame, Label, LabelFrame, Entry, Menu, Toplevel, Button, BitmapImage,
                      PhotoImage, Canvas, Scrollbar, Wm, TclError,
                      StringVar, E, W, NW, Y, VERTICAL, SOLID,
-                     RIGHT, LEFT, BOTH, TRUE, FALSE, IntVar)
+                     RIGHT, LEFT, BOTH, TRUE, FALSE, N)
 from tkinter import filedialog as tkFileDialog
 from tkinter import font as tkFont
-from tkinter import simpledialog as tkSimpleDialog
 from tkinter import messagebox
+from tkinter import simpledialog as tkSimpleDialog
 
 import Utilities
 
 message_help = '  o   Port must be a value between 1 and 65535. \n\n' \
-                               '  o   IP address must have the following format:\n\n' \
-                               '              <num_1>.<num_2>.<num_3>.<num_4>\n\n' \
-                               '      where each number must have a value between 0 and 255.\n\n' \
-                               '  o   MAC address must be in the following format:\n\n' \
-                               '            <val1>:<val2>:<val3>:<val4>:<val5>:<val6>\n\n' \
-                               '      where in values you can put number in hexadecimal\n' \
-                               '      from 00 to FF.\n'
+               '  o   IP address must have the following format:\n\n' \
+               '              <num_1>.<num_2>.<num_3>.<num_4>\n\n' \
+               '      where each number must have a value between 0 and 255.\n\n' \
+               '  o   MAC address must be in the following format:\n\n' \
+               '            <val1>:<val2>:<val3>:<val4>:<val5>:<val6>\n\n' \
+               '      where in values you can put number in hexadecimal\n' \
+               '      from 00 to FF.\n'
+
+message_help_2 = '  o   Bandwidth, Distance, and Velocity of Propagation\n' \
+                 '      values must be a positive integer greater than 0.'
+
 
 class CustomDialog(object):
 
@@ -29,20 +32,18 @@ class CustomDialog(object):
         self.top = Toplevel(master)
 
         self.bodyFrame = Frame(self.top)
-        self.bodyFrame.grid(row=0, column=0, sticky='nswe')
+        self.bodyFrame.grid(row=0, column=0, sticky='N')
         self.body(self.bodyFrame)
 
         # return self.b # initial focus
-        buttonFrame = Frame(self.top, relief='ridge', bd=3, bg='lightgrey')
-        buttonFrame.grid(row=1, column=0, sticky='nswe')
+        buttonFrame = Frame(self.top, relief='ridge', bd=3)
+        buttonFrame.grid(row=1, column=0, sticky=N)
 
-        okButton = Button(buttonFrame, width=8, text='OK', relief='groove',
-                          bd=4, command=self.okAction)
-        okButton.grid(row=0, column=0, sticky=E)
+        okButton = Button(buttonFrame, width=8, text='OK', command=self.okAction)
+        okButton.grid(row=0, column=0, sticky=N)
 
-        canlceButton = Button(buttonFrame, width=8, text='Cancel', relief='groove',
-                              bd=4, command=self.cancelAction)
-        canlceButton.grid(row=0, column=1, sticky=W)
+        canlceButton = Button(buttonFrame, width=8, text='Cancel', command=self.cancelAction)
+        canlceButton.grid(row=0, column=1, sticky=N)
 
     def body(self, master):
         self.rootFrame = master
@@ -62,6 +63,10 @@ class HostDialog(CustomDialog):
 
     def __init__(self, master, title, prefDefaults):
 
+        self.port = StringVar()
+        self.ip = StringVar()
+        self.mac = StringVar()
+        self.hostname = StringVar()
         self.prefValues = prefDefaults
         self.result = None
         CustomDialog.__init__(self, master, title)
@@ -76,36 +81,32 @@ class HostDialog(CustomDialog):
         remoteFrame.grid(row=1, column=1, sticky=W)
 
         Label(remoteFrame, text="Hostname:").grid(row=0, column=0, sticky=W)
-        self.hostnameEntry = Entry(remoteFrame)
-        self.hostnameEntry.grid(row=0, column=1)
+        Entry(remoteFrame, textvariable=self.hostname, state='disabled').grid(row=0, column=1)
         if 'hostname' in self.prefValues:
-            self.hostnameEntry.insert(0, self.prefValues['hostname'])
+            self.hostname.set(self.prefValues['hostname'])
 
         Label(remoteFrame, text="MAC Address:").grid(row=1, sticky=W)
-        self.macEntry = Entry(remoteFrame)
-        self.macEntry.grid(row=1, column=1)
+        Entry(remoteFrame, textvariable=self.mac).grid(row=1, column=1)
         if 'mac' in self.prefValues:
-            self.macEntry.insert(0, self.prefValues['mac'])
+            self.mac.set(self.prefValues['mac'])
 
         Label(remoteFrame, text="IP Address:").grid(row=2, sticky=W)
-        self.ipEntry = Entry(remoteFrame)
-        self.ipEntry.grid(row=2, column=1)
+        Entry(remoteFrame, textvariable=self.ip).grid(row=2, column=1)
         if 'ip' in self.prefValues:
-            self.ipEntry.insert(0, self.prefValues['ip'])
+            self.ip.set(self.prefValues['ip'])
 
         Label(remoteFrame, text="Port:").grid(row=3, sticky=W)
-        self.routeEntry = Entry(remoteFrame)
-        self.routeEntry.grid(row=3, column=1)
+        Entry(remoteFrame, textvariable=self.port).grid(row=3, column=1)
         if 'port' in self.prefValues:
-            self.routeEntry.insert(0, self.prefValues['port'])
+            self.port.set(self.prefValues['port'])
 
     def apply(self):
 
         results = {
-            'hostname': self.hostnameEntry.get(),
-            'mac': self.macEntry.get(),
-            'ip': self.ipEntry.get(),
-            'port': self.routeEntry.get(),
+            'hostname': self.hostname.get(),
+            'mac': self.mac.get(),
+            'ip': self.ip.get(),
+            'port': self.port.get(),
         }
         self.result = results
 
@@ -116,6 +117,10 @@ class SwitchDialog(CustomDialog):
 
         self.prefValues = prefDefaults
         self.result = None
+        self.ip = StringVar()
+        self.mac = StringVar()
+        self.port = StringVar()
+        self.hostame = StringVar()
         CustomDialog.__init__(self, master, title)
 
     def body(self, master):
@@ -124,48 +129,31 @@ class SwitchDialog(CustomDialog):
         Label(master, text='     ').grid(row=1, column=0)
         Label(master, text='     ').grid(row=1, column=2)
         Label(master, text='     ').grid(row=2, column=1)
+
         remoteFrame = LabelFrame(master, text='Switch parameters')
         remoteFrame.grid(row=1, column=1, sticky=W)
 
-        Label(remoteFrame, text="Hostname:").grid(row=0, column=0)
-        self.hostnameEntry = Entry(remoteFrame)
-        self.hostnameEntry.grid(row=0, column=1)
+        Label(remoteFrame, text="Hostname:").grid(row=0, column=0, sticky=W)
+        Entry(remoteFrame, textvariable=self.hostame, state='disabled').grid(row=0, column=1)
         if 'hostname' in self.prefValues:
-            self.hostnameEntry.insert(0, self.prefValues['hostname'])
+            self.hostame.set(self.prefValues['hostname'])
 
-        Label(remoteFrame, text="MAC Address:").grid(row=1, sticky=E)
-        self.macEntry = Entry(remoteFrame)
-        self.macEntry.grid(row=1, column=1)
+        Label(remoteFrame, text="MAC Address:").grid(row=1, sticky=W)
+        Entry(remoteFrame, textvariable=self.mac).grid(row=1, column=1)
         if 'mac' in self.prefValues:
-            self.macEntry.insert(0, self.prefValues['mac'])
+            self.mac.set(self.prefValues['mac'])
 
-        Label(remoteFrame, text="IP Address:").grid(row=2, sticky=E)
-        self.ipEntry = Entry(remoteFrame)
-        self.ipEntry.grid(row=2, column=1)
+        Label(remoteFrame, text="IP Address:").grid(row=2, sticky=W)
+        Entry(remoteFrame, textvariable=self.ip).grid(row=2, column=1)
         if 'ip' in self.prefValues:
-            self.ipEntry.insert(0, self.prefValues['ip'])
-
-        Label(remoteFrame, text="Port:").grid(row=3, sticky=W)
-        self.routeEntry = Entry(remoteFrame)
-        self.routeEntry.grid(row=3, column=1)
-        if 'port' in self.prefValues:
-            self.routeEntry.insert(0, self.prefValues['port'])
+            self.ip.set(self.prefValues['ip'])
 
     def apply(self):
 
         results = {
-            # 'cpu': self.cpuEntry.get(),
-            # 'cores':self.coreEntry.get(),
-            # 'sched':self.schedVar.get(),
-            'hostname': self.hostnameEntry.get(),
-            'mac': self.macEntry.get(),
-            'ip': self.ipEntry.get(),
-            'port': self.routeEntry.get(),
-            # 'startCommand':self.startEntry.get(),
-            # 'stopCommand':self.stopEntry.get(),
-            # 'privateDirectory':privateDirectories,
-            # 'externalInterfaces':externalInterfaces,
-            # 'vlanInterfaces':vlanInterfaces
+            'hostname': self.hostame.get(),
+            'mac': self.mac.get(),
+            'ip': self.ip.get(),
         }
         self.result = results
 
@@ -260,175 +248,92 @@ class LinkDialog(tkSimpleDialog.Dialog):
 
     def __init__(self, parent, title, linkDefaults):
 
+        self.propagation_speed = StringVar()
+        self.distance = StringVar()
+        self.bandwidth = StringVar()
         self.linkValues = linkDefaults
-        self.show_band = StringVar()
-        self.show_band_width = StringVar()
 
         tkSimpleDialog.Dialog.__init__(self, parent, title)
 
-    def update_value_bandwidth(self, event):
-        self.show_band_width.set(self.show_band_width.get())
-
     def body(self, master):
 
-        list_band_width = [10, 20, 100, 1000, 10000, 40000]
-
-        # self.showProtocolsOption = OptionMenu(master, self.showProtocols, *list_band_width)
-        # self.showProtocolsOption.grid(row=0, column=1, sticky='W')
-        # self.bandwidth = IntVar()
-        # self.bandwidth.set(1000)
         Label(master, text="Bandwidth:").grid(row=0, sticky=W)
-        self.e1 = OptionMenu(master, self.show_band_width, *list_band_width, command=self.update_value_bandwidth)
-        self.e1.grid(row=0, column=1)
+        Entry(master, textvariable=self.bandwidth, width=11).grid(row=0, column=1)
         Label(master, text="Mbps").grid(row=0, column=2, sticky=W)
         if 'bw' in self.linkValues:
-            self.show_band_width.set(self.linkValues['bw'])
+            self.bandwidth.set(self.linkValues['bw'])
         else:
-            self.show_band_width.set(list_band_width[3])
+            self.bandwidth.set(1000)
 
-        self.distance = IntVar()
-        self.distance.set(1)
         Label(master, text="Distance:").grid(row=1, sticky=W)
-        self.e2 = Entry(master, textvariable=self.distance, state='disable')
-        self.e2.grid(row=1, column=1)
+        Entry(master, textvariable=self.distance, width=11).grid(row=1, column=1)
         Label(master, text="m").grid(row=1, column=2, sticky=W)
         if 'distance' in self.linkValues:
-            self.e2.insert(0, str(self.linkValues['distance']))
+            self.distance.set(self.linkValues['distance'])
+        else:
+            self.distance.set(1)
 
-        self.propagation_speed = IntVar()
-        self.propagation_speed.set(240000000)
         Label(master, text="Propagation Speed:").grid(row=2, sticky=W)
-        self.e3 = Entry(master,textvariable=self.propagation_speed, state='disable')
-        self.e3.grid(row=2, column=1)
+        Entry(master, textvariable=self.propagation_speed, width=11).grid(row=2, column=1)
         Label(master, text="m/s").grid(row=2, column=2, sticky=W)
         if 'propagation_speed' in self.linkValues:
-            self.e3.insert(0, str(self.linkValues['propagation_speed']))
-
-
-        # Label(master, text="Delay:").grid(row=1, sticky=E)
-        # self.e2 = Entry(master)
-        # self.e2.grid(row=1, column=1)
-        # if 'delay' in self.linkValues:
-        #     self.e2.insert(0, self.linkValues['delay'])
-        #
-        # Label(master, text="Loss:").grid(row=2, sticky=E)
-        # self.e3 = Entry(master)
-        # self.e3.grid(row=2, column=1)
-        # Label(master, text="%").grid(row=2, column=2, sticky=W)
-        # if 'loss' in self.linkValues:
-        #     self.e3.insert(0, str(self.linkValues['loss']))
-        #
-        # Label(master, text="Max Queue size:").grid(row=3, sticky=E)
-        # self.e4 = Entry(master)
-        # self.e4.grid(row=3, column=1)
-        # if 'max_queue_size' in self.linkValues:
-        #     self.e4.insert(0, str(self.linkValues['max_queue_size']))
-        #
-        # Label(master, text="Jitter:").grid(row=4, sticky=E)
-        # self.e5 = Entry(master)
-        # self.e5.grid(row=4, column=1)
-        # if 'jitter' in self.linkValues:
-        #     self.e5.insert(0, self.linkValues['jitter'])
-        #
-        # Label(master, text="Speedup:").grid(row=5, sticky=E)
-        # self.e6 = Entry(master)
-        # self.e6.grid(row=5, column=1)
-        # if 'speedup' in self.linkValues:
-        #     self.e6.insert(0, str(self.linkValues['speedup']))
-
-        return self.e1  # initial focus
+            self.propagation_speed.set(self.linkValues['propagation_speed'])
+        else:
+            self.propagation_speed.set(240000000)
 
     def apply(self):
         self.result = {}
-
-        self.result['bw'] = int(self.show_band_width.get())
-        if len(self.e2.get()) > 0:
-            self.result['distance'] = int(self.e2.get())
-        if len(self.e3.get()) > 0:
-            self.result['propagation_speed'] = int(self.e3.get())
-        # if len(self.e4.get()) > 0:
-        #     self.result['max_queue_size'] = int(self.e4.get())
-        # if len(self.e5.get()) > 0:
-        #     self.result['jitter'] = self.e5.get()
-        # if len(self.e6.get()) > 0:
-        #     self.result['speedup'] = int(self.e6.get())
+        if len(self.bandwidth.get()) > 0:
+            self.result['bw'] = self.bandwidth.get()
+        if len(self.distance.get()) > 0:
+            self.result['distance'] = self.distance.get()
+        if len(self.propagation_speed.get()) > 0:
+            self.result['propagation_speed'] = self.propagation_speed.get()
 
 
 class ControllerDialog(tkSimpleDialog.Dialog):
 
     def __init__(self, parent, title, ctrlrDefaults=None):
+        self.ip = StringVar()
+        self.mac = StringVar()
+        self.port = StringVar()
+        self.hostame = StringVar()
+        self.protcolvar = StringVar()
+        self.var = StringVar()
         if ctrlrDefaults:
             self.ctrlrValues = ctrlrDefaults
 
         tkSimpleDialog.Dialog.__init__(self, parent, title)
 
     def body(self, master):
-        self.var = StringVar(master)
-        self.protcolvar = StringVar(master)
         remoteFrame = LabelFrame(master, text='Controller', padx=5, pady=5)
         remoteFrame.grid(row=0, column=0, columnspan=1, sticky=W)
         rowCount = 0
-        # Field for Hostname
-        Label(remoteFrame, text="Hostname:").grid(row=rowCount, sticky=E)
-        self.hostnameEntry = Entry(remoteFrame)
-        self.hostnameEntry.grid(row=rowCount, column=1)
-        self.hostnameEntry.insert(0, self.ctrlrValues['hostname'])
+
+        self.hostame.set(self.ctrlrValues['hostname'])
+        Label(remoteFrame, text="Hostname:").grid(row=rowCount, sticky=W)
+        Entry(remoteFrame, state='disabled', textvariable=self.hostame).grid(row=rowCount, column=1)
         rowCount += 1
 
-        # Field for Remove Controller Port
-        Label(remoteFrame, text="Port:").grid(row=rowCount, sticky=E)
-        self.e2 = Entry(remoteFrame)
-        self.e2.grid(row=rowCount, column=1)
-        self.e2.insert(0, self.ctrlrValues['remotePort'])
+        self.port.set(self.ctrlrValues['remotePort'])
+        Label(remoteFrame, text="Port:").grid(row=rowCount, sticky=W)
+        Entry(remoteFrame, state='disabled', textvariable=self.port).grid(row=rowCount, column=1)
         rowCount += 1
 
-        # Field for Controller Type
-        Label(remoteFrame, text="Mac:").grid(row=rowCount, sticky=E)
-        self.e3 = Entry(remoteFrame)
-        self.e3.grid(row=rowCount, column=1)
-        self.e3.insert(0, self.ctrlrValues['mac'])
-        # controllerType = self.ctrlrValues['controllerType']
-        # self.o1 = OptionMenu(master, self.var, "Remote Controller", "In-Band Controller", "OpenFlow Reference", "OVS Controller")
-        # self.o1.grid(row=rowCount, column=1, sticky=W)
-        # if controllerType == 'ref':
-        #     self.var.set("OpenFlow Reference")
-        # elif controllerType == 'inband':
-        #     self.var.set("In-Band Controller")
-        # elif controllerType == 'remote':
-        #     self.var.set("Remote Controller")
-        # else:
-
+        self.mac.set(self.ctrlrValues['mac'])
+        Label(remoteFrame, text="Mac:").grid(row=rowCount, sticky=W)
+        Entry(remoteFrame, textvariable=self.mac).grid(row=rowCount, column=1)
         rowCount += 1
 
-        # Field for Controller Protcol
-        # Label(master, text="Protocol:").grid(row=rowCount, sticky=E)
-        # if 'controllerProtocol' in self.ctrlrValues:
-        #     controllerProtocol = self.ctrlrValues['controllerProtocol']
-        # else:
-        #     controllerProtocol = 'tcp'
-        # self.protcol = OptionMenu(master, self.protcolvar, "TCP", "SSL")
-        # self.protcol.grid(row=rowCount, column=1, sticky=W)
-        # if controllerProtocol == 'ssl':
-        #     self.protcolvar.set("SSL")
-        # else:
-        #     self.protcolvar.set("TCP")
-        # rowCount+=1
-
-        # Field for Remove Controller IP
-
+        self.ip.set(self.ctrlrValues['remoteIP'])
         Label(remoteFrame, text="IP Address:").grid(row=rowCount, sticky=E)
-        self.e1 = Entry(remoteFrame)
-        self.e1.grid(row=rowCount, column=1)
-        self.e1.insert(0, self.ctrlrValues['remoteIP'])
-        rowCount += 1
-
-        return self.hostnameEntry  # initial focus
+        Entry(remoteFrame, state='disabled', textvariable=self.ip).grid(row=rowCount, column=1)
 
     def apply(self):
-        self.result = {'hostname': self.hostnameEntry.get(),
-                       'remoteIP': self.e1.get(),
-                       'remotePort': int(self.e2.get()),
-                       'mac': self.e3.get()}
+        self.result = {'hostname': self.hostame.get(),
+                       'remoteIP': self.ip.get(),
+                       'remotePort': self.port.get(),
+                       'mac': self.mac.get()}
 
 
 class ToolTip(object):
@@ -452,7 +357,7 @@ class ToolTip(object):
         tw.wm_geometry("+%d+%d" % (x, y))
         try:
             # For Mac OS
-            # pylint: disable=protected-access
+            # pylint: disabled=protected-access
             tw.tk.call("::tk::unsupported::MacWindowStyle",
                        "style", tw._w,
                        "help", "noActivates")
@@ -859,7 +764,7 @@ class MiniEdit(Frame):
             self.link = self.canvas.create_line(sx, sy, dx, dy, width=4,
                                                 fill='blue', tag='link')
             c.itemconfig(self.link, tags=c.gettags(self.link) + ('data',))
-            print('opts:',link['opts'])
+            print('opts:', link['opts'])
 
             self.addLink(src, dest, linkopts=link['opts'])
             self.createDataLinkBindings()
@@ -957,7 +862,7 @@ class MiniEdit(Frame):
             try:
                 f = open(fileName, 'w')
                 f.write(json.dumps(savingDictionary, sort_keys=True, indent=4, separators=(',', ': ')))
-            # pylint: disable=broad-except
+            # pylint: disabled=broad-except
             except Exception as er:
                 print(er)
             # pylint: enable=broad-except
@@ -1014,7 +919,7 @@ class MiniEdit(Frame):
     def deleteItem(self, item):
         "Delete an item."
         # Don't delete while network is running
-        if self.buttons['Select']['state'] == 'disabled':
+        if self.buttons['Select']['state'] == 'disabledd':
             return
         # Delete from model
         if item in self.links:
@@ -1277,7 +1182,7 @@ class MiniEdit(Frame):
         stags = self.canvas.gettags(self.widgetToItem[source])
         dtags = self.canvas.gettags(target)
         # TODO: Make this less confusing
-        # pylint: disable=too-many-boolean-expressions
+        # pylint: disabled=too-many-boolean-expressions
         if (('Host' in stags and 'Host' in dtags) or
                 ('Controller' in dtags and 'LegacyRouter' in stags) or
                 ('Controller' in stags and 'LegacyRouter' in dtags) or
@@ -1317,16 +1222,6 @@ class MiniEdit(Frame):
 
         # We're done
         self.link = self.linkWidget = None
-
-    # Menu handlers
-
-    def createToolImages(self):
-        "Create toolbar (and icon) images."
-
-    @staticmethod
-    def checkIntf(intf):
-
-        return True
 
     def hostDetails(self, _ignore=None):
         if (self.selection is None or
@@ -1375,13 +1270,12 @@ class MiniEdit(Frame):
                     message = 'Error, the parameters (' + parameter + ') are not correct. Values will not be saved.'
                 else:
                     message = 'Error, the parameter (' + parameter + ') are not correct. The value will not be saved'
-                messagebox.showerror("Error", message + '\n\n'+ 'Help:\n\n' + message_help)
+                messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help)
             else:
                 self.hostOpts[name] = newHostOpts
 
     def switchDetails(self, _ignore=None):
         if (self.selection is None or
-                self.net is not None or
                 self.selection not in self.itemToWidget):
             return
         widget = self.itemToWidget[self.selection]
@@ -1394,8 +1288,8 @@ class MiniEdit(Frame):
         switchBox = SwitchDialog(self, title='Switch Details', prefDefaults=prefDefaults)
         self.master.wait_window(switchBox.top)
         if switchBox.result:
-            newSwitchOpts = {'nodeNum': self.switchOpts[name]['nodeNum']}
-            newSwitchOpts['controllers'] = self.switchOpts[name]['controllers']
+            newSwitchOpts = {'nodeNum': self.switchOpts[name]['nodeNum'],
+                             'controllers': self.switchOpts[name]['controllers']}
             utilities = Utilities.Utilities()
             parameter = ''
             correct = True
@@ -1410,16 +1304,12 @@ class MiniEdit(Frame):
             else:
                 correct = False
                 parameter = '{MAC address}'
+
             if len(switchBox.result['ip']) > 0 and utilities.ip_address_check(switchBox.result['ip']):
                 newSwitchOpts['ip'] = switchBox.result['ip']
             else:
                 correct = False
                 parameter += '{IP address}'
-            if len(switchBox.result['port']) > 0 and utilities.port_check(switchBox.result['port']):
-                newSwitchOpts['port'] = switchBox.result['port']
-            else:
-                parameter += '{Port}'
-                correct = False
 
             if not correct:
                 if len(parameter.split(' ')) > 0:
@@ -1427,8 +1317,6 @@ class MiniEdit(Frame):
                 else:
                     message = 'Error, the parameter (' + parameter + ') are not correct. The value will not be saved'
                 messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help)
-            else:
-                self.switchOpts[name] = newSwitchOpts
 
     def linkUp(self):
         if (self.selection is None or
@@ -1455,6 +1343,7 @@ class MiniEdit(Frame):
         self.canvas.itemconfig(link, dash=(4, 4))
 
     def linkDetails(self, _ignore=None):
+        correct = True
         if (self.selection is None or
                 self.net is not None):
             return
@@ -1466,8 +1355,30 @@ class MiniEdit(Frame):
         linkopts = linkDetail['opts']
         linkBox = LinkDialog(self, title='Link Details', linkDefaults=linkopts)
         if linkBox.result is not None:
-            linkDetail['opts'] = linkBox.result
+            utilities = Utilities.Utilities()
+            if len(linkBox.result['bw']) > 0 and utilities.is_number_positive(linkBox.result['bw']):
+                linkDetail['opts']['bw'] = linkBox.result['bw']
+            else:
+                correct = False
+                parameter = '( Bandwidth )'
+            if len(linkBox.result['distance']) > 0 and utilities.is_number_positive(linkBox.result['distance']):
+                linkDetail['opts']['distance'] = linkBox.result['distance']
+            else:
+                correct = False
+                parameter += '( Distance )'
+            if len(linkBox.result['propagation_speed']) > 0 and utilities.is_number_positive(
+                    linkBox.result['propagation_speed']):
+                linkDetail['opts']['propagation_speed'] = linkBox.result['propagation_speed']
+            else:
+                correct = False
+                parameter += '( Propagation Speed )'
 
+            if not correct:
+                if len(parameter.split(' ')) > 1:
+                    message = 'Error, the parameters [ ' + parameter + ' ] are not correct. Values will not be saved.'
+                else:
+                    message = 'Error, the parameter [' + parameter + '] are not correct. The value will not be saved.'
+                messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help_2)
 
     def controllerDetails(self, _ignore=None):
         if (self.selection is None or
@@ -1481,20 +1392,12 @@ class MiniEdit(Frame):
         if 'Controller' not in tags:
             return
 
-        print(self.controllers[name])
         ctrlrBox = ControllerDialog(self, title='Controller Details', ctrlrDefaults=self.controllers[name])
         print(ctrlrBox.result)
         if ctrlrBox.result:
             utilities = Utilities.Utilities()
             parameter = ''
             correct = True
-            # debug( 'Controller is ' + ctrlrBox.result[0], '\n' )
-            if len(ctrlrBox.result['hostname']) > 0:
-                name = ctrlrBox.result['hostname']
-                widget['text'] = name
-            else:
-                ctrlrBox.result['hostname'] = name
-            self.controllers[name] = ctrlrBox.result
 
             if len(ctrlrBox.result['hostname']) > 0:
                 self.controllers['hostname'] = ctrlrBox.result['hostname']
@@ -1504,25 +1407,26 @@ class MiniEdit(Frame):
                 self.controllers['mac'] = ctrlrBox.result['mac']
             else:
                 correct = False
-                parameter = '{MAC address}'
+                parameter = '( MAC address )'
             if len(ctrlrBox.result['remoteIP']) > 0 and utilities.ip_address_check(ctrlrBox.result['remoteIP']):
                 self.controllers['remoteIP'] = ctrlrBox.result['remoteIP']
             else:
                 correct = False
-                parameter += '{IP address}'
-            if ctrlrBox.result['remotePort'] > 0 and utilities.port_check(ctrlrBox.result['remotePort']):
+                parameter += '( IP address )'
+            if len(ctrlrBox.result['remotePort']) > 0 and utilities.port_check(ctrlrBox.result['remotePort']):
                 self.controllers['remotePort'] = ctrlrBox.result['remotePort']
             else:
                 parameter += '{Port}'
                 correct = False
 
             if not correct:
-                if len(parameter.split(' ')) > 0:
+                if len(parameter.split(' ')) > 1:
                     message = 'Error, the parameters (' + parameter + ') are not correct. Values will not be saved.'
                 else:
-                    message = 'Error, the parameter (' + parameter + ') are not correct. The value will not be saved'
+                    message = 'Error, the parameter (' + parameter + ') are not correct. The value will not be saved.'
                 messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help)
             else:
+                self.controllers[name] = ctrlrBox.result
                 # info('New controller details for ' + name + ' = ' + str(self.controllers[name]), '\n')
                 # Find references to controller and change name
                 if oldName != name:
@@ -1846,7 +1750,7 @@ class MiniEdit(Frame):
         customs = {}
         if os.path.isfile(fileName):
             with open(fileName, 'r') as f:
-                exec(f.read())  # pylint: disable=exec-used
+                exec(f.read())  # pylint: disabled=exec-used
             for name, val in customs.items():
                 self.setCustom(name, val)
         else:

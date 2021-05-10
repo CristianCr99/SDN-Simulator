@@ -1,13 +1,7 @@
-import re
-import scapy
 from scapy.layers.inet import *
-from scapy.sendrecv import sniff, AsyncSniffer, send
-import socket
-import tkinter as tk
-from scapy.utils import wrpcap, wireshark, rdpcap
-from IPy import IP
 
-class Utilities():
+
+class Utilities:
 
     def mac_address_check(self, mac_address):
         try:
@@ -19,8 +13,10 @@ class Utilities():
 
     def ip_address_check(self, ip_address):
         try:
-            IP(ip_address)
             if len(ip_address.split('.')) == 4:
+                for i in ip_address.split('.'):
+                    if not int(i) >= 0:
+                        return False
                 return True
             return False
         except:
@@ -29,36 +25,17 @@ class Utilities():
     def port_check(self, port):
         try:
             port_number = int(port)
-            if port_number >= 1 and port_number <= 65535:
+            if 1 <= port_number <= 65535:
                 return True
             return False
         except:
             return False
 
-
-
-
-utilities = Utilities()
-
-
-print(utilities.mac_address_check("00-11-22-33-44-66"))
-print(utilities.mac_address_check("1 2 3 4 5 6 7 8 9 a b c"))
-print(utilities.mac_address_check("This is not a mac"))
-print(utilities.mac_address_check("AA:BB:CC:a:EE:FF"))
-print(utilities.mac_address_check("AA:BB:CC:DD:EE:FF"))
-
-print('\n')
-
-
-print(utilities.ip_address_check("255.255.-1.255"))
-print(utilities.ip_address_check("255.255.255"))
-print(utilities.ip_address_check("255.255.255.255"))
-print(utilities.ip_address_check("0.255.255.255"))
-
-print('\n')
-
-print(utilities.port_check("0"))
-print(utilities.port_check("-100"))
-print(utilities.port_check("65536"))
-print(utilities.port_check("255.255.255"))
-print(utilities.port_check("20000"))
+    def is_number_positive(self, number):
+        try:
+            number = int(number)
+            if number > 0:
+                return True
+            return False
+        except:
+            return False
