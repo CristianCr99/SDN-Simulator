@@ -171,20 +171,17 @@ class NetworkTopology(object):
 
             if proactive == True and path[i]:
                 # def __init__(self, mac_src, mac_dst, ip_src, ip_dst, transport_protocol,port_src, port_dst, action):
-
                 miniNAM.display_multiple_packet('c0', path[i], None, True, 'Flow_Mod', 'c0' + '->' + path[i])
-
-
-
+                # miniNAM.join()
                 self.add_flow_entry_to_node(path[i], FlowEntry('*', '*', packet[IP].src,
                                                                packet[IP].dst, protocol ,packet[protocol].sport,
                                                                packet[protocol].dport, path[i + 1]))
                 print('flowMod a ', path[i])
 
-
             if path[i] == switch:
                 action = path[i + 1]
-
+        # for i in range(1, len(path) - 1):
+        # miniNAM.join()
 
         # Enviamos paquet_out a switch (Enviar graficamente)
         print('paquetOut a ', switch)

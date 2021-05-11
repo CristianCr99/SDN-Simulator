@@ -671,6 +671,7 @@ class MiniNAM(Frame, Thread):
         arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst]
         threading.Thread(target=self.displayPacket, args=arr).start()
 
+
     def movePacket(self, packet, image, delta, t):
         c = self.canvas
         i = 0
