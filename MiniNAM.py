@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 import tkinter.filedialog
 import tkinter.font
 import tkinter.simpledialog
@@ -293,7 +294,7 @@ class NodeStats(object):
             tw.destroy()
 
 
-class MiniNAM(Frame):
+class MiniNAM(Frame, Thread):
     "A realtime network animator for Mininet."
 
     def __init__(self, parent=None, cheight=720, cwidth=1280, locations={}):
@@ -665,6 +666,10 @@ class MiniNAM(Frame):
 
         except Exception:
             print('Excepción!!!!')
+
+    def display_multiple_packet(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst):
+        arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst]
+        threading.Thread(target=self.displayPacket, args=arr).start()
 
     def movePacket(self, packet, image, delta, t):
         c = self.canvas

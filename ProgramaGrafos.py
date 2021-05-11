@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+import threading
 from builtins import range
 import networkx as nx
 from scapy.layers.inet import *
@@ -170,7 +172,10 @@ class NetworkTopology(object):
             if proactive == True and path[i]:
                 # def __init__(self, mac_src, mac_dst, ip_src, ip_dst, transport_protocol,port_src, port_dst, action):
 
-                miniNAM.displayPacket('c0', path[i], None, True, 'Flow_Mod', 'c0' + '->' + path[i])
+                miniNAM.display_multiple_packet('c0', path[i], None, True, 'Flow_Mod', 'c0' + '->' + path[i])
+
+
+
                 self.add_flow_entry_to_node(path[i], FlowEntry('*', '*', packet[IP].src,
                                                                packet[IP].dst, protocol ,packet[protocol].sport,
                                                                packet[protocol].dport, path[i + 1]))
