@@ -1545,11 +1545,6 @@ class MiniNAM(Frame, Thread):
         # print(graph.get_list_packets_to_send()[host])
 
     def run_simulation(self):
-        # self.info_window_import
-        # p1 = Process(target=method1)  # create a process object p1
-        # p1.start()  # starts the process p1
-        # p2 = Process(target=method2)
-        # p2.start()
 
         if len(self.info_window_import) > 0:
             for host in self.info_window_import:
@@ -1559,14 +1554,10 @@ class MiniNAM(Frame, Thread):
                     for paquet in cola_eventos:
                         print('paquete:', paquet)
                         graph.communication_hots(app, host, paquet)
-                        # p = Pool(3)
-                        # p.map(graph.communication_hots, [app, host, paquet])
-                        # self.info_window_import[host].pop(0)
-                # p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / TCP(sport=4000, dport=3000)
-                # graph.communication_hots(app, 'h2', p2)
 
 
-def miniImages():
+
+def minimages():
     "Create and return images for MiniNAM."
 
     # Image data. Git will be unhappy. However, the alternative
