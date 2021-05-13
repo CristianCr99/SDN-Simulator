@@ -1,7 +1,7 @@
 from __future__ import print_function
 
-import threading
 from builtins import range
+
 import networkx as nx
 from scapy.layers.inet import *
 
@@ -60,6 +60,7 @@ class FlowEntry:
 class NetworkTopology(object):
     def __init__(self):
         self.G = nx.Graph()
+        self.proactive = True
         # self.list_Packets_to_send = {}
         # self.miniNam = None
         # self.MNAM = mn.MiniNAM()
@@ -125,15 +126,15 @@ class NetworkTopology(object):
             else:
                 protocol = 'UDP'
             print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
-                Ether].src,i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
-                IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,  i.get_port_dst() == packet[protocol].dport)
+                Ether].src, i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
+                      IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,
+                  i.get_port_dst() == packet[protocol].dport)
 
             if i.get_mac_src() == packet[Ether].src or i.get_mac_src() == '*' and i.get_mac_dst() == packet[
                 Ether].src or i.get_mac_dst() == '*' \
                     and i.get_ip_src() == packet[IP].src and i.get_ip_dst() == packet[
                 IP].dst and i.get_transport_protocol() == protocol \
                     and i.get_port_src() == packet[protocol].sport and i.get_port_dst() == packet[protocol].dport:
-
                 i.set_counter_packet_number(i.get_counter_packet_number() + 1)
                 i.set_counter_packet_byte(i.get_counter_packet_byte() + len(packet))
 
@@ -153,9 +154,8 @@ class NetworkTopology(object):
 
     def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
         # verInformacionConcretaNodo(self.G)
-        # TODO Preguntar por la otra funcion que te debuelve solo el camino deseado de un origen a un destino
 
-        #all_path = dict(nx.all_pairs_dijkstra_path(self.G, cutoff=None, weight='weight'))
+        # all_path = dict(nx.all_pairs_dijkstra_path(self.G, cutoff=None, weight='weight'))
 
         path = nx.dijkstra_path(self.G, src_host, dst_host, weight='bw')
         print(path)
@@ -174,7 +174,7 @@ class NetworkTopology(object):
                 miniNAM.display_multiple_packet('c0', path[i], None, True, 'Flow_Mod', 'c0' + '->' + path[i])
                 # miniNAM.join()
                 self.add_flow_entry_to_node(path[i], FlowEntry('*', '*', packet[IP].src,
-                                                               packet[IP].dst, protocol ,packet[protocol].sport,
+                                                               packet[IP].dst, protocol, packet[protocol].sport,
                                                                packet[protocol].dport, path[i + 1]))
                 print('flowMod a ', path[i])
 
@@ -189,10 +189,132 @@ class NetworkTopology(object):
         # self.miniNam.displayPacket('c0', 's' + str(switch), '')
         return action
 
-    def communication_hots(self, miniNAM, h_src, packet):
+    def processing_event_packet_generation(self, event, list_packets):
+        # print(event['packet_id'])
+        src_host, dst_host = self.find_hosts_by_ip_packet(list_packets[event['packet_id']])
 
+        # print('Hosts:', src_host, dst_host)
+
+        if src_host is not None and dst_host is not None:
+
+            if self.G.degree(src_host) == 1:  # solo puede un host estar conectado a un Switch
+
+                listEnlaces = list(self.G.edges(src_host))
+                Switch = tuple(listEnlaces[0])[1]  # Cogemos el Switch al cual esta conectado [1]
+                # print(src_host, Switch)
+
+                event = {'type': 'packet_propagation',
+                         'src': src_host,
+                         'dst': Switch,
+                         'time_spawn': event['time_spawn'],
+                         'packet_id': event['packet_id']
+                         }
+            return event
+        return 0
+
+    def processing_event_packet_propagation(self, event, list_packets):
+        if event['dst'] == 'c0' or event['src'] == 'c0':
+            propagation_delay = 0.06
+        else:
+            propagation_delay = self.G.edges[event['src'], event['dst']]['distance'] / \
+                                self.G.edges[event['src'], event['dst']]['propagation_speed'] + len(
+                list_packets[event['packet_id']]) / self.G.edges[event['src'], event['dst']]['bw']
+
+        if event['dst'] == 'c0':
+            type = 'packet_processing_controller'
+        else:
+            type = 'packet_processing_switch'
+
+        event = {'type': type,
+                 'src': event['src'],
+                 'dst': event['dst'],
+                 'time_spawn': event['time_spawn'] + propagation_delay,
+                 'packet_id': event['packet_id']
+                 }
+        return event
+
+    def processing_event_packet_match_and_action_switch(self, event, list_packets):
+        # print(event)
+        for i in (self.G.nodes[event['dst']]['flow_table']):
+            packet = list_packets[event['packet_id']]
+            if 'TCP' in packet:
+                protocol = 'TCP'
+            else:
+                protocol = 'UDP'
+            print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
+                Ether].src, i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
+                      IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,
+                  i.get_port_dst() == packet[protocol].dport)
+
+            if i.get_mac_src() == packet[Ether].src or i.get_mac_src() == '*' and i.get_mac_dst() == packet[
+                Ether].src or i.get_mac_dst() == '*' \
+                    and i.get_ip_src() == packet[IP].src and i.get_ip_dst() == packet[
+                IP].dst and i.get_transport_protocol() == protocol \
+                    and i.get_port_src() == packet[protocol].sport and i.get_port_dst() == packet[protocol].dport:
+                i.set_counter_packet_number(i.get_counter_packet_number() + 1)
+                i.set_counter_packet_byte(i.get_counter_packet_byte() + len(packet))
+
+                event = {'type': 'packet_propagation',
+                         'src': event['dst'],
+                         'dst': i.get_action(),
+                         'time_spawn': event['time_spawn'] + 0.1,
+                         'packet_id': event['packet_id']
+                         }
+                return event
+
+        event = {'type': 'packet_propagation',
+                 'src': event['dst'],
+                 'dst': 'c0',
+                 'time_spawn': event['time_spawn'] + 0.1,
+                 'packet_id': event['packet_id']
+                 }
+        return event
+
+    # def processing_event_packet_controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
+    def processing_event_packet_controller_action(self, event, list_packets, list_openflow_messages = []):
+
+        packet = list_packets[event['packet_id']]
         src_host, dst_host = self.find_hosts_by_ip_packet(packet)
-        print('Hosts:',src_host, dst_host)
+        path = nx.dijkstra_path(self.G, src_host, dst_host, weight='bw')
+        list_new_events = []
+
+        for i in range(1, len(path) - 1):
+            if path[i] == event['src']:
+                list_new_events.append({'type': 'packet_propagation',
+                                        'src': event['dst'],
+                                        'dst': path[i],
+                                        'action': 'packet_out ' + path[i + 1],
+                                        'time_spawn': event['time_spawn'] + 0.1,
+                                        'packet_id': event['packet_id']
+                                        })
+                list_openflow_messages.append()
+            if self.proactive and path[i]:
+                list_new_events.append({'type': 'packet_propagation',
+                                        'src': event['dst'],
+                                        'dst': path[i],
+                                        'action': 'flow_mod ' + path[i + 1],
+                                        'time_spawn': event['time_spawn'] + 0.1,
+                                        'packet_id': event['packet_id']
+                                        })
+        return list_new_events
+
+    def communication_hots(self, miniNAM, h_src, packet):
+        # Voy a dividir este metodo en varias partes mediante comentarios para luego pasarlo a diferentes metodos para el
+        # simulador de eventos discretos
+
+        #### (1) Estos seria el tratamiento de un paquete generado ####
+
+        # Recibe el evento:
+        #    - Type: packet_generation
+        #           - Time Spawn: TimeSpawn (del evento que está procesando)
+        #           - Origen: None
+        #           - Destino: None
+        #           - ID_paquete: (El que sea)
+        #
+
+        # Cogemos el paquete de la lista de paquetes mediante su id:
+        src_host, dst_host = self.find_hosts_by_ip_packet(packet)
+        print('Hosts:', src_host, dst_host)
 
         if src_host == h_src and dst_host is not None:
 
@@ -201,8 +323,28 @@ class NetworkTopology(object):
                 listEnlaces = list(self.G.edges(src_host))
                 Switch = tuple(listEnlaces[0])[1]  # Cogemos el Switch al cual esta conectado [1]
                 print(src_host, Switch)
+
+                # Puede devolver:
+                #       o Evento propagacion:
+                #           - Type: packet_propagation
+                #           - Time Spawn: TimeSpawn recibido (del evento que está procesando)
+                #           - Origen: src_host
+                #           - Destino: Switch
+                #           - ID_paquete: el mismo id que el recibido
+                ###############################################################
+
+                #### (2) Estos seria el tratamiento de una propagacion de un paquete por un enlace ####
+
+                # Recive el evento anteriormente mencionado
                 miniNAM.displayPacket(src_host, Switch, packet, False, None, src_host + '->' + dst_host)
                 print('Enviamos paquete a', Switch)
+                # Generaria un evento:
+                #       o Evento procesamiento:
+                #           - Type: packet_processing
+                #           - Time Spawn: TimeSpawn recibido + + TimeSpawn (calculado con el enlace (BW) y el paquete (SIZE))
+                #           - Origen: None
+                #           - Destino: Switch
+                #           - ID_paquete: el mismo id que el id del paquete recibido en el evento
 
                 has_arrived = False
 
@@ -213,7 +355,7 @@ class NetworkTopology(object):
                     if action == 0:
                         print('No Matchin')
                         miniNAM.displayPacket(Switch, 'c0', packet, True, 'Packet_In', Switch + '->' + 'c0')
-                        #def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
+                        # def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
                         action = self.controller_action(miniNAM, packet, src_host, dst_host, Switch, True)
 
                     print('enviamos paquete a', action)

@@ -17,14 +17,14 @@ from PIL import Image, ImageDraw
 from PIL import ImageTk as itk
 from networkx.readwrite import json_graph
 from scapy.layers.inet import *
+from ttkbootstrap import Style
 
+import InfoLinkWindow as info_link
+import InfoSwitchWindow as info_switch
 import PacketImportWindow as p_import_w
 import ProgramaGrafos as p
 import miniEdit as edit
-import InfoSwitchWindow as info_switch
-import InfoLinkWindow as info_link
-from ttkbootstrap import Style
-from multiprocessing import Pool
+from DiscreteEvents import DiscreteEvents
 
 
 class MyEncoder(JSONEncoder):
@@ -303,7 +303,6 @@ class MiniNAM(Frame, Thread):
         self.action = None
         self.info_window_import = {}
 
-
         # Defaults for preferences and filters
         self.appPrefs = {
             'flowTime': FLOWTIME[FLOWTIMEDEF],
@@ -544,8 +543,9 @@ class MiniNAM(Frame, Thread):
                 self.Nodes.append(
                     {'name': i, 'widget': None, 'type': "Switch", 'dpid': None, 'color': None, 'controllers': []})
             elif i[0] == 'h':
-                self.Nodes.append({'name': i, 'widget': None, 'type': "Host", 'ip': graph.get_graph().nodes()[i]['ip'],
-                                   'color': None})
+                self.Nodes.append(
+                    {'name': i, 'widget': None, 'type': "Host", 'ip': graph.get_graph().nodes()[i]['ip'],
+                     'color': None})
 
     def intfExists(self, interface):
         for data in self.intfData:
@@ -670,7 +670,6 @@ class MiniNAM(Frame, Thread):
     def display_multiple_packet(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst):
         arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst]
         threading.Thread(target=self.displayPacket, args=arr).start()
-
 
     def movePacket(self, packet, image, delta, t):
         c = self.canvas
@@ -1112,7 +1111,7 @@ class MiniNAM(Frame, Thread):
 
         editMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Edit", menu=editMenu)
-        editMenu.add_command(label="Preferences",command=self.prefDetails)
+        editMenu.add_command(label="Preferences", command=self.prefDetails)
         editMenu.add_command(label="Filters", command=self.filterDetails)
 
         runMenu = Menu(mbar, tearoff=False)
@@ -1223,17 +1222,18 @@ class MiniNAM(Frame, Thread):
 
                 print('hola', i)
                 if 'bw' in i['opts'] and 'distance' in i['opts'] and 'propagation_speed' in i['opts']:
-                    g.add_edges_from([(i['src'], i['dest'],
-                                       {'bw': int(i['opts']['bw']), 'distance': int(i['opts']['distance']),
-                                        'propagation_speed': int(i['opts']['propagation_speed'])})])
-                # else:
-                #     g.add_edges_from([(i['src'], i['dest'], {'bw': 1})])
+                    g.add_edge(i['src'], i['dest'], bw=int(i['opts']['bw']), distance=int(i['opts']['distance']),
+                               propagation_speed=int(i['opts']['propagation_speed']))
+                    # else:
+                    #     g.add_edges_from([(i['src'], i['dest'], {'bw': 1})])
 
-                print('info', list(g.edges))
+                    print('info', list(g.edges(data=True)))
 
         print('hola')
 
         graph.set_graph(g)
+        # print('infoooooooooooo', list(graph.get_graph().edges))
+        # print('infoooooooooooo', graph.get_graph().edges['h1','s1']['bw'])
         self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
         self.createNodes()
 
@@ -1335,7 +1335,7 @@ class MiniNAM(Frame, Thread):
         dst = linkDetail['dest']
         srcName, dstName = src['text'], dst['text']
         root = tkinter.Toplevel()
-        print(srcName,dstName)
+        print(srcName, dstName)
         info_s = info_link.InfoLinkWindow(root, graph.get_graph().edges[srcName, dstName], srcName + ',' + dstName)
         info_s.initialize_user_interface()
 
@@ -1546,18 +1546,54 @@ class MiniNAM(Frame, Thread):
 
     def run_simulation(self):
 
-        if len(self.info_window_import) > 0:
-            for host in self.info_window_import:
-                if len(self.info_window_import[host]) > 0:
-                    print('Enviamos los paquetes del host:', host)
-                    cola_eventos = self.info_window_import[host]
-                    for paquet in cola_eventos:
-                        print('paquete:', paquet)
-                        graph.communication_hots(app, host, paquet)
+        # if len(self.info_window_import) > 0:
+        #     for host in self.info_window_import:
+        #         if len(self.info_window_import[host]) > 0:
+        #             print('Enviamos los paquetes del host:', host)
+        #             cola_eventos = self.info_window_import[host]
+        #             for paquet in cola_eventos:
+        #                 print('paquete:', paquet)
+        #                 graph.communication_hots(app, host, paquet)
+
+        p1 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B2') / IP(src='192.168.120.131',
+                                                                          dst='192.168.120.132') / TCP(
+            sport=int('10'), dport=int('20'))
+
+        p2 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B3') / IP(src='192.168.120.131',
+                                                                          dst='192.168.120.133') / TCP(
+            sport=int('10'), dport=int('20'))
+
+        packets_data = {'1': p1, '2': p2}
+        packets_openflow = {}
+        event_queue = [{'type': 'packet_generation', 'src': None, 'dst': None, 'time_spawn': 1.0, 'packet_id': '1'},
+                       {'type': 'packet_generation', 'src': None, 'dst': None, 'time_spawn': 2.0, 'packet_id': '2'}]
+
+        discrete_events = DiscreteEvents(initial_event_list=event_queue, initial_packets_list=packets_data,
+                                         initial_openflow_list=packets_openflow)
+
+        while not discrete_events.is_empty_list_events():
+            event = discrete_events.unqueue_list_events()
+            print('Procesamos evento:', event)
+            if event['type'] == 'packet_generation':
+                new_event = graph.processing_event_packet_generation(event, packets_data)
+                if new_event != 0: discrete_events.inser_event(new_event)
+            if event['type'] == 'packet_propagation':
+                new_event = graph.processing_event_packet_propagation(event, packets_data)
+                discrete_events.inser_event(new_event)
+
+            if event['type'] == 'packet_processing_switch':
+                new_event = graph.processing_event_packet_match_and_action_switch(event, packets_data)
+                discrete_events.inser_event(new_event)
+
+            if event['type'] == 'packet_processing_controller':
+                # new_event = graph.processing_event_packet_match_and_action_switch(event, packets_data)
+                # discrete_events.inser_event(new_event)
+                print('')
 
 
 
-def minimages():
+
+def miniImages():
     "Create and return images for MiniNAM."
 
     # Image data. Git will be unhappy. However, the alternative
