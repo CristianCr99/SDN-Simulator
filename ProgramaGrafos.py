@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import uuid
 from builtins import range
 
 import networkx as nx
@@ -222,45 +223,76 @@ class NetworkTopology(object):
 
         if event['dst'] == 'c0':
             type = 'packet_processing_controller'
+        elif event['dst'][0] == 'h' :
+            type = 'packet_processing_host'
         else:
             type = 'packet_processing_switch'
 
-        event = {'type': type,
-                 'src': event['src'],
-                 'dst': event['dst'],
-                 'time_spawn': event['time_spawn'] + propagation_delay,
-                 'packet_id': event['packet_id']
-                 }
-        return event
+        if 'openflow_id' in event:
+            event = {'type': type,
+                     'src': event['src'],
+                     'dst': event['dst'],
+                     'time_spawn': event['time_spawn'] + propagation_delay,
+                     'packet_id': event['packet_id'],
+                     'openflow_id': event['openflow_id']
+                     }
+            return event
+        else:
+            event = {'type': type,
+                     'src': event['src'],
+                     'dst': event['dst'],
+                     'time_spawn': event['time_spawn'] + propagation_delay,
+                     'packet_id': event['packet_id']
+                     }
+            return event
 
-    def processing_event_packet_match_and_action_switch(self, event, list_packets):
+    def processing_event_packet_match_and_action_switch(self, event, list_packets, list_openflow):
         # print(event)
-        for i in (self.G.nodes[event['dst']]['flow_table']):
-            packet = list_packets[event['packet_id']]
-            if 'TCP' in packet:
-                protocol = 'TCP'
-            else:
-                protocol = 'UDP'
-            print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
-                Ether].src, i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
-                      IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,
-                  i.get_port_dst() == packet[protocol].dport)
-
-            if i.get_mac_src() == packet[Ether].src or i.get_mac_src() == '*' and i.get_mac_dst() == packet[
-                Ether].src or i.get_mac_dst() == '*' \
-                    and i.get_ip_src() == packet[IP].src and i.get_ip_dst() == packet[
-                IP].dst and i.get_transport_protocol() == protocol \
-                    and i.get_port_src() == packet[protocol].sport and i.get_port_dst() == packet[protocol].dport:
-                i.set_counter_packet_number(i.get_counter_packet_number() + 1)
-                i.set_counter_packet_byte(i.get_counter_packet_byte() + len(packet))
-
+        if 'openflow_id' in event:
+            if list_openflow[event['openflow_id']]['type'] == 'packet_out':
                 event = {'type': 'packet_propagation',
                          'src': event['dst'],
-                         'dst': i.get_action(),
+                         'dst': list_openflow[event['openflow_id']]['action'],
                          'time_spawn': event['time_spawn'] + 0.1,
                          'packet_id': event['packet_id']
                          }
                 return event
+            elif list_openflow[event['openflow_id']]['type'] == 'flow_mood':
+                if 'TCP' in list_packets[event['packet_id']]:
+                    protocol = 'TCP'
+                else:
+                    protocol = 'UDP'
+                self.add_flow_entry_to_node(event['dst'], FlowEntry('*', '*', list_packets[event['packet_id']][IP].src,
+                                                               list_packets[event['packet_id']][IP].dst, protocol, list_packets[event['packet_id']][protocol].sport,
+                                                               list_packets[event['packet_id']][protocol].dport, list_openflow[event['openflow_id']]['action']))
+                return 0
+        else:
+            for i in (self.G.nodes[event['dst']]['flow_table']):
+                packet = list_packets[event['packet_id']]
+                if 'TCP' in packet:
+                    protocol = 'TCP'
+                else:
+                    protocol = 'UDP'
+                print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
+                    Ether].src, i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
+                          IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,
+                      i.get_port_dst() == packet[protocol].dport)
+
+                if i.get_mac_src() == packet[Ether].src or i.get_mac_src() == '*' and i.get_mac_dst() == packet[
+                    Ether].src or i.get_mac_dst() == '*' \
+                        and i.get_ip_src() == packet[IP].src and i.get_ip_dst() == packet[
+                    IP].dst and i.get_transport_protocol() == protocol \
+                        and i.get_port_src() == packet[protocol].sport and i.get_port_dst() == packet[protocol].dport:
+                    i.set_counter_packet_number(i.get_counter_packet_number() + 1)
+                    i.set_counter_packet_byte(i.get_counter_packet_byte() + len(packet))
+
+                    event = {'type': 'packet_propagation',
+                             'src': event['dst'],
+                             'dst': i.get_action(),
+                             'time_spawn': event['time_spawn'] + 0.1,
+                             'packet_id': event['packet_id']
+                             }
+                    return event
 
         event = {'type': 'packet_propagation',
                  'src': event['dst'],
@@ -271,7 +303,7 @@ class NetworkTopology(object):
         return event
 
     # def processing_event_packet_controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
-    def processing_event_packet_controller_action(self, event, list_packets, list_openflow_messages = []):
+    def processing_event_packet_controller_action(self, event, list_packets, list_openflow_messages):
 
         packet = list_packets[event['packet_id']]
         src_host, dst_host = self.find_hosts_by_ip_packet(packet)
@@ -280,22 +312,29 @@ class NetworkTopology(object):
 
         for i in range(1, len(path) - 1):
             if path[i] == event['src']:
+                id = uuid.uuid4()
                 list_new_events.append({'type': 'packet_propagation',
                                         'src': event['dst'],
-                                        'dst': path[i],
-                                        'action': 'packet_out ' + path[i + 1],
+                                        'dst': event['src'],
                                         'time_spawn': event['time_spawn'] + 0.1,
-                                        'packet_id': event['packet_id']
+                                        'packet_id': event['packet_id'],
+                                        'openflow_id': id
                                         })
-                list_openflow_messages.append()
+
+                list_openflow_messages[id] = {'type': 'packet_out', 'action': path[i + 1],
+                                              'size': 10}  # TODO ver el tamanio real de un mensaje opnflow (p_out) y ponerlo aqui
+                # list_openflow_messages.append()
             if self.proactive and path[i]:
+                id = uuid.uuid4()
                 list_new_events.append({'type': 'packet_propagation',
                                         'src': event['dst'],
                                         'dst': path[i],
-                                        'action': 'flow_mod ' + path[i + 1],
                                         'time_spawn': event['time_spawn'] + 0.1,
-                                        'packet_id': event['packet_id']
+                                        'packet_id': event['packet_id'],
+                                        'openflow_id': id
                                         })
+                list_openflow_messages[id] = {'type': 'flow_mood', 'action': path[i + 1],
+                                              'size': 10}  # TODO ver el tamanio real de un mensaje opnflow (f_mood) y ponerlo aqui
         return list_new_events
 
     def communication_hots(self, miniNAM, h_src, packet):

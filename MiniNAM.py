@@ -1582,15 +1582,17 @@ class MiniNAM(Frame, Thread):
                 discrete_events.inser_event(new_event)
 
             if event['type'] == 'packet_processing_switch':
-                new_event = graph.processing_event_packet_match_and_action_switch(event, packets_data)
-                discrete_events.inser_event(new_event)
+                new_event = graph.processing_event_packet_match_and_action_switch(event, packets_data, packets_openflow)
+                if new_event != 0:
+                    discrete_events.inser_event(new_event)
 
             if event['type'] == 'packet_processing_controller':
-                # new_event = graph.processing_event_packet_match_and_action_switch(event, packets_data)
-                # discrete_events.inser_event(new_event)
-                print('')
-
-
+                new_event = graph.processing_event_packet_controller_action(event, packets_data, packets_openflow)
+                if len(new_event) > 0:
+                    for i in new_event:
+                        discrete_events.inser_event(i)
+            if event['type'] == 'packet_processing_host':
+                print('ha llegado al destino')
 
 
 def miniImages():
