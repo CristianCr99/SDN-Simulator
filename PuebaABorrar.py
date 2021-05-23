@@ -1,39 +1,25 @@
-# Python 3 code to demonstrate basics of SimPy package
-# Simulation of a Traffic Light
+import matplotlib.pyplot as plt
 
-# import the SimPy package
-import simpy
+# x axis values
+y = [1000, 230, 1000, 2323, 200, 2231]
+# corresponding y axis values
+x = [1, 2, 3, 4, 5, 6]
 
+# plotting the points
+plt.plot(x, y, color='#80cbcf', linestyle='dashed', linewidth=2,
+         marker='o', markerfacecolor='#9aca64', markersize=12)
 
-# Generator function that defines the working of the traffic light
-# "timeout()" function makes next yield statement wait for a
-# given time passed as the argument
-def Traffic_Light(env):
-    while True:
-        print("Light turns GRN at " + str(env.now))
+# setting x and y axis range
+plt.ylim(0, 4000)
+plt.xlim(1, len(x))
 
-        # Light is green for 25 seconds
-        yield env.timeout(25)
+# naming the x axis
+plt.xlabel('Packet (number)')
+# naming the y axis
+plt.ylabel('Delay (ms)')
 
-        print("Light turns YEL at " + str(env.now))
+# giving a title to my graph
+plt.title('Delay per Packet')
 
-        # Light is yellow for 5 seconds
-        yield env.timeout(5)
-
-        print("Light turns RED at " + str(env.now))
-
-        # Light is red for 60 seconds
-        yield env.timeout(60)
-
-
-# env is the environment variable
-
-
-env = simpy.Environment()
-
-# The process defined by the function Traffic_Light(env)
-# is added to the environment
-env.process(Traffic_Light(env))
-
-# The process is run for the first 180 seconds (180 is not included)
-env.run(until=180)
+# function to show the plot
+plt.show()

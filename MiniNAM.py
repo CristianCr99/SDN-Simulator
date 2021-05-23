@@ -26,6 +26,7 @@ import ProgramaGrafos as p
 import miniEdit as edit
 from DiscreteEvents import DiscreteEvents
 
+import time
 
 class MyEncoder(JSONEncoder):
     def default(self, o):
@@ -93,7 +94,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
 
         Label(self.typeColorsOpenFlow, text="Packet In").grid(row=0, column=1, sticky=W)
         self.PacketInColor = StringVar(self.typeColorsOpenFlow)
-        self.PacketInColor.set(self.typeColors["Packet_In"])
+        self.PacketInColor.set(self.typeColors["packet_in"])
         self.PacketInColorMenu = OptionMenu(self.typeColorsOpenFlow, self.PacketInColor, "None", "Red", "Green", "Blue",
                                             "Purple",
                                             'Brown', 'Cyan', 'Orange', 'Violet')
@@ -102,7 +103,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         # Selection of color for UDP
         Label(self.typeColorsOpenFlow, text="Packet Out").grid(row=0, column=2, sticky=W)
         self.PacketOutColor = StringVar(self.typeColorsOpenFlow)
-        self.PacketOutColor.set(self.typeColors["Packet_Out"])
+        self.PacketOutColor.set(self.typeColors["packet_out"])
         self.PacketOutColorMenu = OptionMenu(self.typeColorsOpenFlow, self.PacketOutColor, "None", "Red", "Green",
                                              "Blue", "Purple",
                                              'Brown', 'Cyan', 'Orange', 'Violet')
@@ -110,7 +111,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
 
         Label(self.typeColorsOpenFlow, text="Flow Mod").grid(row=0, column=3, sticky=W)
         self.FlowModColor = StringVar(self.typeColorsOpenFlow)
-        self.FlowModColor.set(self.typeColors["Flow_Mod"])
+        self.FlowModColor.set(self.typeColors["flow_mod"])
         self.FlowModColorMenu = OptionMenu(self.typeColorsOpenFlow, self.FlowModColor, "None", "Red", "Green", "Blue",
                                            "Purple",
                                            'Brown', 'Cyan', 'Orange', 'Violet')
@@ -307,7 +308,7 @@ class MiniNAM(Frame, Thread):
         self.appPrefs = {
             'flowTime': FLOWTIME[FLOWTIMEDEF],
             'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown',
-                           'Packet_In': 'Cyan', 'Packet_Out': 'Green', 'Flow_Mod': 'Red'},
+                           'packet_in': 'Cyan', 'packet_out': 'Green', 'flow_mod': 'Red'},
             'showAddr': 'Source and destination',
             'showNodeStats': 1
         }
@@ -591,7 +592,7 @@ class MiniNAM(Frame, Thread):
         except Exception as e:
             print(e)
 
-    def displayPacket(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst):
+    def displayPacket(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst, time):
 
         try:
             c = self.canvas
@@ -661,14 +662,19 @@ class MiniNAM(Frame, Thread):
             delta = deltax, deltay
             print('4')
             # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
-            t = float(self.appPrefs['flowTime']) * float(100) / 50000  # 1000 for ms and 50 for steps
+            t = (float(self.appPrefs['flowTime']) * float(100) / 50000.0) # 1000 for ms and 50 for steps
+
+            print('time:',t*1000.0)
+            start = self.current_milli_time()
             self.movePacket(packet, packetImage, delta, t)
+            end = self.current_milli_time()
+            print("Time elapsed:", end - start)
 
         except Exception:
             print('Excepción!!!!')
 
-    def display_multiple_packet(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst):
-        arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst]
+    def display_multiple_packet(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst, time):
+        arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst, time]
         threading.Thread(target=self.displayPacket, args=arr).start()
 
     def movePacket(self, packet, image, delta, t):
@@ -1116,7 +1122,7 @@ class MiniNAM(Frame, Thread):
 
         runMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Run", menu=runMenu)
-        runMenu.add_command(label="Run Simulation", command=self.run_simulation)
+        runMenu.add_command(label="Run Simulation", command=self.run_simulation2)
         runMenu.add_command(label="Pause", command=lambda: self.doRun(runMenu))
         runMenu.add_command(label="Pause2", command=self.pause)
         runMenu.add_command(label="Clear", command=self.clearQueue)
@@ -1559,8 +1565,8 @@ class MiniNAM(Frame, Thread):
                                                                           dst='192.168.120.132') / TCP(
             sport=int('10'), dport=int('20'))
 
-        p2 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B3') / IP(src='192.168.120.131',
-                                                                          dst='192.168.120.133') / TCP(
+        p2 = Ether(src='00:1B:44:11:3A:B2', dst='00:1B:44:11:3A:B3') / IP(src='192.168.120.132',
+                                                                          dst='192.168.120.131') / TCP(
             sport=int('10'), dport=int('20'))
 
         packets_data = {'1': p1, '2': p2}
@@ -1592,7 +1598,71 @@ class MiniNAM(Frame, Thread):
                     for i in new_event:
                         discrete_events.inser_event(i)
             if event['type'] == 'packet_processing_host':
-                print('ha llegado al destino')
+                print('ha llegado al destino el paquete con id:', event['packet_id'])
+
+    def current_milli_time(self):
+        return round(time.time() * 1000)
+
+    def processing_event(self):
+        if self.event != 0:
+            threading.Timer(1.0/1000.0, self.processing_event).start()
+        if (self.event['time_spawn']) * 1000.0 <= (self.current_milli_time() - self.start) and self.event != 0:
+
+            print('Procesamos evento:', self.event, 'en el instante de tiempo:', self.current_milli_time() - self.start)
+
+            if self.event['type'] == 'packet_generation':
+                new_event = graph.processing_event_packet_generation(self.event, self.packets_data)
+                if new_event != 0: self.discrete_events.inser_event(new_event)
+            if self.event['type'] == 'packet_propagation':
+                new_event = graph.processing_event_packet_propagation2(self.event, self.packets_data,self.packets_openflow,app)
+                self.discrete_events.inser_event(new_event)
+
+            if self.event['type'] == 'packet_processing_switch':
+                new_event = graph.processing_event_packet_match_and_action_switch(self.event, self.packets_data,self.packets_openflow)
+                if new_event != 0:
+                    self.discrete_events.inser_event(new_event)
+
+            if self.event['type'] == 'packet_processing_controller':
+                new_event = graph.processing_event_packet_controller_action(self.event, self.packets_data, self.packets_openflow)
+                if len(new_event) > 0:
+                    for i in new_event:
+                        self.discrete_events.inser_event(i)
+            if self.event['type'] == 'packet_processing_host':
+                print('ha llegado al destino el paquete con id:', self.event['packet_id'])
+
+            self.event = self.discrete_events.unqueue_list_events()
+
+        elif self.event == 0:
+            print('Fin de la simulacion')
+
+    def run_simulation2(self):
+
+
+
+        p1 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B2') / IP(src='192.168.120.131',
+                                                                          dst='192.168.120.132') / TCP(
+            sport=int('10'), dport=int('20'))
+
+        p2 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B3') / IP(src='192.168.120.132',
+                                                                          dst='192.168.120.133') / TCP(
+            sport=int('10'), dport=int('20'))
+
+        self.packets_data = {'1': p1, '2': p2}
+        self.packets_openflow = {}
+        self.event_queue = [{'type': 'packet_generation', 'src': None, 'dst': None, 'time_spawn': 1.0, 'packet_id': '1'},
+                       {'type': 'packet_generation', 'src': None, 'dst': None, 'time_spawn': 2.0, 'packet_id': '2'}]
+
+        self.discrete_events = DiscreteEvents(initial_event_list=self.event_queue, initial_packets_list=self.packets_data,
+                                         initial_openflow_list=self.packets_openflow)
+
+        self.event = self.discrete_events.unqueue_list_events()
+        self.start = self.current_milli_time()
+
+        threading.Timer(1.0 / 1000.0, self.processing_event).start()
+
+
+
+
 
 
 def miniImages():

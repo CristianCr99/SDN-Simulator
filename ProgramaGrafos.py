@@ -149,8 +149,10 @@ class NetworkTopology(object):
             if i[0] == 'h':
                 if self.G.nodes[i]['ip'] == packet[IP].src:
                     src_host = i
+                    print('host origen:', packet[IP].src)
                 if self.G.nodes[i]['ip'] == packet[IP].dst:
                     dst_host = i
+                    print('host destino:', packet[IP].dst)
         return src_host, dst_host
 
     def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
@@ -193,7 +195,7 @@ class NetworkTopology(object):
     def processing_event_packet_generation(self, event, list_packets):
         # print(event['packet_id'])
         src_host, dst_host = self.find_hosts_by_ip_packet(list_packets[event['packet_id']])
-
+        print(src_host,dst_host)
         # print('Hosts:', src_host, dst_host)
 
         if src_host is not None and dst_host is not None:
@@ -228,6 +230,45 @@ class NetworkTopology(object):
         else:
             type = 'packet_processing_switch'
 
+        if 'openflow_id' in event:
+            event = {'type': type,
+                     'src': event['src'],
+                     'dst': event['dst'],
+                     'time_spawn': event['time_spawn'] + propagation_delay,
+                     'packet_id': event['packet_id'],
+                     'openflow_id': event['openflow_id']
+                     }
+            return event
+        else:
+            event = {'type': type,
+                     'src': event['src'],
+                     'dst': event['dst'],
+                     'time_spawn': event['time_spawn'] + propagation_delay,
+                     'packet_id': event['packet_id']
+                     }
+            return event
+
+    def processing_event_packet_propagation2(self, event, list_packets,list_openflow,miniNAM):
+        if event['dst'] == 'c0' or event['src'] == 'c0':
+            propagation_delay = 0.06 + 3.5
+            is_openflow = True
+            type_message = list_openflow[event['openflow_id']]['type']
+        else:
+            # print('time:',float(miniNAM.appPrefs['flowTime']))
+            propagation_delay = (self.G.edges[event['src'], event['dst']]['distance'] / \
+                                self.G.edges[event['src'], event['dst']]['propagation_speed'] + len(
+                list_packets[event['packet_id']]) / self.G.edges[event['src'], event['dst']]['bw']) +3.5
+            is_openflow = False
+            type_message = None
+        if event['dst'] == 'c0':
+            type = 'packet_processing_controller'
+        elif event['dst'][0] == 'h':
+            type = 'packet_processing_host'
+        else:
+            type = 'packet_processing_switch'
+        # print(propagation_delay)
+        miniNAM.display_multiple_packet(event['src'], event['dst'], list_packets[event['packet_id']], is_openflow, type_message, event['src'] + '->' +  event['dst'], propagation_delay)
+        # print('hola')
         if 'openflow_id' in event:
             event = {'type': type,
                      'src': event['src'],
@@ -293,13 +334,15 @@ class NetworkTopology(object):
                              'packet_id': event['packet_id']
                              }
                     return event
-
+        id = uuid.uuid4()
         event = {'type': 'packet_propagation',
                  'src': event['dst'],
                  'dst': 'c0',
                  'time_spawn': event['time_spawn'] + 0.1,
-                 'packet_id': event['packet_id']
+                 'packet_id': event['packet_id'],
+                 'openflow_id': id
                  }
+        list_openflow[id] = {'type': 'packet_in','size': 10}
         return event
 
     # def processing_event_packet_controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
