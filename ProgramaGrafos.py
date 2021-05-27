@@ -257,7 +257,7 @@ class NetworkTopology(object):
             # print('time:',float(miniNAM.appPrefs['flowTime']))
             propagation_delay = (self.G.edges[event['src'], event['dst']]['distance'] / \
                                 self.G.edges[event['src'], event['dst']]['propagation_speed'] + len(
-                list_packets[event['packet_id']]) / self.G.edges[event['src'], event['dst']]['bw']) +3.5
+                list_packets[event['packet_id']]) / self.G.edges[event['src'], event['dst']]['bw']) + 3.5
             is_openflow = False
             type_message = None
         if event['dst'] == 'c0':
@@ -291,10 +291,19 @@ class NetworkTopology(object):
         # print(event)
         if 'openflow_id' in event:
             if list_openflow[event['openflow_id']]['type'] == 'packet_out':
+                if 'TCP' in list_packets[event['packet_id']]:
+                    protocol = 'TCP'
+                else:
+                    protocol = 'UDP'
+                self.add_flow_entry_to_node(event['dst'], FlowEntry('*', '*', list_packets[event['packet_id']][IP].src,
+                                                                    list_packets[event['packet_id']][IP].dst, protocol,
+                                                                    list_packets[event['packet_id']][protocol].sport,
+                                                                    list_packets[event['packet_id']][protocol].dport,
+                                                                    list_openflow[event['openflow_id']]['action']))
                 event = {'type': 'packet_propagation',
                          'src': event['dst'],
                          'dst': list_openflow[event['openflow_id']]['action'],
-                         'time_spawn': event['time_spawn'] + 0.1,
+                         'time_spawn': event['time_spawn'] + 0.1 + 0.1, # TODO Preguntar esta parte :(
                          'packet_id': event['packet_id']
                          }
                 return event
@@ -367,7 +376,7 @@ class NetworkTopology(object):
                 list_openflow_messages[id] = {'type': 'packet_out', 'action': path[i + 1],
                                               'size': 10}  # TODO ver el tamanio real de un mensaje opnflow (p_out) y ponerlo aqui
                 # list_openflow_messages.append()
-            if self.proactive and path[i]:
+            if self.proactive and path[i] and path[i] != event['src']:
                 id = uuid.uuid4()
                 list_new_events.append({'type': 'packet_propagation',
                                         'src': event['dst'],

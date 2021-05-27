@@ -30,14 +30,16 @@ class PackageImportWindow(tk.Frame):
         self.index = 1
         self.graph = graph
         self.showProtocolsOption = None
+        self.time_spawn = tk.IntVar()
+        self.time_spawn.set(0)
         self.initialize_user_interface()
 
     def get_list_packets(self):
         return self.list_packets
 
-    def edit(self, mac_src, mac_dst, ip_src, ip_dst, sport, dport, protocol):
+    def edit(self, mac_src, mac_dst, ip_src, ip_dst, sport, dport, protocol, time_spawn):
         selected_item = self.tree.selection()[0]
-        self.tree.item(selected_item, values=(mac_src, mac_dst, ip_src, ip_dst, sport, dport, protocol))
+        self.tree.item(selected_item, values=(mac_src, mac_dst, ip_src, ip_dst, sport, dport, protocol, time_spawn))
 
     def delete(self):
         if len(self.tree.selection()) > 0:
@@ -57,17 +59,17 @@ class PackageImportWindow(tk.Frame):
 
             i = 1
             for packet in self.list_packets:
-                if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
-                        'TCP' in packet or 'UDP' in packet):
-                    if 'TCP' in packet:
+                if ('MAC' in packet[0] or 'Ethernet' in packet[0]) and 'IP' in packet[0] and (
+                        'TCP' in packet[0] or 'UDP' in packet[0]):
+                    if 'TCP' in packet[0]:
                         protocol = 'TCP'
                     else:
                         protocol = 'UDP'
                     # Reinsertamos los paquetes actualizados
                     self.tree.insert('', 'end', iid=i, values=(
-                        i, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
-                        packet[protocol].sport,
-                        packet[protocol].dport, protocol))
+                        i, packet[0][Ether].src, packet[0][Ether].dst, packet[0][IP].src, packet[0][IP].dst,
+                        packet[0][protocol].sport,
+                        packet[0][protocol].dport, protocol, packet[1]))
                     i += 1
 
     def load_values(self):
@@ -83,6 +85,7 @@ class PackageImportWindow(tk.Frame):
             self.port_src.set(self.tree.item(selected_item)['values'][5])
             self.port_dst.set(self.tree.item(selected_item)['values'][6])
             self.protocol.set(self.tree.item(selected_item)['values'][7])
+            self.time_spawn.set(self.tree.item(selected_item)['values'][8])
             #
 
     def apply_changes(self):
@@ -97,23 +100,25 @@ class PackageImportWindow(tk.Frame):
             # item_chain = int(selected_item)
             # print(item_chain)
             # try:
-            self.list_packets[selected_item][Ether].src = self.mac_src.get()
-            self.list_packets[selected_item][Ether].dst = self.mac_dst.get()
-            self.list_packets[selected_item][IP].src = self.ip_src.get()
-            self.list_packets[selected_item][IP].dst = self.ip_dst.get()
-            if 'TCP' in self.list_packets[selected_item]:
+            #print(len(self.list_packets))
+            self.list_packets[selected_item - 1][0][Ether].src = self.mac_src.get()
+            self.list_packets[selected_item - 1][0][Ether].dst = self.mac_dst.get()
+            self.list_packets[selected_item - 1][0][IP].src = self.ip_src.get()
+            self.list_packets[selected_item - 1][0][IP].dst = self.ip_dst.get()
+            if 'TCP' in self.list_packets[selected_item - 1][0]:
                 transport_protocol = 'TCP'
             else:
                 transport_protocol = 'UDP'
 
             # print(transport_protocol, self.port_src.get())
 
-            self.list_packets[selected_item][transport_protocol].sport = int(self.port_src.get())
-            self.list_packets[selected_item][transport_protocol].dport = int(self.port_dst.get())
+            self.list_packets[selected_item - 1][0][transport_protocol].sport = int(self.port_src.get())
+            self.list_packets[selected_item - 1][0][transport_protocol].dport = int(self.port_dst.get())
 
             self.tree.item(selected_item, values=(
                 self.tree.item(selected_item)['values'][0], self.mac_src.get(), self.mac_dst.get(), self.ip_src.get(),
-                self.ip_dst.get(), self.port_src.get(), self.port_dst.get(), self.protocol.get()))
+                self.ip_dst.get(), self.port_src.get(), self.port_dst.get(), self.protocol.get(),
+                self.time_spawn.get()))
 
             # print('Cambio Correcto')
             # except OSError as error:
@@ -183,11 +188,11 @@ class PackageImportWindow(tk.Frame):
                                                                                        dst=self.ip_dst.get()) / UDP(
                             sport=int(self.port_src.get()), dport=int(self.port_dst.get()))
 
-                    self.list_packets.append(p)
+                    self.list_packets.append((p, self.time_spawn.get()))
                     self.tree.insert('', 'end', iid=self.index, values=(
                         self.index, p[Ether].src, p[Ether].dst, p[IP].src, p[IP].dst,
                         p[self.protocol.get()].sport,
-                        p[self.protocol.get()].dport, self.protocol.get()))
+                        p[self.protocol.get()].dport, self.protocol.get(), self.time_spawn.get()))
                     self.index += 1
             else:
                 message = ''
@@ -219,7 +224,7 @@ class PackageImportWindow(tk.Frame):
         self.tree.configure(yscrollcommand=self.scroll.set)
 
         self.tree['show'] = 'headings'
-        self.tree["columns"] = ("1", "2", "3", "4", "5", "6", "7", '8')
+        self.tree["columns"] = ("1", "2", "3", "4", "5", "6", "7", '8', '9')
         # Set the heading (Attribute Names)
         self.tree.heading('1', text='Num Packet')
         self.tree.heading('2', text='MAC Source')
@@ -229,15 +234,17 @@ class PackageImportWindow(tk.Frame):
         self.tree.heading('6', text='Port Source')
         self.tree.heading('7', text='Port Destination')
         self.tree.heading('8', text='Transport Protocol')
+        self.tree.heading('9', text='Time Spawn')
         # Specify attributes of the columns (We want to stretch it!)
-        self.tree.column('1', minwidth=120, width=120, stretch=False)
-        self.tree.column('2', minwidth=120, width=120, stretch=False)
-        self.tree.column('3', minwidth=120, width=120, stretch=False)
-        self.tree.column('4', minwidth=120, width=120, stretch=False)
-        self.tree.column('5', minwidth=120, width=120, stretch=False)
-        self.tree.column('6', minwidth=120, width=120, stretch=False)
-        self.tree.column('7', minwidth=120, width=120, stretch=False)
-        self.tree.column('8', minwidth=120, width=120, stretch=False)
+        self.tree.column('1', minwidth=120, width=145, stretch=False)
+        self.tree.column('2', minwidth=120, width=145, stretch=False)
+        self.tree.column('3', minwidth=120, width=145, stretch=False)
+        self.tree.column('4', minwidth=120, width=145, stretch=False)
+        self.tree.column('5', minwidth=120, width=145, stretch=False)
+        self.tree.column('6', minwidth=120, width=145, stretch=False)
+        self.tree.column('7', minwidth=120, width=145, stretch=False)
+        self.tree.column('8', minwidth=120, width=145, stretch=False)
+        self.tree.column('9', minwidth=120, width=145, stretch=False)
         self.tree.grid(row=0)
         # self.treeview = self.tree
 
@@ -257,6 +264,7 @@ class PackageImportWindow(tk.Frame):
         tk.Label(campos, text="       Port dst:  ").grid(row=2, column=6, sticky='w')
         tk.Label(campos, text="       Pransport protocol:  ").grid(row=1, column=8, sticky='w')
         tk.Label(campos, text="       Nº of packages to add:  ").grid(row=2, column=8, sticky='w')
+
         self.host_src.set(self.host)
         tk.Entry(campos, textvariable=self.host_src, width=10, state='disabled').grid(row=1, column=1, sticky='w')
         tk.Entry(campos, textvariable=self.mac_src, width=16, state='disabled').grid(row=1, column=3, sticky='w')
@@ -286,17 +294,20 @@ class PackageImportWindow(tk.Frame):
 
         tk.Entry(campos, textvariable=self.number_packets, width=10).grid(row=2, column=9, sticky='w')
 
-        tk.Label(campos, text='     ').grid(row=3, column=8)
-        tk.Label(campos, text='     ').grid(row=1, column=10)
-        tk.Label(campos, text='     ').grid(row=2, column=10)
-        tk.Label(campos, text='     ').grid(row=3, column=10)
+        tk.Label(campos, text='     ').grid(row=3, column=13)
+        tk.Label(campos, text='     ').grid(row=1, column=13)
+        tk.Label(campos, text='     ').grid(row=2, column=13)
+        tk.Label(campos, text='     ').grid(row=3, column=13)
 
-        tk.Button(campos, text=" Load values ", command=self.load_values, height=1, width=15).grid(row=1, column=11,
+        tk.Label(campos, text="       Time Spawn:  ").grid(row=1, column=11, sticky='w')
+        tk.Entry(campos, textvariable=self.time_spawn, width=7).grid(row=1, column=12, sticky='w')
+
+        tk.Button(campos, text=" Load values ", command=self.load_values, height=1, width=15).grid(row=1, column=14,
                                                                                                    sticky='E')
-        tk.Button(campos, text="Apply changes", command=self.apply_changes, height=1, width=15).grid(row=2, column=11,
+        tk.Button(campos, text="Apply changes", command=self.apply_changes, height=1, width=15).grid(row=2, column=14,
                                                                                                      sticky='E')
         tk.Button(campos, text="Add as new package", command=self.add_packets, height=1, width=15).grid(row=3,
-                                                                                                        column=11,
+                                                                                                        column=14,
                                                                                                         sticky='E')
         # tk.Label(campos, text=' ').grid(row=2, column=0)
 
@@ -330,7 +341,7 @@ class PackageImportWindow(tk.Frame):
             print(self.list_packets)
             print('longitusd:', len(self.master.info_window_import[self.host]))
             for i in range(0, len(self.master.info_window_import[self.host])):
-                packet = self.master.info_window_import[self.host][i]
+                packet, time_spawn = self.master.info_window_import[self.host][i]
                 packet.show()
                 print('MAC' in packet, 'Ethernet' in packet, 'IP' in packet, 'TCP' in packet, 'UDP' in packet)
                 if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
@@ -339,11 +350,11 @@ class PackageImportWindow(tk.Frame):
                         protocol = 'TCP'
                     else:
                         protocol = 'UDP'
-                    self.list_packets.append(packet)
+                    self.list_packets.append((packet,time_spawn))
                     self.tree.insert('', 'end', iid=self.index, values=(
                         self.index, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
                         packet[protocol].sport,
-                        packet[protocol].dport, protocol))
+                        packet[protocol].dport, protocol, time_spawn))
                     self.index += 1
 
     def return_list_packets(self):

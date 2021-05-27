@@ -1,6 +1,8 @@
 import json
+import math
 import os
 import threading
+import time
 import tkinter.filedialog
 import tkinter.font
 import tkinter.simpledialog
@@ -26,7 +28,6 @@ import ProgramaGrafos as p
 import miniEdit as edit
 from DiscreteEvents import DiscreteEvents
 
-import time
 
 class MyEncoder(JSONEncoder):
     def default(self, o):
@@ -422,6 +423,19 @@ class MiniNAM(Frame, Thread):
         # Gather topology info and create nodes
         self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
         self.createNodes()
+        # Label(text='Text on the screen')
+        self.chronometer = Label(self.cframe, text='\n Simulation Time \n\n00:00:000', padx=3, pady=3, relief="ridge")
+        self.chronometer.grid(row=0, column=1, sticky='NE', padx=3, pady=3)
+
+        self.stop_simulation = False
+        self.time_pause = 0
+        self.time_start_pause = 0
+        # self.chronometer.destroy()
+        # c = Canvas(self.cframe)
+        # c.grid(row=0, column=1, sticky='NE')
+        # c.create_text(100, 100, text="My Text")
+        # c.itemconfig(font=("courier", 12))
+
         # self.displayPacket('h1', 's1', "hola")
         # self.displayPacket('h1', 's1', "hola")
         # self.displayPacket('h1', 's1', "hola")
@@ -602,9 +616,14 @@ class MiniNAM(Frame, Thread):
             dstx, dsty = c.coords(self.widgetToItem[d])
 
             # Draw a rectangle shape for the packet
-            image1 = Image.new("RGBA", (45, 15))
-            draw = ImageDraw.Draw(image1)
-            draw.polygon([(0, 0), (0, 15), (45, 15), (40, 0)], "black")
+            if is_openflow and type_openflow == 'packet_out':
+                image1 = Image.new("RGBA", (90, 15))
+                draw = ImageDraw.Draw(image1)
+                draw.polygon([(0, 0), (0, 15), (90, 15), (90, 0)], "black")
+            else:
+                image1 = Image.new("RGBA", (45, 15))
+                draw = ImageDraw.Draw(image1)
+                draw.polygon([(0, 0), (0, 15), (45, 15), (45, 0)], "black")
 
             if is_openflow:
                 color_by_type_packet = self.appPrefs['typeColors']['OpenFlow']
@@ -612,6 +631,8 @@ class MiniNAM(Frame, Thread):
                 color_by_type_packet = self.appPrefs['typeColors']['Usertraffic']
 
             draw.polygon([(15, 0), (15, 15), (45, 15), (45, 0)], color_by_type_packet)
+            if type_openflow == 'packet_out':
+                draw.polygon([(15 + 45, 0), (15 + 45, 15), (45 + 45, 15), (45 + 45, 0)], color_by_type_packet)
             print('1')
             if not is_openflow:
                 try:
@@ -631,6 +652,10 @@ class MiniNAM(Frame, Thread):
             print(ip_color is not None)
             if ip_color is not None:
                 draw.polygon([(0, 0), (0, 15), (15, 15), (15, 0)], ip_color)
+                if type_openflow == 'packet_out':
+                    draw.polygon([(0 + 45, 0), (0 + 45, 15), (15 + 45, 15), (15 + 45, 0)],
+                                 self.appPrefs['typeColors']['flow_mod'])
+
             print('3')
             # If IP address is not displayed then rotate the packet along the link
             if self.appPrefs['showAddr'] == 'None':
@@ -653,6 +678,7 @@ class MiniNAM(Frame, Thread):
                 dy = 10 * cos(angle)
                 angle = 180 * angle / pi
                 draw.text((0, 0), h_src_dst)
+                draw.text((45, 0), h_src_dst)
                 packetImage = itk.PhotoImage(image1)
                 # dx, dy = 0, 0
             self.packetImage.append(packetImage)
@@ -662,9 +688,9 @@ class MiniNAM(Frame, Thread):
             delta = deltax, deltay
             print('4')
             # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
-            t = (float(self.appPrefs['flowTime']) * float(100) / 50000.0) # 1000 for ms and 50 for steps
+            t = (float(self.appPrefs['flowTime']) * float(100) / 50000.0)  # 1000 for ms and 50 for steps
 
-            print('time:',t*1000.0)
+            print('time:', t * 1000.0)
             start = self.current_milli_time()
             self.movePacket(packet, packetImage, delta, t)
             end = self.current_milli_time()
@@ -682,7 +708,7 @@ class MiniNAM(Frame, Thread):
         i = 0
         # Move the packet in 50 steps then remove the image
         while i < 50:
-            if self.active:
+            if self.stop_simulation == False:
                 i += 1
                 c.move(packet, delta[0], delta[1])
                 c.update()
@@ -1122,12 +1148,12 @@ class MiniNAM(Frame, Thread):
 
         runMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Run", menu=runMenu)
-        runMenu.add_command(label="Run Simulation", command=self.run_simulation2)
-        runMenu.add_command(label="Pause", command=lambda: self.doRun(runMenu))
-        runMenu.add_command(label="Pause2", command=self.pause)
-        runMenu.add_command(label="Clear", command=self.clearQueue)
-        fileMenu.add_separator()
-        runMenu.add_command(label='Show Interfaces Summary', command=self.intfInfo)
+        runMenu.add_command(label="Run", command=self.run_simulation2)
+        # runMenu.add_command(label="Pause", command=lambda: self.doRun(runMenu))
+        runMenu.add_command(label="Pause", command=self.pause_simulation)
+        runMenu.add_command(label="Reanude", command=self.reanude_simulation)
+        # fileMenu.add_separator()
+        # runMenu.add_command(label='Show Interfaces Summary', command=self.intfInfo)
         # runMenu.add_command(label='Show OVS Summary', font=font, command=self.ovsShow)
         # runMenu.add_command(label='Root Terminal', font=font, command=self.rootTerminal)
 
@@ -1285,11 +1311,14 @@ class MiniNAM(Frame, Thread):
                     list.append("")
             print(row_format.format("", *list))
 
-    def pause(self):
-        # TODO VER COMO HACER PARA DESACER EL .wait_window()
-        self.top.wait_window()
-        self.top.doRun()
-        # self.top.
+    def pause_simulation(self):
+        self.stop_simulation = True
+        self.time_start_pause = self.current_milli_time()
+
+    def reanude_simulation(self):
+        self.stop_simulation = False
+        self.time_pause += self.current_milli_time() - self.time_start_pause
+        # self.time_pause = 0
 
     def doRun(self, menu):
         "Run command."
@@ -1604,9 +1633,13 @@ class MiniNAM(Frame, Thread):
         return round(time.time() * 1000)
 
     def processing_event(self):
+        time = (self.current_milli_time() - self.start)
+        if not self.stop_simulation:
+            self.update_chronometer(time - self.time_pause)
         if self.event != 0:
-            threading.Timer(1.0/1000.0, self.processing_event).start()
-        if (self.event['time_spawn']) * 1000.0 <= (self.current_milli_time() - self.start) and self.event != 0:
+            threading.Timer(1.0 / 1000.0, self.processing_event).start()
+        if self.event != 0 and float(self.event['time_spawn']) * 1000.0 <= (
+                time - self.time_pause) and self.stop_simulation == False:
 
             print('Procesamos evento:', self.event, 'en el instante de tiempo:', self.current_milli_time() - self.start)
 
@@ -1614,16 +1647,19 @@ class MiniNAM(Frame, Thread):
                 new_event = graph.processing_event_packet_generation(self.event, self.packets_data)
                 if new_event != 0: self.discrete_events.inser_event(new_event)
             if self.event['type'] == 'packet_propagation':
-                new_event = graph.processing_event_packet_propagation2(self.event, self.packets_data,self.packets_openflow,app)
+                new_event = graph.processing_event_packet_propagation2(self.event, self.packets_data,
+                                                                       self.packets_openflow, app)
                 self.discrete_events.inser_event(new_event)
 
             if self.event['type'] == 'packet_processing_switch':
-                new_event = graph.processing_event_packet_match_and_action_switch(self.event, self.packets_data,self.packets_openflow)
+                new_event = graph.processing_event_packet_match_and_action_switch(self.event, self.packets_data,
+                                                                                  self.packets_openflow)
                 if new_event != 0:
                     self.discrete_events.inser_event(new_event)
 
             if self.event['type'] == 'packet_processing_controller':
-                new_event = graph.processing_event_packet_controller_action(self.event, self.packets_data, self.packets_openflow)
+                new_event = graph.processing_event_packet_controller_action(self.event, self.packets_data,
+                                                                            self.packets_openflow)
                 if len(new_event) > 0:
                     for i in new_event:
                         self.discrete_events.inser_event(i)
@@ -1635,34 +1671,59 @@ class MiniNAM(Frame, Thread):
         elif self.event == 0:
             print('Fin de la simulacion')
 
+    def update_chronometer(self, milliseconds):
+        milli = math.trunc(milliseconds % 1000)
+        seconds = math.trunc((milliseconds / 1000) % 60)
+        minutes = math.trunc((milliseconds / (1000 * 60)) % 60)
+        Label(self.cframe, text='\n Simulation Time \n\n' + str(minutes) + ':' + str(seconds) + ':' + str(milli),
+              padx=3, pady=3, relief="ridge").grid(row=0, column=1, sticky='NE', padx=3, pady=3)
+
     def run_simulation2(self):
 
+        # p1 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B2') / IP(src='192.168.120.131',
+        #                                                                   dst='192.168.120.132') / TCP(
+        #     sport=int('10'), dport=int('20'))
+        #
+        # p2 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B3') / IP(src='192.168.120.132',
+        #                                                                   dst='192.168.120.133') / TCP(
+        #     sport=int('10'), dport=int('20'))
 
-
-        p1 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B2') / IP(src='192.168.120.131',
-                                                                          dst='192.168.120.132') / TCP(
-            sport=int('10'), dport=int('20'))
-
-        p2 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B3') / IP(src='192.168.120.132',
-                                                                          dst='192.168.120.133') / TCP(
-            sport=int('10'), dport=int('20'))
-
-        self.packets_data = {'1': p1, '2': p2}
+        self.packets_data = {}
         self.packets_openflow = {}
-        self.event_queue = [{'type': 'packet_generation', 'src': None, 'dst': None, 'time_spawn': 1.0, 'packet_id': '1'},
-                       {'type': 'packet_generation', 'src': None, 'dst': None, 'time_spawn': 2.0, 'packet_id': '2'}]
+        self.event_queue = []
 
-        self.discrete_events = DiscreteEvents(initial_event_list=self.event_queue, initial_packets_list=self.packets_data,
-                                         initial_openflow_list=self.packets_openflow)
+        self.discrete_events = DiscreteEvents(initial_event_list=self.event_queue,
+                                              initial_packets_list=self.packets_data,
+                                              initial_openflow_list=self.packets_openflow)
+        i = 0
+        if len(self.info_window_import) > 0:
+            for host in self.info_window_import:
+                if len(self.info_window_import[host]) > 0:
+                    # print('Enviamos los paquetes del host:', host)
+                    cola_eventos = self.info_window_import[host]
+                    for paquet in cola_eventos:
+                        print('paquete:', paquet)
+                        self.packets_data[str(i)] = paquet[0]
+                        self.discrete_events.inser_event(
+                            {'type': 'packet_generation', 'src': host, 'dst': None, 'time_spawn': paquet[1],
+                             'packet_id': str(i)})
 
+                        i += 1
+                        print(i)
+                        # graph.communication_hots(app, host, paquet)
+
+        # print(self.packets_data)
+        # print(self.event_queue)
         self.event = self.discrete_events.unqueue_list_events()
         self.start = self.current_milli_time()
+        self.stop_simulation = False
+        self.update_chronometer(self.start)
 
+        # # print(self.event_queue)
         threading.Timer(1.0 / 1000.0, self.processing_event).start()
 
-
-
-
+        # arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst, time]
+        # threading.Thread(target=self.displayPacket, args=arr).start()
 
 
 def miniImages():
