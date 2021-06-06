@@ -8,6 +8,12 @@ from scapy.utils import wrpcap, wireshark, rdpcap
 # cache = []
 #
 p = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
+p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
+
+if p == p2:
+    print('Iguales!!')
+else:
+    print('No iguales!!')
 #
 # for i in range(0, 10):
 #     p = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)

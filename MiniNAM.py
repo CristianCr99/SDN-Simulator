@@ -2,7 +2,6 @@ import json
 import math
 import os
 import threading
-import time
 import tkinter.filedialog
 import tkinter.font
 import tkinter.simpledialog
@@ -21,12 +20,15 @@ from networkx.readwrite import json_graph
 from scapy.layers.inet import *
 from ttkbootstrap import Style
 
+import FlowInformation as fl_inf
 import InfoLinkWindow as info_link
 import InfoSwitchWindow as info_switch
 import PacketImportWindow as p_import_w
 import ProgramaGrafos as p
+import Utilities as utili
 import miniEdit as edit
 from DiscreteEvents import DiscreteEvents
+import simulationResultInformation as resultInfor
 
 
 class MyEncoder(JSONEncoder):
@@ -302,6 +304,7 @@ class MiniNAM(Frame, Thread):
     def __init__(self, parent=None, cheight=720, cwidth=1280, locations={}):
 
         Frame.__init__(self, parent)
+        self.list_processed_events = []
         self.action = None
         self.info_window_import = {}
 
@@ -1579,6 +1582,39 @@ class MiniNAM(Frame, Thread):
         # graph.get_list_packets_to_send()[host] = list_packets
         # print(graph.get_list_packets_to_send()[host])
 
+    def find_timeGeneration_timeArrive(self, id_packet):
+
+        time_generation = 0
+        time_arrive = 0
+        number_jumps = 0
+        host = 0
+
+        for i in self.list_processed_events:
+
+            if i != 0:
+                # print(i['type'] == 'packet_processing_switch', i['type'] == 'packet_processing_controller', i[
+                #    'type'] == 'packet_processing_host', i['packet_id'] == str(id_packet), 'condicion', i['type'] == 'packet_processing_switch' or i['type'] == 'packet_processing_controller' or i[
+                #    'type'] == 'packet_processing_host')
+
+                if i['type'] == 'packet_generation' and i['packet_id'] == str(id_packet):
+                    time_generation = i['time_spawn']
+                    host = i['src']
+                    print('hostttttttttttttttt', host)
+                elif i['type'] == 'packet_processing_host' and i['packet_id'] == str(id_packet):
+                    time_arrive = i['time_spawn']
+                elif (i['type'] == 'packet_processing_switch' or i['type'] == 'packet_processing_controller' or i[
+                    'type'] == 'packet_processing_host') and i['packet_id'] == str(id_packet):
+                    if 'openflow_id' in i:
+                        openflow_message = self.packets_openflow[i['openflow_id']]
+                        if openflow_message['type'] == 'packet_out' or openflow_message['type'] == 'packet_in':
+                            number_jumps += 1
+                            # print('ewr JAJA')
+                    else:
+                        print(i['type'])
+                        number_jumps += 1
+                        # print('ewr JAJA 222222')
+        return time_generation, time_arrive, number_jumps, host
+
     def run_simulation(self):
 
         # if len(self.info_window_import) > 0:
@@ -1638,10 +1674,11 @@ class MiniNAM(Frame, Thread):
             self.update_chronometer(time - self.time_pause)
         if self.event != 0:
             threading.Timer(1.0 / 1000.0, self.processing_event).start()
+
         if self.event != 0 and float(self.event['time_spawn']) * 1000.0 <= (
                 time - self.time_pause) and self.stop_simulation == False:
 
-            print('Procesamos evento:', self.event, 'en el instante de tiempo:', self.current_milli_time() - self.start)
+            print('Procesamos evento:', self.event, 'en el instante de tiempo:', time - self.time_pause)
 
             if self.event['type'] == 'packet_generation':
                 new_event = graph.processing_event_packet_generation(self.event, self.packets_data)
@@ -1667,9 +1704,11 @@ class MiniNAM(Frame, Thread):
                 print('ha llegado al destino el paquete con id:', self.event['packet_id'])
 
             self.event = self.discrete_events.unqueue_list_events()
+            self.list_processed_events.append(self.event)
 
         elif self.event == 0:
             print('Fin de la simulacion')
+            self.processing_results()
 
     def update_chronometer(self, milliseconds):
         milli = math.trunc(milliseconds % 1000)
@@ -1711,10 +1750,11 @@ class MiniNAM(Frame, Thread):
                         i += 1
                         print(i)
                         # graph.communication_hots(app, host, paquet)
-
+        # print(self.packets_data)
         # print(self.packets_data)
         # print(self.event_queue)
         self.event = self.discrete_events.unqueue_list_events()
+        self.list_processed_events.append(self.event)
         self.start = self.current_milli_time()
         self.stop_simulation = False
         self.update_chronometer(self.start)
@@ -1724,6 +1764,60 @@ class MiniNAM(Frame, Thread):
 
         # arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst, time]
         # threading.Thread(target=self.displayPacket, args=arr).start()
+
+    def find_packet_equal(self, list_packet, packet):
+        for i in list_packet:
+            # print('idX', i[0])
+            if i[1] == packet:
+                # print(i[1],packet)
+                return i[0]
+        return None
+
+    def processing_results(self):
+        list_flow = {}
+        list_packet = []
+        # print(self.packets_data)
+
+        for id_packet, packet in self.packets_data.items():
+            time_generation, time_arrive, number_jumps, host = self.find_timeGeneration_timeArrive(id_packet)
+            delay = (time_arrive - time_generation - (3.5 * (number_jumps + 1))) * 1000
+            print('DELAY', id_packet, delay)
+            # print(time_generation, time_arrive, number_jumps, host)
+            # print(delay * 1000)
+            id = self.find_packet_equal(list_packet, packet)
+            print('ID:', id)
+            # print('iddddd:', id)
+            if host not in list_flow:
+                list_flow[host] = {}
+            if id == None:
+                # list_packet[id_packet] = packet
+                list_flow[host][id_packet] = fl_inf.flow_information(packet)
+                list_flow[host][id_packet].add_delay(delay, time_generation)
+                list_packet.append((id_packet, packet, time_generation))
+            else:
+                list_flow[host][id].add_delay(delay, time_generation)
+
+        #     print(list_flow)
+        # print(list_flow)
+        # utilities = utili.Utilities()
+
+        root = tkinter.Toplevel()
+        # self.top.wait_variable()
+        # name = self.itemToWidget[self.selection]['text']
+        # print(name)
+        # p_import_w.PackageImportWindow(root=root, master=self, host=name, graph=graph)
+
+        resultInfor.ResultInformation(root=root, graph=graph, list_flow=list_flow)
+
+        # for node in graph.get_graph().nodes:
+        #     if node[0] == 'h' and node in list_flow:
+        #         for flujo in list_flow[node].items():
+        #             packet_delay_list = flujo[1].get_packet_delay_list()
+        #             print('Flujo', flujo[0], ':', packet_delay_list)
+        #             # print('1:', [i[0] for i in packet_delay_list], '2:', list(range(1, len(packet_delay_list) + 1 )))
+        #             list_delays = [i[0] for i in packet_delay_list]
+        #
+        #             utilities.create_graph(y=list_delays, x=list(range(1, len(list_delays) + 1)), x_label = 'Packet (number)', y_label='Delay (ms)', title_graph='Delay per Packet')
 
 
 def miniImages():
