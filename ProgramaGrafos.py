@@ -142,6 +142,7 @@ class NetworkTopology(object):
                 return i.get_action()
         return 0
 
+
     def find_hosts_by_ip_packet(self, packet):
         src_host = None
         dst_host = None
