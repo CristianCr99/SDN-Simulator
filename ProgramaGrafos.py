@@ -88,7 +88,7 @@ class NetworkTopology(object):
         # self.MNAM.addNode(num_controller, 'controller')
 
     def add_link(self, node_a, node_b, weight_link):
-        self.G.add_edge(node_a, node_b, weight=weight_link)
+        self.G.add_edge(node_a, node_b, weight=weight_link, load=[])
         # self.MNAM.drawLink(self.G.nodes[node_a]['name'], self.G.nodes[node_b]['name'])
 
     def add_flow_entry_to_node(self, node, flowentry):
@@ -141,8 +141,6 @@ class NetworkTopology(object):
 
                 return i.get_action()
         return 0
-
-
 
     def find_hosts_by_ip_packet(self, packet):
         src_host = None
@@ -197,7 +195,7 @@ class NetworkTopology(object):
     def processing_event_packet_generation(self, event, list_packets):
         # print(event['packet_id'])
         src_host, dst_host = self.find_hosts_by_ip_packet(list_packets[event['packet_id']])
-        print(src_host,dst_host)
+        print(src_host, dst_host)
         # print('Hosts:', src_host, dst_host)
 
         if src_host is not None and dst_host is not None:
@@ -208,6 +206,14 @@ class NetworkTopology(object):
                 Switch = tuple(listEnlaces[0])[1]  # Cogemos el Switch al cual esta conectado [1]
                 # print(src_host, Switch)
 
+                # if len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+                #     last_load = self.G.edges[src_host, Switch]['load'][-1][0]
+                # else:
+                #     last_load = 0
+                # load_packet = len(list_packets[event['packet_id']])
+                # new_load = last_load + load_packet
+                # self.G.edges[src_host, Switch]['load'].append((event['time_spawn'], new_load))  # TODO ooo
+
                 event = {'type': 'packet_propagation',
                          'src': src_host,
                          'dst': Switch,
@@ -217,51 +223,66 @@ class NetworkTopology(object):
             return event
         return 0
 
-    def processing_event_packet_propagation(self, event, list_packets):
-        if event['dst'] == 'c0' or event['src'] == 'c0':
-            propagation_delay = 0.06
-        else:
-            propagation_delay = self.G.edges[event['src'], event['dst']]['distance'] / \
-                                self.G.edges[event['src'], event['dst']]['propagation_speed'] + len(
-                list_packets[event['packet_id']]) / self.G.edges[event['src'], event['dst']]['bw']
+    # def processing_event_packet_propagation(self, event, list_packets):
+    #     if event['dst'] == 'c0' or event['src'] == 'c0':
+    #         propagation_delay = 0.06
+    #     else:
+    #         propagation_delay = self.G.edges[event['src'], event['dst']]['distance'] / \
+    #                             self.G.edges[event['src'], event['dst']]['propagation_speed'] + len(
+    #             list_packets[event['packet_id']]) / self.G.edges[event['src'], event['dst']]['bw']
+    #
+    #     if event['dst'] == 'c0':
+    #         type = 'packet_processing_controller'
+    #     elif event['dst'][0] == 'h':
+    #         type = 'packet_processing_host'
+    #     else:
+    #         type = 'packet_processing_switch'
+    #
+    #
+    #
+    #     if 'openflow_id' in event:
+    #         event = {'type': type,
+    #                  'src': event['src'],
+    #                  'dst': event['dst'],
+    #                  'time_spawn': event['time_spawn'] + propagation_delay,
+    #                  'packet_id': event['packet_id'],
+    #                  'openflow_id': event['openflow_id']
+    #                  }
+    #         return event
+    #     else:
+    #         event = {'type': type,
+    #                  'src': event['src'],
+    #                  'dst': event['dst'],
+    #                  'time_spawn': event['time_spawn'] + propagation_delay,
+    #                  'packet_id': event['packet_id']
+    #                  }
+    #         return event
 
-        if event['dst'] == 'c0':
-            type = 'packet_processing_controller'
-        elif event['dst'][0] == 'h' :
-            type = 'packet_processing_host'
-        else:
-            type = 'packet_processing_switch'
-
-        if 'openflow_id' in event:
-            event = {'type': type,
-                     'src': event['src'],
-                     'dst': event['dst'],
-                     'time_spawn': event['time_spawn'] + propagation_delay,
-                     'packet_id': event['packet_id'],
-                     'openflow_id': event['openflow_id']
-                     }
-            return event
-        else:
-            event = {'type': type,
-                     'src': event['src'],
-                     'dst': event['dst'],
-                     'time_spawn': event['time_spawn'] + propagation_delay,
-                     'packet_id': event['packet_id']
-                     }
-            return event
-
-    def processing_event_packet_propagation2(self, event, list_packets,list_openflow,miniNAM):
+    def processing_event_packet_propagation2(self, event, list_packets, list_openflow, miniNAM):
         if event['dst'] == 'c0' or event['src'] == 'c0':
             propagation_delay = 0.06 + 3.5
             is_openflow = True
             type_message = list_openflow[event['openflow_id']]['type']
+            load_packet = list_openflow[event['openflow_id']]['size']
         else:
             # print('time:',float(miniNAM.appPrefs['flowTime']))
+            load_packet = len(list_packets[event['packet_id']])
             propagation_delay = (self.G.edges[event['src'], event['dst']]['distance'] / \
-                                self.G.edges[event['src'], event['dst']]['propagation_speed'] + len(
-                list_packets[event['packet_id']]) / self.G.edges[event['src'], event['dst']]['bw']) + 3.5
+                                 self.G.edges[event['src'], event['dst']]['propagation_speed'] + load_packet /
+                                 self.G.edges[event['src'], event['dst']]['bw']) + 3.5
             is_openflow = False
             type_message = None
+        print('imprimir:::::::::::::: ', self.G.edges[event['src'], event['dst']])
+        if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+            last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
+        else:
+            last_load = 0
+
+        new_load = last_load + load_packet
+
+        if 'load' in self.G.edges[event['src'], event['dst']]:
+            self.G.edges[event['src'], event['dst']]['load'].append((event['time_spawn'], new_load))  # TODO ooooooooooo
+
         if event['dst'] == 'c0':
             type = 'packet_processing_controller'
         elif event['dst'][0] == 'h':
@@ -269,7 +290,9 @@ class NetworkTopology(object):
         else:
             type = 'packet_processing_switch'
         # print(propagation_delay)
-        miniNAM.display_multiple_packet(event['src'], event['dst'], list_packets[event['packet_id']], is_openflow, type_message, event['src'] + '->' +  event['dst'], propagation_delay)
+        miniNAM.display_multiple_packet(event['src'], event['dst'], list_packets[event['packet_id']], is_openflow,
+                                        type_message, event['src'] + '->' + event['dst'], propagation_delay)
+
         # print('hola')
         if 'openflow_id' in event:
             event = {'type': type,
@@ -302,12 +325,23 @@ class NetworkTopology(object):
                                                                     list_packets[event['packet_id']][protocol].sport,
                                                                     list_packets[event['packet_id']][protocol].dport,
                                                                     list_openflow[event['openflow_id']]['action']))
+
+                if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+                    last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
+                else:
+                    last_load = 0
+                load_packet = list_openflow[event['openflow_id']]['size']
+                new_load = last_load - load_packet
+                if 'load' in self.G.edges[event['src'], event['dst']]:
+                    self.G.edges[event['src'], event['dst']]['load'].append((event['time_spawn'], new_load))  # TODO ooo
+
                 event = {'type': 'packet_propagation',
                          'src': event['dst'],
                          'dst': list_openflow[event['openflow_id']]['action'],
-                         'time_spawn': event['time_spawn'] + 0.1 + 0.1, # TODO Preguntar esta parte :(
+                         'time_spawn': event['time_spawn'] + 0.1 + 0.1,  # TODO Preguntar esta parte :(
                          'packet_id': event['packet_id']
                          }
+
                 return event
             elif list_openflow[event['openflow_id']]['type'] == 'flow_mood':
                 if 'TCP' in list_packets[event['packet_id']]:
@@ -315,8 +349,21 @@ class NetworkTopology(object):
                 else:
                     protocol = 'UDP'
                 self.add_flow_entry_to_node(event['dst'], FlowEntry('*', '*', list_packets[event['packet_id']][IP].src,
-                                                               list_packets[event['packet_id']][IP].dst, protocol, list_packets[event['packet_id']][protocol].sport,
-                                                               list_packets[event['packet_id']][protocol].dport, list_openflow[event['openflow_id']]['action']))
+                                                                    list_packets[event['packet_id']][IP].dst, protocol,
+                                                                    list_packets[event['packet_id']][protocol].sport,
+                                                                    list_packets[event['packet_id']][protocol].dport,
+                                                                    list_openflow[event['openflow_id']]['action']))
+
+                if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+                    last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
+                else:
+                    last_load = 0
+                load_packet = list_openflow[event['openflow_id']]['size']
+                new_load = last_load - load_packet
+
+                if 'load' in self.G.edges[event['src'], event['dst']]:
+                    self.G.edges[event['src'], event['dst']]['load'].append((event['time_spawn'], new_load))  # TODO ooo
+
                 return 0
         else:
             for i in (self.G.nodes[event['dst']]['flow_table']):
@@ -325,10 +372,10 @@ class NetworkTopology(object):
                     protocol = 'TCP'
                 else:
                     protocol = 'UDP'
-                print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
-                    Ether].src, i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
-                          IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,
-                      i.get_port_dst() == packet[protocol].dport)
+                # print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
+                #     Ether].src, i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
+                #           IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,
+                #       i.get_port_dst() == packet[protocol].dport)
 
                 if i.get_mac_src() == packet[Ether].src or i.get_mac_src() == '*' and i.get_mac_dst() == packet[
                     Ether].src or i.get_mac_dst() == '*' \
@@ -338,6 +385,18 @@ class NetworkTopology(object):
                     i.set_counter_packet_number(i.get_counter_packet_number() + 1)
                     i.set_counter_packet_byte(i.get_counter_packet_byte() + len(packet))
 
+                    if 'load' in self.G.edges[event['src'], event['dst']] and len(
+                            self.G.edges[event['src'], event['dst']]['load']) > 0:
+                        last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
+                    else:
+                        last_load = 0
+                    load_packet = len(packet)
+                    new_load = last_load - load_packet
+
+                    if 'load' in self.G.edges[event['src'], event['dst']]:
+                        self.G.edges[event['src'], event['dst']]['load'].append(
+                            (event['time_spawn'], new_load))  # TODO ooo
+
                     event = {'type': 'packet_propagation',
                              'src': event['dst'],
                              'dst': i.get_action(),
@@ -345,6 +404,19 @@ class NetworkTopology(object):
                              'packet_id': event['packet_id']
                              }
                     return event
+
+            packet = list_packets[event['packet_id']]
+            if 'load' in self.G.edges[event['src'], event['dst']] and len(
+                    self.G.edges[event['src'], event['dst']]['load']) > 0:
+                last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
+            else:
+                last_load = 0
+
+            load_packet = len(packet)
+            new_load = last_load - load_packet
+
+            if 'load' in self.G.edges[event['src'], event['dst']]:
+                self.G.edges[event['src'], event['dst']]['load'].append((event['time_spawn'], new_load))  # TODO ooo
         id = uuid.uuid4()
         event = {'type': 'packet_propagation',
                  'src': event['dst'],
@@ -353,7 +425,7 @@ class NetworkTopology(object):
                  'packet_id': event['packet_id'],
                  'openflow_id': id
                  }
-        list_openflow[id] = {'type': 'packet_in','size': 10}
+        list_openflow[id] = {'type': 'packet_in', 'size': 50}
         return event
 
     # def processing_event_packet_controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
@@ -363,6 +435,15 @@ class NetworkTopology(object):
         src_host, dst_host = self.find_hosts_by_ip_packet(packet)
         path = nx.dijkstra_path(self.G, src_host, dst_host, weight='bw')
         list_new_events = []
+
+        if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+            last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
+        else:
+            last_load = 0
+        load_packet = len(packet)
+        new_load = last_load - load_packet
+        if 'load' in self.G.edges[event['src'], event['dst']]:
+            self.G.edges[event['src'], event['dst']]['load'].append((event['time_spawn'], new_load))  # TODO ooo
 
         for i in range(1, len(path) - 1):
             if path[i] == event['src']:
@@ -376,7 +457,7 @@ class NetworkTopology(object):
                                         })
 
                 list_openflow_messages[id] = {'type': 'packet_out', 'action': path[i + 1],
-                                              'size': 10}  # TODO ver el tamanio real de un mensaje opnflow (p_out) y ponerlo aqui
+                                              'size': 50}  # TODO ver el tamanio real de un mensaje opnflow (p_out) y ponerlo aqui
                 # list_openflow_messages.append()
             if self.proactive and path[i] and path[i] != event['src']:
                 id = uuid.uuid4()
@@ -388,83 +469,83 @@ class NetworkTopology(object):
                                         'openflow_id': id
                                         })
                 list_openflow_messages[id] = {'type': 'flow_mood', 'action': path[i + 1],
-                                              'size': 10}  # TODO ver el tamanio real de un mensaje opnflow (f_mood) y ponerlo aqui
+                                              'size': 50}  # TODO ver el tamanio real de un mensaje opnflow (f_mood) y ponerlo aqui
         return list_new_events
 
-    def communication_hots(self, miniNAM, h_src, packet):
-        # Voy a dividir este metodo en varias partes mediante comentarios para luego pasarlo a diferentes metodos para el
-        # simulador de eventos discretos
-
-        #### (1) Estos seria el tratamiento de un paquete generado ####
-
-        # Recibe el evento:
-        #    - Type: packet_generation
-        #           - Time Spawn: TimeSpawn (del evento que está procesando)
-        #           - Origen: None
-        #           - Destino: None
-        #           - ID_paquete: (El que sea)
-        #
-
-        # Cogemos el paquete de la lista de paquetes mediante su id:
-        src_host, dst_host = self.find_hosts_by_ip_packet(packet)
-        print('Hosts:', src_host, dst_host)
-
-        if src_host == h_src and dst_host is not None:
-
-            if self.G.degree(src_host) == 1:  # solo puede un host estar conectado a un Switch
-
-                listEnlaces = list(self.G.edges(src_host))
-                Switch = tuple(listEnlaces[0])[1]  # Cogemos el Switch al cual esta conectado [1]
-                print(src_host, Switch)
-
-                # Puede devolver:
-                #       o Evento propagacion:
-                #           - Type: packet_propagation
-                #           - Time Spawn: TimeSpawn recibido (del evento que está procesando)
-                #           - Origen: src_host
-                #           - Destino: Switch
-                #           - ID_paquete: el mismo id que el recibido
-                ###############################################################
-
-                #### (2) Estos seria el tratamiento de una propagacion de un paquete por un enlace ####
-
-                # Recive el evento anteriormente mencionado
-                miniNAM.displayPacket(src_host, Switch, packet, False, None, src_host + '->' + dst_host)
-                print('Enviamos paquete a', Switch)
-                # Generaria un evento:
-                #       o Evento procesamiento:
-                #           - Type: packet_processing
-                #           - Time Spawn: TimeSpawn recibido + + TimeSpawn (calculado con el enlace (BW) y el paquete (SIZE))
-                #           - Origen: None
-                #           - Destino: Switch
-                #           - ID_paquete: el mismo id que el id del paquete recibido en el evento
-
-                has_arrived = False
-
-                while has_arrived == False:
-
-                    action = self.match_and_action(Switch, packet)
-
-                    if action == 0:
-                        print('No Matchin')
-                        miniNAM.displayPacket(Switch, 'c0', packet, True, 'Packet_In', Switch + '->' + 'c0')
-                        # def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
-                        action = self.controller_action(miniNAM, packet, src_host, dst_host, Switch, True)
-
-                    print('enviamos paquete a', action)
-
-                    # Reenviamos el paquete a al siguiente Switch indicado por action (Enviar graficamente)
-
-                    if action == dst_host:
-                        # Se envia al host destino y ha llegado al destino (Enviar graficamente)
-                        print('Llega paquete al destino', action)
-                        miniNAM.displayPacket(Switch, dst_host, packet, False, None, src_host + '->' + dst_host)
-                        has_arrived = True
-                    else:
-                        print('Llega paquete a', action)
-                        miniNAM.displayPacket(Switch, action, packet, False, None, src_host + '->' + dst_host)
-
-                    Switch = action
+    # def communication_hots(self, miniNAM, h_src, packet):
+    #     # Voy a dividir este metodo en varias partes mediante comentarios para luego pasarlo a diferentes metodos para el
+    #     # simulador de eventos discretos
+    #
+    #     #### (1) Estos seria el tratamiento de un paquete generado ####
+    #
+    #     # Recibe el evento:
+    #     #    - Type: packet_generation
+    #     #           - Time Spawn: TimeSpawn (del evento que está procesando)
+    #     #           - Origen: None
+    #     #           - Destino: None
+    #     #           - ID_paquete: (El que sea)
+    #     #
+    #
+    #     # Cogemos el paquete de la lista de paquetes mediante su id:
+    #     src_host, dst_host = self.find_hosts_by_ip_packet(packet)
+    #     print('Hosts:', src_host, dst_host)
+    #
+    #     if src_host == h_src and dst_host is not None:
+    #
+    #         if self.G.degree(src_host) == 1:  # solo puede un host estar conectado a un Switch
+    #
+    #             listEnlaces = list(self.G.edges(src_host))
+    #             Switch = tuple(listEnlaces[0])[1]  # Cogemos el Switch al cual esta conectado [1]
+    #             print(src_host, Switch)
+    #
+    #             # Puede devolver:
+    #             #       o Evento propagacion:
+    #             #           - Type: packet_propagation
+    #             #           - Time Spawn: TimeSpawn recibido (del evento que está procesando)
+    #             #           - Origen: src_host
+    #             #           - Destino: Switch
+    #             #           - ID_paquete: el mismo id que el recibido
+    #             ###############################################################
+    #
+    #             #### (2) Estos seria el tratamiento de una propagacion de un paquete por un enlace ####
+    #
+    #             # Recive el evento anteriormente mencionado
+    #             miniNAM.displayPacket(src_host, Switch, packet, False, None, src_host + '->' + dst_host)
+    #             print('Enviamos paquete a', Switch)
+    #             # Generaria un evento:
+    #             #       o Evento procesamiento:
+    #             #           - Type: packet_processing
+    #             #           - Time Spawn: TimeSpawn recibido + + TimeSpawn (calculado con el enlace (BW) y el paquete (SIZE))
+    #             #           - Origen: None
+    #             #           - Destino: Switch
+    #             #           - ID_paquete: el mismo id que el id del paquete recibido en el evento
+    #
+    #             has_arrived = False
+    #
+    #             while has_arrived == False:
+    #
+    #                 action = self.match_and_action(Switch, packet)
+    #
+    #                 if action == 0:
+    #                     print('No Matchin')
+    #                     miniNAM.displayPacket(Switch, 'c0', packet, True, 'Packet_In', Switch + '->' + 'c0')
+    #                     # def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
+    #                     action = self.controller_action(miniNAM, packet, src_host, dst_host, Switch, True)
+    #
+    #                 print('enviamos paquete a', action)
+    #
+    #                 # Reenviamos el paquete a al siguiente Switch indicado por action (Enviar graficamente)
+    #
+    #                 if action == dst_host:
+    #                     # Se envia al host destino y ha llegado al destino (Enviar graficamente)
+    #                     print('Llega paquete al destino', action)
+    #                     miniNAM.displayPacket(Switch, dst_host, packet, False, None, src_host + '->' + dst_host)
+    #                     has_arrived = True
+    #                 else:
+    #                     print('Llega paquete a', action)
+    #                     miniNAM.displayPacket(Switch, action, packet, False, None, src_host + '->' + dst_host)
+    #
+    #                 Switch = action
 
                 # Enviamos paquet_in al controlador
     # def create_topology(self, num_host, num_switch):

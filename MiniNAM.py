@@ -25,10 +25,9 @@ import InfoLinkWindow as info_link
 import InfoSwitchWindow as info_switch
 import PacketImportWindow as p_import_w
 import ProgramaGrafos as p
-import Utilities as utili
 import miniEdit as edit
-from DiscreteEvents import DiscreteEvents
 import simulationResultInformation as resultInfor
+from DiscreteEvents import DiscreteEvents
 
 
 class MyEncoder(JSONEncoder):
@@ -1258,7 +1257,7 @@ class MiniNAM(Frame, Thread):
                 print('hola', i)
                 if 'bw' in i['opts'] and 'distance' in i['opts'] and 'propagation_speed' in i['opts']:
                     g.add_edge(i['src'], i['dest'], bw=int(i['opts']['bw']), distance=int(i['opts']['distance']),
-                               propagation_speed=int(i['opts']['propagation_speed']))
+                               propagation_speed=int(i['opts']['propagation_speed']), load=[])
                     # else:
                     #     g.add_edges_from([(i['src'], i['dest'], {'bw': 1})])
 
@@ -1702,7 +1701,18 @@ class MiniNAM(Frame, Thread):
                         self.discrete_events.inser_event(i)
             if self.event['type'] == 'packet_processing_host':
                 print('ha llegado al destino el paquete con id:', self.event['packet_id'])
+                if 'load' in graph.get_graph().edges[self.event['src'], self.event['dst']] and len(
+                        graph.get_graph().edges[self.event['src'], self.event['dst']]['load']) > 0:
+                    last_load = graph.get_graph().edges[self.event['src'], self.event['dst']]['load'][-1][1]
+                else:
+                    last_load = 0
+                packet = self.packets_data[self.event['packet_id']]
+                load_packet = len(packet)
+                new_load = last_load - load_packet
 
+                if 'load' in graph.get_graph().edges[self.event['src'], self.event['dst']]:
+                    graph.get_graph().edges[self.event['src'], self.event['dst']]['load'].append(
+                        (self.event['time_spawn'], new_load))  # TODO ooo
             self.event = self.discrete_events.unqueue_list_events()
             self.list_processed_events.append(self.event)
 
