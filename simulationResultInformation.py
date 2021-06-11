@@ -101,6 +101,7 @@ class ResultInformation(tk.Frame):
         self.campos_load = tk.LabelFrame(self.canvas, text='Loading information for each link')  # text='host flows'
         self.campos_load.pack(padx=10, pady=10)
 
+
         ttk.Label(self.campos_load, text="Select the Link :").grid(row=1, column=0, sticky='NW', padx=10, pady=10)
 
         # Combobox creation
