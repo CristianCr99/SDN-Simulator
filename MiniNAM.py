@@ -862,20 +862,20 @@ class MiniNAM(Frame, Thread):
         icon.bindtags(tuple(bindtags))
         return icon
 
-    def randColor(self):
-
-        i = 0;
-        color = self.HOST_COLORS[i]
-        try:
-            while color in [node['color'] for node in self.Nodes]:
-                i += 1
-                color = self.HOST_COLORS[i]
-        except:
-            color = "#" + ("%06x" % random.randint(0, 16777215))
-            while any(color in sublist for sublist in self.Nodes):
-                color = "#" + ("%06x" % random.randint(0, 16777215))
-
-        return color
+    # def randColor(self):
+    #
+    #     i = 0;
+    #     color = self.HOST_COLORS[i]
+    #     try:
+    #         while color in [node['color'] for node in self.Nodes]:
+    #             i += 1
+    #             color = self.HOST_COLORS[i]
+    #     except:
+    #         color = "#" + ("%06x" % random.randint(0, 16777215))
+    #         while any(color in sublist for sublist in self.Nodes):
+    #             color = "#" + ("%06x" % random.randint(0, 16777215))
+    #
+    #     return color
 
     def newNamedNode(self, Node, x, y):
         # if 'ip' in Node:
@@ -894,7 +894,8 @@ class MiniNAM(Frame, Thread):
             node = 'Switch'
         elif type == 'Host':
             node = 'Host'
-            color = self.randColor()
+            # color = self.randColor() # He cambiado esta línea para quitar el método ese self.randColor() TODO
+            color = None
         elif type == 'Controlador':
             node = 'Controller'
             color = self.Controller_Color
