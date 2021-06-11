@@ -47,8 +47,8 @@ class ResultInformation(tk.Frame):
         frame = tk.Frame(self.canvas)
         self.canvas.create_window((0, 0), window=frame)
 
-        self.campos = tk.LabelFrame(self.canvas)  # text='host flows'
-        self.campos.pack()
+        self.campos = tk.LabelFrame(self.canvas, text= 'Information on the delay of each flow')  # text='host flows'
+        self.campos.pack(padx=10, pady=10)
 
         self.tree = ttk.Treeview(self.campos, height=18)
         self.tree['show'] = 'headings'
@@ -66,7 +66,7 @@ class ResultInformation(tk.Frame):
         self.tree.column('5', minwidth=70, width=70, stretch=False)
         self.tree.column('6', minwidth=90, width=90, stretch=False)
 
-        self.tree.grid(row=0, column=0)
+        self.tree.grid(row=0, column=0, padx=10, pady=10)
 
         tk.Button(self.canvas, text=" Load Graph ", command=self.load_graph, height=1, width=15).pack(side=BOTTOM)
 
@@ -98,10 +98,10 @@ class ResultInformation(tk.Frame):
 
                     i += 1
 
-        self.campos_load = tk.LabelFrame(self.canvas)  # text='host flows'
-        self.campos_load.pack()
+        self.campos_load = tk.LabelFrame(self.canvas, text='Loading information for each link')  # text='host flows'
+        self.campos_load.pack(padx=10, pady=10)
 
-        ttk.Label(self.campos_load, text="Select the Link :").grid(column=0,row=1, sticky='NW')
+        ttk.Label(self.campos_load, text="Select the Link :").grid(row=1, column=0, sticky='NW', padx=10, pady=10)
 
         # Combobox creation
         self.n = tk.StringVar()
@@ -147,14 +147,19 @@ class ResultInformation(tk.Frame):
 
         # monthchoosen['values'] = tuple(links_list)
         self.showHostsOption = tk.OptionMenu(self.campos_load, self.n, *links_list)
-        self.showHostsOption.grid(column=1, row=1, sticky='NW')
+        self.showHostsOption.grid( row=0, column=0, sticky='NW', padx=10, pady=10)
         self.canvas_img = Canvas(self.campos, width=500, height=390)  # width=400, height=350
-        self.canvas_img.grid(row=0, column=1)
+        self.canvas_img.grid(row=0, column=1,padx=10, pady=10)
 
         # monthchoosen.grid(column=1, row=1, sticky='NW')
         # monthchoosen.current()
-        ttk.Label(self.campos_load, text='              ').grid(column=0, row=0)
-        ttk.Label(self.campos_load, text='              ').grid(column=1, row=0)
+        # ttk.Label(self.campos_load, text='      ').grid(column=0, row=0)
+        # ttk.Label(self.campos_load, text='      ').grid(column=1, row=0)
+
+        # ttk.Label(self.campos, text='      ').grid(column=0, row=0)
+        # ttk.Label(self.campos, text='      ').grid(column=2, row=0)
+        # ttk.Label(self.campos, text='      ').grid(column=0, row=2)
+        # ttk.Label(self.campos, text='      ').grid(column=4, row=0)
 
         self.canvas_img_2 = Canvas(self.campos_load, width=700, height=390)  # width=400, height=350
-        self.canvas_img_2.grid(row=1, column=3)
+        self.canvas_img_2.grid(row=1, column=3, padx=10, pady=10)
