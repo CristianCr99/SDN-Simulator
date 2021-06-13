@@ -8,18 +8,19 @@ import Utilities as utilities
 
 
 class ResultInformation(tk.Frame):
-    def __init__(self, root, graph, list_flow, **kw):
+    def __init__(self, root, graph, list_flow, final_time ,**kw):
         super().__init__(**kw)
         self.root = root
         self.graph = graph
         self.list_flow = list_flow
+        self.final_time= final_time
 
         self.initialize_user_interface()
 
-    def on_configure(self, event):
-        # update scrollregion after starting 'mainloop'
-        # when all widgets are in canvas
-        self.canvas.configure(scrollregion=self.canvas.bbox('all'), width=1500, height=500)
+    # def on_configure(self, event):
+    #     # update scrollregion after starting 'mainloop'
+    #     # when all widgets are in canvas cheight=600, cwidth=1000
+    #     self.canvas.configure(scrollregion=self.canvas.bbox('all'), width=1000, height=600)
 
     def load_graph(self):
 
@@ -30,6 +31,9 @@ class ResultInformation(tk.Frame):
             self.img = PhotoImage(file='./GraphsImages/' + host_flow + '.png')
             self.canvas_img.create_image(0, 0, anchor=NW, image=self.img)
 
+
+    def load_graph_2(self):
+
         if self.n != '':
             self.img_2 = PhotoImage(file='./GraphsImages/Link_Load_' + self.n.get() + '.png')
             self.canvas_img_2.create_image(0, 0, anchor=NW, image=self.img_2)
@@ -37,20 +41,25 @@ class ResultInformation(tk.Frame):
     def initialize_user_interface(self):
 
         # --- create canvas with scrollbar ---
+        # self.width=1000
+        # self.height=600
 
-        self.canvas = tk.Canvas(self.root)
-        self.canvas.pack(side=tk.LEFT)
-        scrollbar = tk.Scrollbar(self.root, command=self.canvas.yview)
-        scrollbar.pack(side=tk.LEFT, fill='y')
-        self.canvas.configure(yscrollcommand=scrollbar.set)
-        self.canvas.bind('<Configure>', self.on_configure)
-        frame = tk.Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=frame)
 
-        self.campos = tk.LabelFrame(self.canvas, text= 'Information on the delay of each flow')  # text='host flows'
-        self.campos.pack(padx=10, pady=10)
+        self.root.geometry("1280x720")  # Width x Height
+        # self.canvas = tk.Canvas(self.root)
+        # self.canvas.pack(side=tk.LEFT)
+        # scrollbar = tk.Scrollbar(self.root, command=self.canvas.yview)
+        # scrollbar.pack(side=tk.LEFT, fill='y')
+        # self.canvas.configure(yscrollcommand=scrollbar.set)
+        # self.canvas.bind('<Configure>', self.on_configure)
+        # frame = tk.Frame(self.canvas)
 
-        self.tree = ttk.Treeview(self.campos, height=18)
+        # self.canvas.create_window((0, 0), window=frame)
+
+        self.campos = tk.LabelFrame(self.root, text= 'Information on the delay of each flow')  # text='host flows'
+        self.campos.pack(padx=5, pady=5)
+
+        self.tree = ttk.Treeview(self.campos, height=13)
         self.tree['show'] = 'headings'
         self.tree["columns"] = ("1", "2", "3", "4", "5", "6")
         self.tree.heading('1', text='Flow')
@@ -66,9 +75,9 @@ class ResultInformation(tk.Frame):
         self.tree.column('5', minwidth=70, width=70, stretch=False)
         self.tree.column('6', minwidth=90, width=90, stretch=False)
 
-        self.tree.grid(row=0, column=0, padx=10, pady=10)
+        self.tree.grid(row=0, column=0, padx=5, pady=5)
 
-        tk.Button(self.canvas, text=" Load Graph ", command=self.load_graph, height=1, width=15).pack(side=BOTTOM)
+        tk.Button(self.root, text=" Load Graph ", command=self.load_graph, height=1, width=15).pack()
 
         for node in self.graph.get_graph().nodes:
             if node[0] == 'h' and node in self.list_flow:
@@ -98,16 +107,13 @@ class ResultInformation(tk.Frame):
 
                     i += 1
 
-        self.campos_load = tk.LabelFrame(self.canvas, text='Loading information for each link')  # text='host flows'
-        self.campos_load.pack(padx=10, pady=10)
+        self.campos_load = tk.LabelFrame(self.root, text='Loading information for each link')  # text='host flows'
+        self.campos_load.pack(padx=5, pady=5)
 
 
-        ttk.Label(self.campos_load, text="Select the Link :").grid(row=1, column=0, sticky='NW', padx=10, pady=10)
+        ttk.Label(self.campos_load, text="Select the Link :").grid(row=0, column=0, sticky='NW', padx=5, pady=5)
 
-        # Combobox creation
         self.n = tk.StringVar()
-        # monthchoosen = ttk.OptionMenu(self.campos_load, textvariable=self.n)
-
 
         # Adding combobox drop down list
         links_list = []
@@ -125,8 +131,6 @@ class ResultInformation(tk.Frame):
                           if not (a in seen or seen.add(a))]
                 Output.reverse()
                 print(Output)
-                # x = [j[0] for j in Output]
-                # y = [i[1] for i in Output]
 
                 x = []
                 y = []
@@ -136,31 +140,28 @@ class ResultInformation(tk.Frame):
 
                 if 0 < len(x) == len(y) > 0:
                     links_list.append('[' + link[0] + ',' + link[1] + ']')
+                    if x[0] != 0:
+                        x.insert(0, 0)
+                        y.insert(0, 0)
+                    if x[-1] != self.final_time:
+                        x.append(self.final_time/1000)
+                        y.append(0)
+                    print(x,y)
                     util.create_graph(y=y, x_label='Time',
                                       x=x, y_label='Load (Bytes)',
                                       title_graph='Link Load: [' + link[0] + ',' + link[1] + ']',
                                       name='Link_Load_[' + link[0] + ',' + link[1] + ']' + '.png',
                                       dpi=80, bbox_inches='tight', x_range_min=0, is_delay=False)
 
-        # util.create_graph_multiple(list_edges=self.graph.get_graph().edges(data=True), x_label='Time',
-        #                            y_label='Load (Bytes)',
-        #                            name='Links_Load.png', title_graph='Links Load', dpi=80, bbox_inches='tight')
-
-        # monthchoosen['values'] = tuple(links_list)
         self.showHostsOption = tk.OptionMenu(self.campos_load, self.n, *links_list)
-        self.showHostsOption.grid( row=0, column=0, sticky='NW', padx=10, pady=10)
-        self.canvas_img = Canvas(self.campos, width=500, height=390)  # width=400, height=350
-        self.canvas_img.grid(row=0, column=1,padx=10, pady=10)
+        self.showHostsOption.grid(row=0, column=1, sticky='NW', padx=5, pady=5)
+        self.canvas_img = Canvas(self.campos, width=700, height=290)  # width=400, height=350
+        self.canvas_img.grid(row=0, column=1,padx=5, pady=5)
 
-        # monthchoosen.grid(column=1, row=1, sticky='NW')
-        # monthchoosen.current()
-        # ttk.Label(self.campos_load, text='      ').grid(column=0, row=0)
-        # ttk.Label(self.campos_load, text='      ').grid(column=1, row=0)
+        self.canvas_img_2 = Canvas(self.campos_load, width=1000, height=290)  # width=400, height=350
+        self.canvas_img_2.grid(row=0, column=2, padx=10, pady=5)
 
-        # ttk.Label(self.campos, text='      ').grid(column=0, row=0)
-        # ttk.Label(self.campos, text='      ').grid(column=2, row=0)
-        # ttk.Label(self.campos, text='      ').grid(column=0, row=2)
-        # ttk.Label(self.campos, text='      ').grid(column=4, row=0)
+        if len(links_list[0]) > 0:
+            self.n.set(links_list[0])
 
-        self.canvas_img_2 = Canvas(self.campos_load, width=700, height=390)  # width=400, height=350
-        self.canvas_img_2.grid(row=1, column=3, padx=10, pady=10)
+        tk.Button(self.root, text=" Load Graph ", command=self.load_graph_2, height=1, width=15).pack()

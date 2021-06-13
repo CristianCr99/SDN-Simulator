@@ -11,19 +11,20 @@ class InfoSwitchWindow(tk.Frame):
 
     def initialize_user_interface(self):
 
+        self.root.title('Switch ' + self.name  + ' information')
         campos = tk.LabelFrame(self.root, text=' Parameters of Switch ' + self.name + ' ')
-        campos.grid(row=0, column=0)
+        campos.grid(row=1, column=0, padx=5, pady=5)
 
         # tk.Label(campos, text=' ').grid(row=0, column=0)
-        tk.Label(campos, text="       MAC Address:  ").grid(row=1, column=0, sticky='w')
-        tk.Label(campos, text="       IP Address:  ").grid(row=1, column=2, sticky='w')
-        tk.Label(campos, text="       Port:  ").grid(row=1, column=4, sticky='w')
+        tk.Label(campos, text="MAC Address:").grid(row=1, column=0, sticky='w', padx=5, pady=5)
+        tk.Label(campos, text="IP Address:").grid(row=1, column=2, sticky='w', padx=5, pady=5)
+        # tk.Label(campos, text="Port:").grid(row=1, column=4, sticky='w', padx=5, pady=5)
         if 'mac' in self.switch_data:
-            tk.Label(campos, text=self.switch_data['mac']).grid(row=1, column=1, sticky='w')
+            tk.Label(campos, text=self.switch_data['mac']).grid(row=1, column=1, sticky='w', padx=5, pady=5)
         if 'ip' in self.switch_data:
-            tk.Label(campos, text=self.switch_data['ip']).grid(row=1, column=3, sticky='w')
-        if 'port' in self.switch_data:
-            tk.Label(campos, text=self.switch_data['port']).grid(row=1, column=5, sticky='w')
+            tk.Label(campos, text=self.switch_data['ip']).grid(row=1, column=3, sticky='w', padx=5, pady=5)
+        # if 'port' in self.switch_data:
+        #     tk.Label(campos, text=self.switch_data['port']).grid(row=1, column=5, sticky='w', padx=5, pady=5)
 
         # tk.Label(campos, text='     ').grid(row=2, column=0)
         # tk.Label(campos, text='     ').grid(row=4, column=0)
@@ -31,7 +32,7 @@ class InfoSwitchWindow(tk.Frame):
         self.tree = ttk.Treeview(self.root)
 
         self.scroll = tk.Scrollbar(self.root, orient="vertical", command=self.tree.yview)
-        self.scroll.grid(column=1, sticky='nsew')
+        self.scroll.grid(row=0,column=1, sticky='nsew')
         self.tree.configure(yscrollcommand=self.scroll.set)
 
         self.tree['show'] = 'headings'
@@ -60,7 +61,7 @@ class InfoSwitchWindow(tk.Frame):
         self.tree.column('9', minwidth=90, width=90, stretch=False)
         self.tree.column('10', minwidth=90, width=90, stretch=False)
         self.tree.column('11', minwidth=70, width=70, stretch=False)
-        self.tree.grid(row=1, column=0)
+        self.tree.grid(row=0, column=0)
 
         i = 1
         #self.G.nodes[node]['flow_table']

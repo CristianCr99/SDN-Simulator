@@ -58,14 +58,19 @@ class Utilities:
                      bbox_inches='tight', is_delay=True):
 
         if is_delay:
+            plt.figure(figsize=(10, 3.4))
             plt.plot(x, y, color=color, linestyle='dashed', linewidth=2,
                      marker='o', markerfacecolor=markerfacecolor, markersize=12)
             y_max = max(y)
-            plt.ylim(0, y_max + 0.1 * y_max)
+            plt.ylim(0, y_max + 0.4 * y_max)
             plt.xlim(1, len(x))
+            # plt.figure(figsize=(10, 5))
         else:
-            plt.figure(figsize=(10, 5))
-            plt.step(x, y, where='post', )
+            plt.figure(figsize=(15, 3.3))
+
+            plt.step(x, y, where='post')
+
+
         # naming the x axis
         plt.xlabel(x_label)  # 'Packet (number)'
         # naming the y axis
@@ -79,8 +84,8 @@ class Utilities:
             Path("./GraphsImages").mkdir(parents=True, exist_ok=True)
 
         if is_delay:
-            text_pos_x = 0
-            text_pos_y = - 0.05
+            text_pos_x = 0.2
+            text_pos_y = - 0.07
 
             jitter = self.calculate_jitter(y)
             plt.text(text_pos_x, text_pos_y,
@@ -90,8 +95,8 @@ class Utilities:
                      transform=plt.gcf().transFigure)
         # plt.rcParams['figure.figsize'] = [10, 10]
         else:
-            text_pos_x = 0.25
-            text_pos_y = - 0.05
+            text_pos_x = 0.35
+            text_pos_y = - 0.07
 
             plt.text(text_pos_x, text_pos_y, 'Max load:' + str(round(max(y), 2)) + ' Bytes   Min Load:' + str(round(min(
                 y), 2)) + ' Bytes   Avg Load: ' + str(round(sum(y) / len(y), 2)) + ' Bytes', fontsize=10,

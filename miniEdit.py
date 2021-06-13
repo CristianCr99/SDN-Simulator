@@ -31,19 +31,21 @@ class CustomDialog(object):
     def __init__(self, master, _title):
         self.top = Toplevel(master)
 
+        self.top.title(_title)
+
         self.bodyFrame = Frame(self.top)
         self.bodyFrame.grid(row=0, column=0, sticky='N')
         self.body(self.bodyFrame)
 
         # return self.b # initial focus
-        buttonFrame = Frame(self.top, relief='ridge', bd=3)
+        buttonFrame = Frame(self.top, bd=3)
         buttonFrame.grid(row=1, column=0, sticky=N)
 
         okButton = Button(buttonFrame, width=8, text='OK', command=self.okAction)
-        okButton.grid(row=0, column=0, sticky=N)
+        okButton.grid(row=0, column=0, sticky=N, padx=5, pady=5)
 
         canlceButton = Button(buttonFrame, width=8, text='Cancel', command=self.cancelAction)
-        canlceButton.grid(row=0, column=1, sticky=N)
+        canlceButton.grid(row=0, column=1, sticky=N, padx=5, pady=5)
 
     def body(self, master):
         self.rootFrame = master
@@ -73,30 +75,30 @@ class HostDialog(CustomDialog):
 
     def body(self, master):
 
-        Label(master, text=' ').grid(row=0, column=0)
-        Label(master, text='     ').grid(row=1, column=0)
-        Label(master, text='     ').grid(row=1, column=2)
-        Label(master, text='     ').grid(row=2, column=1)
-        remoteFrame = LabelFrame(master, text='Host parameters')
-        remoteFrame.grid(row=1, column=1, sticky=W)
+        # Label(master, text=' ').grid(row=0, column=0)
+        # Label(master, text='     ').grid(row=1, column=0)
+        # Label(master, text='     ').grid(row=1, column=2)
+        # Label(master, text='     ').grid(row=2, column=1)
+        # remoteFrame = LabelFrame(master, text='Host parameters')
+        # remoteFrame.grid(row=1, column=1, sticky=W)
 
-        Label(remoteFrame, text="Hostname:").grid(row=0, column=0, sticky=W)
-        Entry(remoteFrame, textvariable=self.hostname, state='disabled').grid(row=0, column=1)
+        Label(master, text="Hostname:").grid(row=0, column=0, sticky=W,padx=5, pady=5)
+        Entry(master, textvariable=self.hostname, state='disabled').grid(row=0, column=1,padx=5, pady=5)
         if 'hostname' in self.prefValues:
             self.hostname.set(self.prefValues['hostname'])
 
-        Label(remoteFrame, text="MAC Address:").grid(row=1, sticky=W)
-        Entry(remoteFrame, textvariable=self.mac).grid(row=1, column=1)
+        Label(master, text="MAC Address:").grid(row=1, sticky=W,padx=5, pady=5)
+        Entry(master, textvariable=self.mac).grid(row=1, column=1,padx=5, pady=5)
         if 'mac' in self.prefValues:
             self.mac.set(self.prefValues['mac'])
 
-        Label(remoteFrame, text="IP Address:").grid(row=2, sticky=W)
-        Entry(remoteFrame, textvariable=self.ip).grid(row=2, column=1)
+        Label(master, text="IP Address:").grid(row=2, sticky=W,padx=5, pady=5)
+        Entry(master, textvariable=self.ip).grid(row=2, column=1,padx=5, pady=5)
         if 'ip' in self.prefValues:
             self.ip.set(self.prefValues['ip'])
 
-        Label(remoteFrame, text="Port:").grid(row=3, sticky=W)
-        Entry(remoteFrame, textvariable=self.port).grid(row=3, column=1)
+        Label(master, text="Port:").grid(row=3, sticky=W,padx=5, pady=5)
+        Entry(master, textvariable=self.port).grid(row=3, column=1,padx=5, pady=5)
         if 'port' in self.prefValues:
             self.port.set(self.prefValues['port'])
 
@@ -125,26 +127,26 @@ class SwitchDialog(CustomDialog):
 
     def body(self, master):
 
-        Label(master, text=' ').grid(row=0, column=0)
-        Label(master, text='     ').grid(row=1, column=0)
-        Label(master, text='     ').grid(row=1, column=2)
-        Label(master, text='     ').grid(row=2, column=1)
+        # Label(master, text=' ').grid(row=0, column=0)
+        # Label(master, text='     ').grid(row=1, column=0)
+        # Label(master, text='     ').grid(row=1, column=2)
+        # Label(master, text='     ').grid(row=2, column=1)
 
-        remoteFrame = LabelFrame(master, text='Switch parameters')
-        remoteFrame.grid(row=1, column=1, sticky=W)
+        # remoteFrame = LabelFrame(master, text='Switch parameters')
+        # remoteFrame.grid(row=1, column=1, sticky=W)
 
-        Label(remoteFrame, text="Hostname:").grid(row=0, column=0, sticky=W)
-        Entry(remoteFrame, textvariable=self.hostame, state='disabled').grid(row=0, column=1)
+        Label(master, text="Hostname:").grid(row=0, column=0, sticky=W, padx=10, pady=5)
+        Entry(master, textvariable=self.hostame, state='disabled').grid(row=0, column=1, padx=10, pady=5)
         if 'hostname' in self.prefValues:
             self.hostame.set(self.prefValues['hostname'])
 
-        Label(remoteFrame, text="MAC Address:").grid(row=1, sticky=W)
-        Entry(remoteFrame, textvariable=self.mac).grid(row=1, column=1)
+        Label(master, text="MAC Address:").grid(row=1, sticky=W, padx=10, pady=5)
+        Entry(master, textvariable=self.mac).grid(row=1, column=1, padx=10, pady=5)
         if 'mac' in self.prefValues:
             self.mac.set(self.prefValues['mac'])
 
-        Label(remoteFrame, text="IP Address:").grid(row=2, sticky=W)
-        Entry(remoteFrame, textvariable=self.ip).grid(row=2, column=1)
+        Label(master, text="IP Address:").grid(row=2, sticky=W, padx=10, pady=5)
+        Entry(master, textvariable=self.ip).grid(row=2, column=1, padx=10, pady=5)
         if 'ip' in self.prefValues:
             self.ip.set(self.prefValues['ip'])
 
@@ -306,28 +308,28 @@ class ControllerDialog(tkSimpleDialog.Dialog):
         tkSimpleDialog.Dialog.__init__(self, parent, title)
 
     def body(self, master):
-        remoteFrame = LabelFrame(master, text='Controller', padx=5, pady=5)
-        remoteFrame.grid(row=0, column=0, columnspan=1, sticky=W)
+        # remoteFrame = LabelFrame(master, text='Controller', padx=5, pady=5)
+        # remoteFrame.grid(row=0, column=0, columnspan=1, sticky=W)
         rowCount = 0
 
         self.hostame.set(self.ctrlrValues['hostname'])
-        Label(remoteFrame, text="Hostname:").grid(row=rowCount, sticky=W)
-        Entry(remoteFrame, state='disabled', textvariable=self.hostame).grid(row=rowCount, column=1)
+        Label(master, text="Hostname:").grid(row=rowCount, sticky=W, padx=5, pady=5)
+        Entry(master, state='disabled', textvariable=self.hostame).grid(row=rowCount, column=1, padx=5, pady=5)
         rowCount += 1
 
         self.port.set(self.ctrlrValues['remotePort'])
-        Label(remoteFrame, text="Port:").grid(row=rowCount, sticky=W)
-        Entry(remoteFrame, state='disabled', textvariable=self.port).grid(row=rowCount, column=1)
+        Label(master, text="OpenFlow TCP Port:").grid(row=rowCount, sticky=W, padx=5, pady=5)
+        Entry(master, state='disabled', textvariable=self.port).grid(row=rowCount, column=1, padx=5, pady=5)
         rowCount += 1
 
         self.mac.set(self.ctrlrValues['mac'])
-        Label(remoteFrame, text="Mac:").grid(row=rowCount, sticky=W)
-        Entry(remoteFrame, textvariable=self.mac).grid(row=rowCount, column=1)
+        Label(master, text="Mac:").grid(row=rowCount, sticky=W, padx=5, pady=5)
+        Entry(master, textvariable=self.mac).grid(row=rowCount, column=1, padx=5, pady=5)
         rowCount += 1
 
         self.ip.set(self.ctrlrValues['remoteIP'])
-        Label(remoteFrame, text="IP Address:").grid(row=rowCount, sticky=E)
-        Entry(remoteFrame, state='disabled', textvariable=self.ip).grid(row=rowCount, column=1)
+        Label(master, text="IP Address:").grid(row=rowCount, sticky=W, padx=5, pady=5)
+        Entry(master, state='disabled', textvariable=self.ip).grid(row=rowCount, column=1, padx=5, pady=5)
 
     def apply(self):
         self.result = {'hostname': self.hostame.get(),
@@ -470,8 +472,8 @@ class MiniEdit(Frame):
         self.hostPopup = Menu(self.top, tearoff=0)
         self.hostPopup.add_command(label='Properties', font=self.font, command=self.hostDetails)
         self.switchPopup = Menu(self.top, tearoff=0)
-        self.switchPopup.add_command(label='Switch Options', font=self.font)
-        self.switchPopup.add_separator()
+        # self.switchPopup.add_command(label='Switch Options', font=self.font)
+        # self.switchPopup.add_separator()
         self.switchPopup.add_command(label='Properties', font=self.font, command=self.switchDetails)
 
         self.switchRunPopup = Menu(self.top, tearoff=0)
@@ -491,8 +493,8 @@ class MiniEdit(Frame):
         self.linkRunPopup.add_command(label='Link Down', font=self.font, command=self.linkDown)
 
         self.controllerPopup = Menu(self.top, tearoff=0)
-        self.controllerPopup.add_command(label='Controller Options', font=self.font)
-        self.controllerPopup.add_separator()
+        # self.controllerPopup.add_command(label='Controller Options', font=self.font)
+        # self.controllerPopup.add_separator()
         self.controllerPopup.add_command(label='Properties', font=self.font, command=self.controllerDetails)
 
         # Event handling initalization
@@ -788,8 +790,9 @@ class MiniEdit(Frame):
 
     def newTopology(self):
         "New command."
-        for widget in self.widgetToItem:
-            self.deleteItem(self.widgetToItem[widget])
+        keys = list(self.widgetToItem.keys())
+        for key in keys:
+            self.deleteItem(self.widgetToItem[key])
         self.hostCount = 0
         self.switchCount = 0
         self.controllerCount = 0

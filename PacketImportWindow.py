@@ -100,7 +100,7 @@ class PackageImportWindow(tk.Frame):
             # item_chain = int(selected_item)
             # print(item_chain)
             # try:
-            #print(len(self.list_packets))
+            # print(len(self.list_packets))
             self.list_packets[selected_item - 1][0][Ether].src = self.mac_src.get()
             self.list_packets[selected_item - 1][0][Ether].dst = self.mac_dst.get()
             self.list_packets[selected_item - 1][0][IP].src = self.ip_src.get()
@@ -248,22 +248,22 @@ class PackageImportWindow(tk.Frame):
         self.tree.grid(row=0)
         # self.treeview = self.tree
 
-        tk.Label(self.root, text=' ').grid(row=1)
+        # tk.Label(self.root, text=' ').grid(row=1)
 
         campos = tk.LabelFrame(self.root, text="Parameters to change of the selected package")
-        campos.grid(row=2)
+        campos.grid(row=2, padx=5, pady=15)
 
         tk.Label(campos, text=' ').grid(row=0, column=0)
-        tk.Label(campos, text="   Host src:  ").grid(row=1, column=0, sticky='w')
-        tk.Label(campos, text="   Host dst:  ").grid(row=2, column=0, sticky='w')
-        mac_label = tk.Label(campos, text="       MAC src:  ").grid(row=1, column=2, sticky='w')
-        tk.Label(campos, text="       MAC dst:  ").grid(row=2, column=2, sticky='w')
-        tk.Label(campos, text="       IP src:  ").grid(row=1, column=4, sticky='w')
-        tk.Label(campos, text="       IP dst:  ").grid(row=2, column=4, sticky='w')
-        tk.Label(campos, text="       Port src:  ").grid(row=1, column=6, sticky='w')
-        tk.Label(campos, text="       Port dst:  ").grid(row=2, column=6, sticky='w')
-        tk.Label(campos, text="       Pransport protocol:  ").grid(row=1, column=8, sticky='w')
-        tk.Label(campos, text="       Nº of packages to add:  ").grid(row=2, column=8, sticky='w')
+        tk.Label(campos, text="Host src:").grid(row=1, column=0, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Host dst:").grid(row=2, column=0, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="MAC src:").grid(row=1, column=2, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="MAC dst:").grid(row=2, column=2, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="IP src:").grid(row=1, column=4, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="IP dst:").grid(row=2, column=4, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Port src:").grid(row=1, column=6, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Port dst:").grid(row=2, column=6, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Pransport protocol:").grid(row=1, column=8, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Nº of packages to add:").grid(row=2, column=8, sticky='w', padx=20, pady=5)
 
         self.host_src.set(self.host)
         tk.Entry(campos, textvariable=self.host_src, width=10, state='disabled').grid(row=1, column=1, sticky='w')
@@ -302,25 +302,31 @@ class PackageImportWindow(tk.Frame):
         tk.Label(campos, text="       Time Spawn:  ").grid(row=1, column=11, sticky='w')
         tk.Entry(campos, textvariable=self.time_spawn, width=7).grid(row=1, column=12, sticky='w')
 
-        tk.Button(campos, text=" Load values ", command=self.load_values, height=1, width=15).grid(row=1, column=14,
-                                                                                                   sticky='E')
+        tk.Button(campos, text="Load values", command=self.load_values, height=1, width=15).grid(row=1, column=14,
+                                                                                                 sticky='E', padx=5,
+                                                                                                 pady=5)
         tk.Button(campos, text="Apply changes", command=self.apply_changes, height=1, width=15).grid(row=2, column=14,
-                                                                                                     sticky='E')
+                                                                                                     sticky='E', padx=5,
+                                                                                                     pady=5)
         tk.Button(campos, text="Add as new package", command=self.add_packets, height=1, width=15).grid(row=3,
                                                                                                         column=14,
-                                                                                                        sticky='E')
+                                                                                                        sticky='E',
+                                                                                                        padx=5, pady=5)
         # tk.Label(campos, text=' ').grid(row=2, column=0)
 
-        tk.Label(self.root, text=' ').grid(row=3, column=0)
+        # tk.Label(self.root, text=' ').grid(row=3, column=0)
 
-        botones = tk.LabelFrame(self.root, height=1000)
-        botones.grid(row=4, sticky='N')
+        buttonFrame = tk.Frame(self.root, bd=3)
+        buttonFrame.grid(row=4, column=0, sticky='N')
 
-        tk.Button(botones, text="Delete Selected Packet", command=self.delete).grid(row=0, column=0)
-        tk.Label(botones, text=' ').grid(row=0, column=1)
-        tk.Button(botones, text="Load Packages from...", command=self.load_packages).grid(row=0, column=2)
-        tk.Label(botones, text=' ').grid(row=0, column=3)
-        tk.Button(botones, text="Save Packets", command=self.return_list_packets).grid(row=0, column=4)
+        # botones = tk.LabelFrame(self.root, height=1000)
+        # botones.grid(row=4, sticky='N')
+
+        tk.Button(buttonFrame, text="Delete Selected Packet", command=self.delete).grid(row=0, column=0, padx=0, pady=0)
+        # tk.Label(botones, text=' ').grid(row=0, column=1)
+        tk.Button(buttonFrame, text="Load Packages from...", command=self.load_packages).grid(row=0, column=1, padx=20, pady=0)
+        # tk.Label(botones, text=' ').grid(row=0, column=3)
+        tk.Button(buttonFrame, text="Save Packets", command=self.return_list_packets).grid(row=0, column=2, padx=0, pady=0)
 
         # if len(self.tree.selection()) > 0:
         #     mac_src = self.tree.item(self.tree.selection()[0])['values'][1]
@@ -350,7 +356,7 @@ class PackageImportWindow(tk.Frame):
                         protocol = 'TCP'
                     else:
                         protocol = 'UDP'
-                    self.list_packets.append((packet,time_spawn))
+                    self.list_packets.append((packet, time_spawn))
                     self.tree.insert('', 'end', iid=self.index, values=(
                         self.index, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
                         packet[protocol].sport,
@@ -361,7 +367,7 @@ class PackageImportWindow(tk.Frame):
         # TODO Estas dos líneas de abajo pueden ser muy útiles
         # self.root.deiconify()
         # self.root.wait_window()
-        print('HELLO')
+        # print('HELLO')
         self.master.info_window_import[self.host] = self.list_packets
         self.root.destroy()
         # print(self.list_packets)

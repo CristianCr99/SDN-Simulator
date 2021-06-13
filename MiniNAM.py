@@ -56,7 +56,7 @@ LinkTime = 0.1
 
 def version(*_args):
     "Print Mininet and MiniNAM version and exit"
-    print("MiniNAM: %s" % MININAM_VERSION)
+    # print("MiniNAM: %s" % MININAM_VERSION)
     sys.exit()
 
 
@@ -73,97 +73,95 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         "Create dialog body"
         self.rootFrame = master
 
-        # Field for Packet Flow Speed
-        Label(self.rootFrame, text="Speed of Packet Flow").grid(row=2, sticky=W)
-        self.flowTime = StringVar(self.rootFrame)
-        self.flowTime.set(list(FLOWTIME.keys())[list(FLOWTIME.values()).index(self.prefValues['flowTime'])])
-        self.flowTimeMenu = OptionMenu(self.rootFrame, self.flowTime, *FLOWTIME.keys())
-        self.flowTimeMenu.grid(row=2, column=1, sticky=W)
-
         # Selection for color of packet type
-        self.typeColorsOpenFlow = LabelFrame(self.rootFrame, text='Colors for Openflow Packet Types', padx=5, pady=5)
-        self.typeColorsOpenFlow.grid(row=4, column=0, columnspan=2, sticky=EW)
+        self.typeColorsOpenFlow = LabelFrame(self.rootFrame, text='Openflow Packet Type Colors', padx=5, pady=5)
+        self.typeColorsOpenFlow.grid(row=4, column=0, columnspan=2, sticky=EW, padx=5, pady=10)
         for i in range(3):
             self.typeColorsOpenFlow.columnconfigure(i, weight=1)
         self.typeColors = self.prefValues['typeColors']
 
-        Label(self.typeColorsOpenFlow, text="General Color").grid(row=0, column=0, sticky=W)
+        Label(self.typeColorsOpenFlow, text="General").grid(row=0, column=0, sticky=W, padx=10)
         self.OpenFlowColor = StringVar(self.typeColorsOpenFlow)
         self.OpenFlowColor.set(self.typeColors["OpenFlow"])
         self.OpenFlowColorMenu = OptionMenu(self.typeColorsOpenFlow, self.OpenFlowColor, "None", "Red", "Green", "Blue",
-                                            "Purple", 'Brown', 'Cyan', 'Orange')
-        self.OpenFlowColorMenu.grid(row=1, column=0, sticky=W)
+                                            "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
+        self.OpenFlowColorMenu.grid(row=1, column=0, sticky=W, padx=10)
 
-        Label(self.typeColorsOpenFlow, text="Packet In").grid(row=0, column=1, sticky=W)
+        Label(self.typeColorsOpenFlow, text="Packet In").grid(row=0, column=1, sticky=W, padx=10)
         self.PacketInColor = StringVar(self.typeColorsOpenFlow)
         self.PacketInColor.set(self.typeColors["packet_in"])
         self.PacketInColorMenu = OptionMenu(self.typeColorsOpenFlow, self.PacketInColor, "None", "Red", "Green", "Blue",
-                                            "Purple",
-                                            'Brown', 'Cyan', 'Orange', 'Violet')
-        self.PacketInColorMenu.grid(row=1, column=1, sticky=W)
+                                            "Purple",'Brown', 'Cyan', 'Orange', 'Violet')
+        self.PacketInColorMenu.grid(row=1, column=1, sticky=W, padx=10)
 
         # Selection of color for UDP
-        Label(self.typeColorsOpenFlow, text="Packet Out").grid(row=0, column=2, sticky=W)
+        Label(self.typeColorsOpenFlow, text="Packet Out").grid(row=0, column=2, sticky=W, padx=10)
         self.PacketOutColor = StringVar(self.typeColorsOpenFlow)
         self.PacketOutColor.set(self.typeColors["packet_out"])
         self.PacketOutColorMenu = OptionMenu(self.typeColorsOpenFlow, self.PacketOutColor, "None", "Red", "Green",
                                              "Blue", "Purple",
                                              'Brown', 'Cyan', 'Orange', 'Violet')
-        self.PacketOutColorMenu.grid(row=1, column=2, sticky=W)
+        self.PacketOutColorMenu.grid(row=1, column=2, sticky=W, padx=10)
 
-        Label(self.typeColorsOpenFlow, text="Flow Mod").grid(row=0, column=3, sticky=W)
+        Label(self.typeColorsOpenFlow, text="Flow Mod").grid(row=0, column=3, sticky=W, padx=10)
         self.FlowModColor = StringVar(self.typeColorsOpenFlow)
         self.FlowModColor.set(self.typeColors["flow_mod"])
         self.FlowModColorMenu = OptionMenu(self.typeColorsOpenFlow, self.FlowModColor, "None", "Red", "Green", "Blue",
                                            "Purple",
                                            'Brown', 'Cyan', 'Orange', 'Violet')
-        self.FlowModColorMenu.grid(row=1, column=3, sticky=W)
+        self.FlowModColorMenu.grid(row=1, column=3, sticky=W, padx=10)
 
-        self.typeColorsData = LabelFrame(self.rootFrame, text='Colors for Data Packet Types', padx=5, pady=5)
-        self.typeColorsData.grid(row=5, column=0, columnspan=2, sticky=EW)
+        self.typeColorsData = LabelFrame(self.rootFrame, text='Data Packet Type Colors', padx=5, pady=5)
+        self.typeColorsData.grid(row=5, column=0, columnspan=2, sticky=EW, padx=5, pady=5)
         for i in range(3):
             self.typeColorsData.columnconfigure(i, weight=1)
 
         # Selection of color for TCP
-        Label(self.typeColorsData, text="TCP").grid(row=0, column=1, sticky=W)
+        Label(self.typeColorsData, text="TCP").grid(row=0, column=1, sticky=W, padx=10)
         self.TCPColor = StringVar(self.typeColorsData)
         self.TCPColor.set(self.typeColors["TCP"])
         self.TCPColorMenu = OptionMenu(self.typeColorsData, self.TCPColor, "None", "Red", "Green", "Blue", "Purple",
                                        'Brown', 'Cyan', 'Orange', 'Violet')
-        self.TCPColorMenu.grid(row=1, column=1, sticky=W)
+        self.TCPColorMenu.grid(row=1, column=1, sticky=W, padx=10)
 
         # Selection of color for UDP
-        Label(self.typeColorsData, text="UDP").grid(row=0, column=2, sticky=W)
+        Label(self.typeColorsData, text="UDP").grid(row=0, column=2, sticky=W, padx=10)
         self.UDPColor = StringVar(self.typeColorsData)
         self.UDPColor.set(self.typeColors["UDP"])
         self.UDPColorMenu = OptionMenu(self.typeColorsData, self.UDPColor, "None", "Red", "Green", "Blue", "Purple",
                                        'Brown', 'Cyan', 'Orange', 'Violet')
-        self.UDPColorMenu.grid(row=1, column=2, sticky=W)
+        self.UDPColorMenu.grid(row=1, column=2, sticky=W, padx=10)
 
         # Selection of color for OpenFlow
-        Label(self.typeColorsData, text="General Color").grid(row=0, column=0, sticky=W)
+        Label(self.typeColorsData, text="General").grid(row=0, column=0, sticky=W, padx=10)
         self.UsertrafficColor = StringVar(self.typeColorsData)
         self.UsertrafficColor.set(self.typeColors["Usertraffic"])
         self.UsertrafficColorMenu = OptionMenu(self.typeColorsData, self.UsertrafficColor, "None", "Red", "Green",
                                                "Blue", "Purple", 'Brown', 'Cyan', 'Orange')
-        self.UsertrafficColorMenu.grid(row=1, column=0, sticky=W)
+        self.UsertrafficColorMenu.grid(row=1, column=0, sticky=W, padx=10)
 
         # Field for showing IP Packets
-        Label(self.rootFrame, text="Show IP address on packets:").grid(row=7, sticky=W)
+        Label(self.rootFrame, text="IP address on packets:").grid(row=7, sticky=W, padx=10, pady=10)
         self.showAddrVar = StringVar(self.rootFrame)
         self.showaddrOption = OptionMenu(self.rootFrame, self.showAddrVar, "Source and Destination", "None")
         self.showaddrOption.grid(row=7, column=1, sticky=W)
         self.showAddrVar.set(self.prefValues['showAddr'])
 
+        # Field for Packet Flow Speed
+        Label(self.rootFrame, text="Packet Flow Speed:").grid(row=8, sticky=W, padx=10, pady=10)
+        self.flowTime = StringVar(self.rootFrame)
+        self.flowTime.set(list(FLOWTIME.keys())[list(FLOWTIME.values()).index(self.prefValues['flowTime'])])
+        self.flowTimeMenu = OptionMenu(self.rootFrame, self.flowTime, *FLOWTIME.keys())
+        self.flowTimeMenu.grid(row=8, column=1, sticky=W)
         # Field for showing nodeStats
-        Label(self.rootFrame, text="Show Node Statistics Box:").grid(row=8, sticky=W)
-        self.showNodeStats = IntVar()
-        self.cshowNodeStats = Checkbutton(self.rootFrame, variable=self.showNodeStats)
-        self.cshowNodeStats.grid(row=8, column=1, sticky=W)
-        if self.prefValues['showNodeStats'] == 0:
-            self.cshowNodeStats.deselect()
-        else:
-            self.cshowNodeStats.select()
+        # Label(self.rootFrame, text="Show Node Statistics Box:").grid(row=8, sticky=W, padx=5, pady=5)
+        # self.showNodeStats = IntVar()
+        # self.cshowNodeStats = Checkbutton(self.rootFrame, variable=self.showNodeStats)
+        # self.cshowNodeStats.grid(row=8, column=1, sticky=W, padx=5, pady=10)
+        # if self.prefValues['showNodeStats'] == 0:
+        #     self.cshowNodeStats.deselect()
+        # else:
+        #     self.cshowNodeStats.select()
 
     def apply(self):
 
@@ -306,6 +304,7 @@ class MiniNAM(Frame, Thread):
         self.list_processed_events = []
         self.action = None
         self.info_window_import = {}
+        self.simulation_is_running = False
 
         # Defaults for preferences and filters
         self.appPrefs = {
@@ -315,12 +314,12 @@ class MiniNAM(Frame, Thread):
             'showAddr': 'Source and destination',
             'showNodeStats': 1
         }
-        self.appFilters = {
-            'showPackets': ['TCP', 'UDP', 'ICMP'],  # ARP?
-            'hidePackets': ['IPv6'],
-            'hideFromIPMAC': ['0.0.0.0', '255.255.255.255'],
-            'hideToIPMAC': ['0.0.0.0', '255.255.255.255']
-        }
+        # self.appFilters = {
+        #     'showPackets': ['TCP', 'UDP', 'ICMP'],  # ARP?
+        #     'hidePackets': ['IPv6'],
+        #     'hideFromIPMAC': ['0.0.0.0', '255.255.255.255'],
+        #     'hideToIPMAC': ['0.0.0.0', '255.255.255.255']
+        # }
 
         # Style
         # self.fixedFont = tkinter.font.Font(family="DejaVu Sans Mono", size="14")
@@ -377,7 +376,7 @@ class MiniNAM(Frame, Thread):
         self.focus()
         self.canvas.bind('<Button-1>', self.setFocus)
         self.hostPopup = Menu(self.top, tearoff=0, takefocus=1)
-        self.hostPopup.add_command(label='Host Details')
+        # self.hostPopup.add_command(label='Host Details')
         self.hostPopup.add_command(label='Traffic Insertion', command=self.traffic_insertion)
         # self.hostPopup.add_separator()
         # self.hostPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
@@ -497,7 +496,7 @@ class MiniNAM(Frame, Thread):
         fileName = value
 
         if not os.path.isfile(fileName):
-            print('Could not find config file: %s. Loading default preferences and filters.' % fileName)
+            # print('Could not find config file: %s. Loading default preferences and filters.' % fileName)
             return
         f = open(fileName, 'r')
         loadedPrefs = self.convertJsonUnicode(json.load(f))
@@ -542,9 +541,9 @@ class MiniNAM(Frame, Thread):
     # Topology
 
     def TopoInfo(self):
-        print('hello')
+        # print('hello')
         for i in graph.get_graph().nodes():
-            print(i[0])
+            # print(i[0])
             if i[0] == 'c':
                 ip = ''
                 port = ''
@@ -575,7 +574,7 @@ class MiniNAM(Frame, Thread):
         for node in self.Nodes:
             if not self.findWidgetByName(node['name']):
                 # location = self.nodelocations[node['name']] if node['name'] in self.nodelocations else (random.randrange(70,self.cwidth-100), random.randrange(70,self.cheight-100))
-                print(node)
+                # print(node)
                 self.newNamedNode(node, float(graph.get_graph().nodes()[node['name']]['x']),
                                   float(graph.get_graph().nodes()[node['name']]['y']))
 
@@ -583,7 +582,7 @@ class MiniNAM(Frame, Thread):
 
         for i in list(graph.get_graph().edges()):
             self.drawLink(i[0], i[1])
-            print('enlace de', i[0], 'a', i[1])
+            # print('enlace de', i[0], 'a', i[1])
 
         # Drawing control links
         for switch in self.Nodes:
@@ -635,7 +634,7 @@ class MiniNAM(Frame, Thread):
             draw.polygon([(15, 0), (15, 15), (45, 15), (45, 0)], color_by_type_packet)
             if type_openflow == 'packet_out':
                 draw.polygon([(15 + 45, 0), (15 + 45, 15), (45 + 45, 15), (45 + 45, 0)], color_by_type_packet)
-            print('1')
+            # print('1')
             if not is_openflow:
                 try:
                     if 'UDP' in Packet:
@@ -650,15 +649,15 @@ class MiniNAM(Frame, Thread):
                     ip_color = self.appPrefs['typeColors'][type_openflow]
                 except:
                     ip_color = 'pink'
-            print('2')
-            print(ip_color is not None)
+            # print('2')
+            # print(ip_color is not None)
             if ip_color is not None:
                 draw.polygon([(0, 0), (0, 15), (15, 15), (15, 0)], ip_color)
                 if type_openflow == 'packet_out':
                     draw.polygon([(0 + 45, 0), (0 + 45, 15), (15 + 45, 15), (15 + 45, 0)],
                                  self.appPrefs['typeColors']['flow_mod'])
 
-            print('3')
+            # print('3')
             # If IP address is not displayed then rotate the packet along the link
             if self.appPrefs['showAddr'] == 'None':
                 angle = -1 * atan2(dsty - srcy, dstx - srcx)
@@ -688,15 +687,15 @@ class MiniNAM(Frame, Thread):
             deltax = (dstx - srcx) / 50
             deltay = (dsty - srcy) / 50
             delta = deltax, deltay
-            print('4')
+            # print('4')
             # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
             t = (float(self.appPrefs['flowTime']) * float(100) / 50000.0)  # 1000 for ms and 50 for steps
 
-            print('time:', t * 1000.0)
+            # print('time:', t * 1000.0)
             start = self.current_milli_time()
             self.movePacket(packet, packetImage, delta, t)
             end = self.current_milli_time()
-            print("Time elapsed:", end - start)
+            # print("Time elapsed:", end - start)
 
         except Exception:
             print('Excepción!!!!')
@@ -958,7 +957,7 @@ class MiniNAM(Frame, Thread):
     # TODO Aquí se podría poner alguna información del elemento sobre el que nos hemos situado
     def showNodeStats(self, widget):
         nodeStats = NodeStats(widget)
-        print(nodeStats)
+        # print(nodeStats)
 
         def enter(_event):
             if self.appPrefs['showNodeStats'] == 0:
@@ -1109,7 +1108,7 @@ class MiniNAM(Frame, Thread):
 
         x, y = c.coords(self.widgetToItem[dest])
         c.coords(self.link, self.linkx, self.linky, x, y)
-        print(linkType)
+        # print(linkType)
         self.addLink(source, dest, linktype=linkType)
 
         # We're done
@@ -1147,14 +1146,17 @@ class MiniNAM(Frame, Thread):
         editMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Edit", menu=editMenu)
         editMenu.add_command(label="Preferences", command=self.prefDetails)
-        editMenu.add_command(label="Filters", command=self.filterDetails)
+        # editMenu.add_command(label="Filters", command=self.filterDetails)
 
-        runMenu = Menu(mbar, tearoff=False)
-        mbar.add_cascade(label="Run", menu=runMenu)
-        runMenu.add_command(label="Run", command=self.run_simulation2)
+        self.runMenu = Menu(mbar, tearoff=False)
+        mbar.add_cascade(label="Simulation", menu=self.runMenu)
+        self.runMenu.add_command(label="Run", command=self.run_simulation2)
         # runMenu.add_command(label="Pause", command=lambda: self.doRun(runMenu))
-        runMenu.add_command(label="Pause", command=self.pause_simulation)
-        runMenu.add_command(label="Reanude", command=self.reanude_simulation)
+        self.runMenu.add_command(label="Pause", command=self.pause_simulation)
+        self.runMenu.add_command(label="Resume", command=self.resume_simulation)
+        self.runMenu.add_command(label="Results", command=self.window_results)
+        self.runMenu.entryconfig("Results", state="disable")
+
         # fileMenu.add_separator()
         # runMenu.add_command(label='Show Interfaces Summary', command=self.intfInfo)
         # runMenu.add_command(label='Show OVS Summary', font=font, command=self.ovsShow)
@@ -1185,7 +1187,8 @@ class MiniNAM(Frame, Thread):
             f.write(inf)
             f.close()
         except Exception as er:
-            messagebox.showwarning(er)
+            return
+            # messagebox.showwarning(er)
         # finally:
         #    f.close()
 
@@ -1195,8 +1198,11 @@ class MiniNAM(Frame, Thread):
         # try:
         path = filedialog.askopenfile(title='Load Graph', initialdir='./Graphs',
                                       filetypes=(('Files .txt', '*.json'), (('All Files', '*.*'))))
+
+        if path is None:
+            return
         # Leemos el fichero json
-        edit_topo = json.load(open(path.name))
+        edit_topo = json.load(open(path.name)) # TODO Error
         # G = json_graph.cytoscape_graph(gnl)
         # TODO Aniadir una funcion que compruebe si cada uno tiene los atributos que deben tener y que salte una ventana emergente de error en tal caso
         g = nx.Graph()
@@ -1214,7 +1220,7 @@ class MiniNAM(Frame, Thread):
                     g.nodes[i['opts']['hostname']]['x'] = i['x']
                 if 'y' in i:
                     g.nodes[i['opts']['hostname']]['y'] = i['y']
-                print('info', g.nodes[i['opts']['hostname']])
+                # print('info', g.nodes[i['opts']['hostname']])
 
         if 'controllers' in edit_topo:
             for i in edit_topo['controllers']:
@@ -1230,7 +1236,7 @@ class MiniNAM(Frame, Thread):
                     g.nodes[i['opts']['hostname']]['x'] = i['x']
                 if 'y' in i:
                     g.nodes[i['opts']['hostname']]['y'] = i['y']
-                print('info', g.nodes[i['opts']['hostname']])
+                # print('info', g.nodes[i['opts']['hostname']])
 
         if 'switches' in edit_topo:
             for i in edit_topo['switches']:
@@ -1250,21 +1256,21 @@ class MiniNAM(Frame, Thread):
                     g.nodes[i['opts']['hostname']]['y'] = i['y']
                 if 'controllers' in i['opts']:
                     g.add_edges_from([(i['opts']['hostname'], i['opts']['controllers'][0], {'bw': sys.maxsize})])
-                print('info', g.nodes[i['opts']['hostname']])
+                # print('info', g.nodes[i['opts']['hostname']])
 
         if 'links' in edit_topo:
             for i in edit_topo['links']:
 
-                print('hola', i)
+                # print('hola', i)
                 if 'bw' in i['opts'] and 'distance' in i['opts'] and 'propagation_speed' in i['opts']:
                     g.add_edge(i['src'], i['dest'], bw=int(i['opts']['bw']), distance=int(i['opts']['distance']),
                                propagation_speed=int(i['opts']['propagation_speed']), load=[])
                     # else:
                     #     g.add_edges_from([(i['src'], i['dest'], {'bw': 1})])
 
-                    print('info', list(g.edges(data=True)))
+                    # print('info', list(g.edges(data=True)))
 
-        print('hola')
+        # print('hola')
 
         graph.set_graph(g)
         # print('infoooooooooooo', list(graph.get_graph().edges))
@@ -1304,7 +1310,7 @@ class MiniNAM(Frame, Thread):
         # Convienience function to print interface data while developing
         keys = ["node", "type", "interface", "ip", "dgw", "link", "TXP", "RXP", "TXB", "RXB", "mac"]
         row_format = "{:>15}" * (len(keys) + 1)
-        print(row_format.format("", *keys))
+        # print(row_format.format("", *keys))
         for data in self.intfData:
             list = []
             for key in keys:
@@ -1312,13 +1318,13 @@ class MiniNAM(Frame, Thread):
                     list.append(data[key])
                 except:
                     list.append("")
-            print(row_format.format("", *list))
+            # print(row_format.format("", *list))
 
     def pause_simulation(self):
         self.stop_simulation = True
         self.time_start_pause = self.current_milli_time()
 
-    def reanude_simulation(self):
+    def resume_simulation(self):
         self.stop_simulation = False
         self.time_pause += self.current_milli_time() - self.time_start_pause
         # self.time_pause = 0
@@ -1333,7 +1339,7 @@ class MiniNAM(Frame, Thread):
             menu.entryconfigure(0, label="Pause")
 
     def about(self):
-        print(self.info_window_import)
+        # print(self.info_window_import)
         "Display about box."
         about = self.aboutBox
         if about is None:
@@ -1373,7 +1379,7 @@ class MiniNAM(Frame, Thread):
         dst = linkDetail['dest']
         srcName, dstName = src['text'], dst['text']
         root = tkinter.Toplevel()
-        print(srcName, dstName)
+        # print(srcName, dstName)
         info_s = info_link.InfoLinkWindow(root, graph.get_graph().edges[srcName, dstName], srcName + ',' + dstName)
         info_s.initialize_user_interface()
 
@@ -1403,11 +1409,11 @@ class MiniNAM(Frame, Thread):
         # if self.appPrefs['startCLI'] == 1:
         #    self.startCLI()
 
-    def filterDetails(self):
-        filterDefaults = self.appFilters
-        filterBox = FiltersDialog(self, title='Filters', filterDefaults=filterDefaults)
-        if filterBox.result:
-            self.appFilters = filterBox.result
+    # def filterDetails(self):
+    #     filterDefaults = self.appFilters
+    #     filterBox = FiltersDialog(self, title='Filters', filterDefaults=filterDefaults)
+    #     if filterBox.result:
+    #         self.appFilters = filterBox.result
 
     def show_switch_info(self, _ignore=None):
         if (self.selection is None or
@@ -1429,8 +1435,8 @@ class MiniNAM(Frame, Thread):
 
         # if name not in self.net.nameToNode:
         #    return
-        if 'Switch' in tags or 'LegacySwitch' in tags:
-            print('holaaaaaaaaaaaaaaaaaa')
+        # if 'Switch' in tags or 'LegacySwitch' in tags:
+            # print('holaaaaaaaaaaaaaaaaaa')
             # call([
             #    "xterm -T 'Bridge Details' -sb -sl 2000 -e 'ovs-vsctl list bridge " + name + "; read -p \"Press Enter to close\"' &"],
             #    shell=True)
@@ -1550,7 +1556,7 @@ class MiniNAM(Frame, Thread):
         # display the popup menu
         # if self.net:
         try:
-            print('asdasdasdasddas')
+            # print('asdasdasdasddas')
             self.switchPopup.post(event.x_root, event.y_root)
             self.switchPopup.focus_set()
         finally:
@@ -1559,7 +1565,8 @@ class MiniNAM(Frame, Thread):
 
     def stop(self):
         # Reset the terminal even if CLI wasn't exited properly
-        os.system('stty sane')
+        # print('hola')
+        # os.system('stty sane')
         # Clear the packet queues
         for q in self.flowQueues:
             self.flowQueues[q].queue.clear()
@@ -1575,7 +1582,7 @@ class MiniNAM(Frame, Thread):
         root = tkinter.Toplevel()
         # self.top.wait_variable()
         name = self.itemToWidget[self.selection]['text']
-        print(name)
+        # print(name)
         p_import_w.PackageImportWindow(root=root, master=self, host=name, graph=graph)
         # print(list_packets)
 
@@ -1599,7 +1606,7 @@ class MiniNAM(Frame, Thread):
                 if i['type'] == 'packet_generation' and i['packet_id'] == str(id_packet):
                     time_generation = i['time_spawn']
                     host = i['src']
-                    print('hostttttttttttttttt', host)
+                    # print('hostttttttttttttttt', host)
                 elif i['type'] == 'packet_processing_host' and i['packet_id'] == str(id_packet):
                     time_arrive = i['time_spawn']
                 elif (i['type'] == 'packet_processing_switch' or i['type'] == 'packet_processing_controller' or i[
@@ -1610,7 +1617,7 @@ class MiniNAM(Frame, Thread):
                             number_jumps += 1
                             # print('ewr JAJA')
                     else:
-                        print(i['type'])
+                        # print(i['type'])
                         number_jumps += 1
                         # print('ewr JAJA 222222')
         return time_generation, time_arrive, number_jumps, host
@@ -1644,7 +1651,7 @@ class MiniNAM(Frame, Thread):
 
         while not discrete_events.is_empty_list_events():
             event = discrete_events.unqueue_list_events()
-            print('Procesamos evento:', event)
+            # print('Procesamos evento:', event)
             if event['type'] == 'packet_generation':
                 new_event = graph.processing_event_packet_generation(event, packets_data)
                 if new_event != 0: discrete_events.inser_event(new_event)
@@ -1678,7 +1685,7 @@ class MiniNAM(Frame, Thread):
         if self.event != 0 and float(self.event['time_spawn']) * 1000.0 <= (
                 time - self.time_pause) and self.stop_simulation == False:
 
-            print('Procesamos evento:', self.event, 'en el instante de tiempo:', time - self.time_pause)
+            # print('Procesamos evento:', self.event, 'en el instante de tiempo:', time - self.time_pause)
 
             if self.event['type'] == 'packet_generation':
                 new_event = graph.processing_event_packet_generation(self.event, self.packets_data)
@@ -1701,7 +1708,7 @@ class MiniNAM(Frame, Thread):
                     for i in new_event:
                         self.discrete_events.inser_event(i)
             if self.event['type'] == 'packet_processing_host':
-                print('ha llegado al destino el paquete con id:', self.event['packet_id'])
+                # print('ha llegado al destino el paquete con id:', self.event['packet_id'])
                 if 'load' in graph.get_graph().edges[self.event['src'], self.event['dst']] and len(
                         graph.get_graph().edges[self.event['src'], self.event['dst']]['load']) > 0:
                     last_load = graph.get_graph().edges[self.event['src'], self.event['dst']]['load'][-1][1]
@@ -1718,8 +1725,10 @@ class MiniNAM(Frame, Thread):
             self.list_processed_events.append(self.event)
 
         elif self.event == 0:
-            print('Fin de la simulacion')
+            self.final_time = self.current_milli_time() - self.start - self.time_pause
+            # print('Fin de la simulacion')
             self.processing_results()
+
 
     def update_chronometer(self, milliseconds):
         milli = math.trunc(milliseconds % 1000)
@@ -1752,14 +1761,14 @@ class MiniNAM(Frame, Thread):
                     # print('Enviamos los paquetes del host:', host)
                     cola_eventos = self.info_window_import[host]
                     for paquet in cola_eventos:
-                        print('paquete:', paquet)
+                        # print('paquete:', paquet)
                         self.packets_data[str(i)] = paquet[0]
                         self.discrete_events.inser_event(
                             {'type': 'packet_generation', 'src': host, 'dst': None, 'time_spawn': paquet[1],
                              'packet_id': str(i)})
 
                         i += 1
-                        print(i)
+                        # print(i)
                         # graph.communication_hots(app, host, paquet)
         # print(self.packets_data)
         # print(self.packets_data)
@@ -1785,41 +1794,33 @@ class MiniNAM(Frame, Thread):
         return None
 
     def processing_results(self):
-        list_flow = {}
+        self.list_flow = {}
         list_packet = []
         # print(self.packets_data)
 
         for id_packet, packet in self.packets_data.items():
             time_generation, time_arrive, number_jumps, host = self.find_timeGeneration_timeArrive(id_packet)
             delay = (time_arrive - time_generation - (3.5 * (number_jumps + 1))) * 1000
-            print('DELAY', id_packet, delay)
+            # print('DELAY', id_packet, delay)
             # print(time_generation, time_arrive, number_jumps, host)
             # print(delay * 1000)
             id = self.find_packet_equal(list_packet, packet)
-            print('ID:', id)
+            # print('ID:', id)
             # print('iddddd:', id)
-            if host not in list_flow:
-                list_flow[host] = {}
+            if host not in self.list_flow:
+                self.list_flow[host] = {}
             if id == None:
                 # list_packet[id_packet] = packet
-                list_flow[host][id_packet] = fl_inf.flow_information(packet)
-                list_flow[host][id_packet].add_delay(delay, time_generation)
+                self.list_flow[host][id_packet] = fl_inf.flow_information(packet)
+                self.list_flow[host][id_packet].add_delay(delay, time_generation)
                 list_packet.append((id_packet, packet, time_generation))
             else:
-                list_flow[host][id].add_delay(delay, time_generation)
+                self.list_flow[host][id].add_delay(delay, time_generation)
 
         #     print(list_flow)
         # print(list_flow)
         # utilities = utili.Utilities()
-
-        root = tkinter.Toplevel()
-        # self.top.wait_variable()
-        # name = self.itemToWidget[self.selection]['text']
-        # print(name)
-        # p_import_w.PackageImportWindow(root=root, master=self, host=name, graph=graph)
-
-        resultInfor.ResultInformation(root=root, graph=graph, list_flow=list_flow)
-
+        self.runMenu.entryconfig("Results", state="normal")
         # for node in graph.get_graph().nodes:
         #     if node[0] == 'h' and node in list_flow:
         #         for flujo in list_flow[node].items():
@@ -1829,6 +1830,12 @@ class MiniNAM(Frame, Thread):
         #             list_delays = [i[0] for i in packet_delay_list]
         #
         #             utilities.create_graph(y=list_delays, x=list(range(1, len(list_delays) + 1)), x_label = 'Packet (number)', y_label='Delay (ms)', title_graph='Delay per Packet')
+
+    def window_results(self):
+        root = tkinter.Toplevel()
+        # root.configure(width=1000, height=600)
+        resultInfor.ResultInformation(root=root, master=self, graph=graph,
+                                      list_flow=self.list_flow,  final_time= self.final_time)
 
 
 def miniImages():
