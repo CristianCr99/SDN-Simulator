@@ -11,7 +11,7 @@ from math import atan2, sin, cos
 from struct import *
 from threading import Thread
 from tkinter import *
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
 
 import networkx as nx
 from PIL import Image, ImageDraw
@@ -91,7 +91,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         self.PacketInColor = StringVar(self.typeColorsOpenFlow)
         self.PacketInColor.set(self.typeColors["packet_in"])
         self.PacketInColorMenu = OptionMenu(self.typeColorsOpenFlow, self.PacketInColor, "None", "Red", "Green", "Blue",
-                                            "Purple",'Brown', 'Cyan', 'Orange', 'Violet')
+                                            "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
         self.PacketInColorMenu.grid(row=1, column=1, sticky=W, padx=10)
 
         # Selection of color for UDP
@@ -179,8 +179,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
 
         self.result = {'flowTime': flowTime,
                        'typeColors': typeColors,
-                       'showAddr': self.showAddrVar.get(),
-                       'showNodeStats': self.showNodeStats.get()
+                       'showAddr': self.showAddrVar.get()
                        }
 
 
@@ -333,7 +332,7 @@ class MiniNAM(Frame, Thread):
         self.images = miniImages()
 
         # Title
-        self.appName = 'CristianNAM'
+        self.appName = 'SDN Simulator'
         self.top = self.winfo_toplevel()
         self.top.title(self.appName)
 
@@ -608,7 +607,7 @@ class MiniNAM(Frame, Thread):
             print(e)
 
     def displayPacket(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst, time):
-
+        start = self.current_milli_time()
         try:
             c = self.canvas
             s = self.findWidgetByName(src)
@@ -691,11 +690,11 @@ class MiniNAM(Frame, Thread):
             # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
             t = (float(self.appPrefs['flowTime']) * float(100) / 50000.0)  # 1000 for ms and 50 for steps
 
-            # print('time:', t * 1000.0)
-            start = self.current_milli_time()
+            print('time:', t * 1000.0)
+
             self.movePacket(packet, packetImage, delta, t)
             end = self.current_milli_time()
-            # print("Time elapsed:", end - start)
+            print("Time elapsed:", end - start)
 
         except Exception:
             print('Excepción!!!!')
@@ -912,7 +911,7 @@ class MiniNAM(Frame, Thread):
 
         Node['color'], Node['widget'] = color, item
 
-        self.showNodeStats(icon)
+        # self.showNodeStats(icon)
         icon.bind('<Button-1>', self.setFocus)
         if 'Switch' == node:
             # print('hola')
@@ -955,34 +954,35 @@ class MiniNAM(Frame, Thread):
         self.selectItem(self.lastSelection)
 
     # TODO Aquí se podría poner alguna información del elemento sobre el que nos hemos situado
-    def showNodeStats(self, widget):
-        nodeStats = NodeStats(widget)
-        # print(nodeStats)
-
-        def enter(_event):
-            if self.appPrefs['showNodeStats'] == 0:
-                return
-
-            TXP = 0;
-            TXB = 0;
-            RXP = 0;
-            RXB = 0
-            node = widget['text']
-            for data in self.intfData:
-                if data['node'] == node:
-                    TXP += data['TXP']
-                    TXB += data['TXB']
-                    RXP += data['RXP']
-                    RXB += data['RXB']
-            text = "TXP: " + str(TXP) + "\n" + "RXP: " + str(RXP) + "\n" + "TXB: " + str(TXB) + "\n" + "RXB: " + str(
-                RXB)
-            nodeStats.showtip(text)
-
-        def leave(_event):
-            nodeStats.hidetip()
-
-        widget.bind('<Enter>', enter)
-        widget.bind('<Leave>', leave)
+    # def showNodeStats(self, widget):
+    #     nodeStats = NodeStats(widget)
+    #
+    #     # print(nodeStats)
+    #
+    #     def enter(_event):
+    #         if self.appPrefs['showNodeStats'] == 0:
+    #             return
+    #
+    #         TXP = 0;
+    #         TXB = 0;
+    #         RXP = 0;
+    #         RXB = 0
+    #         node = widget['text']
+    #         for data in self.intfData:
+    #             if data['node'] == node:
+    #                 TXP += data['TXP']
+    #                 TXB += data['TXB']
+    #                 RXP += data['RXP']
+    #                 RXB += data['RXB']
+    #         text = "TXP: " + str(TXP) + "\n" + "RXP: " + str(RXP) + "\n" + "TXB: " + str(TXB) + "\n" + "RXB: " + str(
+    #             RXB)
+    #         nodeStats.showtip(text)
+    #
+    #     def leave(_event):
+    #         nodeStats.hidetip()
+    #
+    #     widget.bind('<Enter>', enter)
+    #     widget.bind('<Leave>', leave)
 
     # Specific node handlers
 
@@ -1028,7 +1028,7 @@ class MiniNAM(Frame, Thread):
 
         def unhighlight(_event, link=self.link):
             "Unhighlight item on mouse exit."
-            self.canvas.itemconfig(link, fill='purple')
+            self.canvas.itemconfig(link, fill='#95A5A6')
 
         self.canvas.tag_bind(self.link, '<Enter>', highlight)
         self.canvas.tag_bind(self.link, '<Leave>', unhighlight)
@@ -1049,11 +1049,11 @@ class MiniNAM(Frame, Thread):
         def highlight(_event, link=self.link):
             "Highlight item on mouse entry."
             self.selectItem(link)
-            self.canvas.itemconfig(link, fill='green')
+            self.canvas.itemconfig(link, fill='#29D3A7')
 
         def unhighlight(_event, link=self.link):
             "Unhighlight item on mouse exit."
-            self.canvas.itemconfig(link, fill='blue')
+            self.canvas.itemconfig(link, fill='purple')
             # self.selectItem( None )
 
         self.canvas.tag_bind(self.link, '<Enter>', highlight)
@@ -1069,7 +1069,7 @@ class MiniNAM(Frame, Thread):
 
         x, y = self.canvas.coords(item)
         self.link = self.canvas.create_line(x, y, x, y, width=4,
-                                            fill='blue', tag='link')
+                                            fill='purple', tag='link')
         self.linkx, self.linky = x, y
         self.linkWidget = w
         self.linkItem = item
@@ -1099,7 +1099,7 @@ class MiniNAM(Frame, Thread):
         if 'Controller' in stags or 'Controller' in dtags:
             linkType = 'control'
 
-            c.itemconfig(self.link, dash=(6, 4, 2, 4), fill='purple')
+            c.itemconfig(self.link, dash=(6, 4, 2, 4), fill='#95A5A6')
             self.createControlLinkBindings()
         else:
             linkType = 'data'
@@ -1202,7 +1202,7 @@ class MiniNAM(Frame, Thread):
         if path is None:
             return
         # Leemos el fichero json
-        edit_topo = json.load(open(path.name)) # TODO Error
+        edit_topo = json.load(open(path.name))  # TODO Error
         # G = json_graph.cytoscape_graph(gnl)
         # TODO Aniadir una funcion que compruebe si cada uno tiene los atributos que deben tener y que salte una ventana emergente de error en tal caso
         g = nx.Graph()
@@ -1263,7 +1263,7 @@ class MiniNAM(Frame, Thread):
 
                 # print('hola', i)
                 if 'bw' in i['opts'] and 'distance' in i['opts'] and 'propagation_speed' in i['opts']:
-                    g.add_edge(i['src'], i['dest'], bw=int(i['opts']['bw']), distance=int(i['opts']['distance']),
+                    g.add_edge(i['src'], i['dest'], bw=1 / int(i['opts']['bw']), distance=int(i['opts']['distance']),
                                propagation_speed=int(i['opts']['propagation_speed']), load=[])
                     # else:
                     #     g.add_edges_from([(i['src'], i['dest'], {'bw': 1})])
@@ -1436,74 +1436,74 @@ class MiniNAM(Frame, Thread):
         # if name not in self.net.nameToNode:
         #    return
         # if 'Switch' in tags or 'LegacySwitch' in tags:
-            # print('holaaaaaaaaaaaaaaaaaa')
-            # call([
-            #    "xterm -T 'Bridge Details' -sb -sl 2000 -e 'ovs-vsctl list bridge " + name + "; read -p \"Press Enter to close\"' &"],
-            #    shell=True)
+        # print('holaaaaaaaaaaaaaaaaaa')
+        # call([
+        #    "xterm -T 'Bridge Details' -sb -sl 2000 -e 'ovs-vsctl list bridge " + name + "; read -p \"Press Enter to close\"' &"],
+        #    shell=True)
 
-    def intfInfo(self):
+    # def intfInfo(self):
+    #
+    #     info = self.infoBox
+    #     if info is None:
+    #         info = Toplevel(bg='white')
+    #         info.title('Interfaces')
+    #
+    #         columns = 9
+    #         font = 'Helvetica 10 bold'
+    #         widgets = []
+    #         Label(info, text='Interface', borderwidth=0, font=font, padx=10).grid(row=0, column=0, sticky="nsew",
+    #                                                                               padx=1, pady=1)
+    #         Label(info, text='Linked To', borderwidth=0, font=font, padx=10).grid(row=0, column=1, sticky="nsew",
+    #                                                                               padx=1, pady=1)
+    #         Label(info, text='Node Type', borderwidth=0, font=font, padx=10).grid(row=0, column=2, sticky="nsew",
+    #                                                                               padx=1, pady=1)
+    #         Label(info, text='IP Address', borderwidth=0, font=font, padx=10).grid(row=0, column=3, sticky="nsew",
+    #                                                                                padx=1, pady=1)
+    #         Label(info, text='MAC Address', borderwidth=0, font=font, padx=10).grid(row=0, column=4, sticky="nsew",
+    #                                                                                 padx=1, pady=1)
+    #         Label(info, text='TXP', borderwidth=0, font=font, padx=10).grid(row=0, column=5, sticky="nsew", padx=1,
+    #                                                                         pady=1)
+    #         Label(info, text='RXP', borderwidth=0, font=font, padx=10).grid(row=0, column=6, sticky="nsew", padx=1,
+    #                                                                         pady=1)
+    #         Label(info, text='TXB', borderwidth=0, font=font, padx=10).grid(row=0, column=7, sticky="nsew", padx=1,
+    #                                                                         pady=1)
+    #         Label(info, text='RXB', borderwidth=0, font=font, padx=10).grid(row=0, column=8, sticky="nsew", padx=1,
+    #                                                                         pady=1)
+    #         row = 0
+    #         font = 'Helvetica 9'
+    #         infoOrder = ['interface', 'link', 'type', 'ip', 'mac', 'TXP', 'RXP', 'TXB', 'RXB']
+    #         for data in self.intfData:
+    #             row += 1
+    #             current_row = []
+    #             for column in range(columns):
+    #                 label = Label(info, text=data[infoOrder[column]], borderwidth=0, font=font, padx=5)
+    #                 label_name = 'label_' + infoOrder[column]
+    #                 data[label_name] = label
+    #                 label.grid(row=row, column=column, sticky="nsew", padx=1, pady=1)
+    #                 current_row.append(label)
+    #             widgets.append(current_row)
+    #
+    #         for column in range(columns):
+    #             info.columnconfigure(column, weight=1)
+    #         # Scroll bars
+    #         ybar = Scrollbar(info, orient='vertical')
+    #         ybar.grid(row=0, rowspan=row + 1, column=9, sticky='ns')
+    #
+    #         hide = (lambda info=info: info.withdraw())
+    #         self.infoBox = info
+    #         # Hide on close rather than destroying window
+    #         Wm.wm_protocol(info, name='WM_DELETE_WINDOW', func=hide)
+    #     # Show (existing) window
+    #     self.updateIntfInfo()
+    #     info.deiconify()
 
-        info = self.infoBox
-        if info is None:
-            info = Toplevel(bg='white')
-            info.title('Interfaces')
-
-            columns = 9
-            font = 'Helvetica 10 bold'
-            widgets = []
-            Label(info, text='Interface', borderwidth=0, font=font, padx=10).grid(row=0, column=0, sticky="nsew",
-                                                                                  padx=1, pady=1)
-            Label(info, text='Linked To', borderwidth=0, font=font, padx=10).grid(row=0, column=1, sticky="nsew",
-                                                                                  padx=1, pady=1)
-            Label(info, text='Node Type', borderwidth=0, font=font, padx=10).grid(row=0, column=2, sticky="nsew",
-                                                                                  padx=1, pady=1)
-            Label(info, text='IP Address', borderwidth=0, font=font, padx=10).grid(row=0, column=3, sticky="nsew",
-                                                                                   padx=1, pady=1)
-            Label(info, text='MAC Address', borderwidth=0, font=font, padx=10).grid(row=0, column=4, sticky="nsew",
-                                                                                    padx=1, pady=1)
-            Label(info, text='TXP', borderwidth=0, font=font, padx=10).grid(row=0, column=5, sticky="nsew", padx=1,
-                                                                            pady=1)
-            Label(info, text='RXP', borderwidth=0, font=font, padx=10).grid(row=0, column=6, sticky="nsew", padx=1,
-                                                                            pady=1)
-            Label(info, text='TXB', borderwidth=0, font=font, padx=10).grid(row=0, column=7, sticky="nsew", padx=1,
-                                                                            pady=1)
-            Label(info, text='RXB', borderwidth=0, font=font, padx=10).grid(row=0, column=8, sticky="nsew", padx=1,
-                                                                            pady=1)
-            row = 0
-            font = 'Helvetica 9'
-            infoOrder = ['interface', 'link', 'type', 'ip', 'mac', 'TXP', 'RXP', 'TXB', 'RXB']
-            for data in self.intfData:
-                row += 1
-                current_row = []
-                for column in range(columns):
-                    label = Label(info, text=data[infoOrder[column]], borderwidth=0, font=font, padx=5)
-                    label_name = 'label_' + infoOrder[column]
-                    data[label_name] = label
-                    label.grid(row=row, column=column, sticky="nsew", padx=1, pady=1)
-                    current_row.append(label)
-                widgets.append(current_row)
-
-            for column in range(columns):
-                info.columnconfigure(column, weight=1)
-            # Scroll bars
-            ybar = Scrollbar(info, orient='vertical')
-            ybar.grid(row=0, rowspan=row + 1, column=9, sticky='ns')
-
-            hide = (lambda info=info: info.withdraw())
-            self.infoBox = info
-            # Hide on close rather than destroying window
-            Wm.wm_protocol(info, name='WM_DELETE_WINDOW', func=hide)
-        # Show (existing) window
-        self.updateIntfInfo()
-        info.deiconify()
-
-    def updateIntfInfo(self):
-        self.printdata()
-        items = ['interface', 'link', 'type', 'ip', 'mac',
-                 'TXP', 'RXP', 'TXB', 'RXB', ]
-        for data in self.intfData:
-            for item in items:
-                data[str('label_' + item)].config(text=str(data[item]))
+    # def updateIntfInfo(self):
+    #     self.printdata()
+    #     items = ['interface', 'link', 'type', 'ip', 'mac',
+    #              'TXP', 'RXP', 'TXB', 'RXB', ]
+    #     for data in self.intfData:
+    #         for item in items:
+    #             data[str('label_' + item)].config(text=str(data[item]))
 
     def do_linkPopup(self, event):
 
@@ -1583,7 +1583,7 @@ class MiniNAM(Frame, Thread):
         # self.top.wait_variable()
         name = self.itemToWidget[self.selection]['text']
         # print(name)
-        p_import_w.PackageImportWindow(root=root, master=self, host=name, graph=graph)
+        p_import_w.PacketImportWindow(root=root, master=self, host=name, graph=graph)
         # print(list_packets)
 
         # graph.get_list_packets_to_send()[host] = list_packets
@@ -1620,6 +1620,7 @@ class MiniNAM(Frame, Thread):
                         # print(i['type'])
                         number_jumps += 1
                         # print('ewr JAJA 222222')
+
         return time_generation, time_arrive, number_jumps, host
 
     def run_simulation(self):
@@ -1729,7 +1730,6 @@ class MiniNAM(Frame, Thread):
             # print('Fin de la simulacion')
             self.processing_results()
 
-
     def update_chronometer(self, milliseconds):
         milli = math.trunc(milliseconds % 1000)
         seconds = math.trunc((milliseconds / 1000) % 60)
@@ -1800,7 +1800,13 @@ class MiniNAM(Frame, Thread):
 
         for id_packet, packet in self.packets_data.items():
             time_generation, time_arrive, number_jumps, host = self.find_timeGeneration_timeArrive(id_packet)
-            delay = (time_arrive - time_generation - (3.5 * (number_jumps + 1))) * 1000
+
+            if self.appPrefs['flowTime'] == 30:
+                animation_propagation_time = 3.5
+            else:
+                animation_propagation_time = 1.0
+
+            delay = (time_arrive - time_generation - (animation_propagation_time * (number_jumps + 1))) * 1000
             # print('DELAY', id_packet, delay)
             # print(time_generation, time_arrive, number_jumps, host)
             # print(delay * 1000)
@@ -1835,7 +1841,7 @@ class MiniNAM(Frame, Thread):
         root = tkinter.Toplevel()
         # root.configure(width=1000, height=600)
         resultInfor.ResultInformation(root=root, master=self, graph=graph,
-                                      list_flow=self.list_flow,  final_time= self.final_time)
+                                      list_flow=self.list_flow, final_time=self.final_time)
 
 
 def miniImages():

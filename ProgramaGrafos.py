@@ -91,7 +91,27 @@ class NetworkTopology(object):
         self.G.add_edge(node_a, node_b, weight=weight_link, load=[])
         # self.MNAM.drawLink(self.G.nodes[node_a]['name'], self.G.nodes[node_b]['name'])
 
+    # def __init__(self, mac_src, mac_dst, ip_src, ip_dst, transport_protocol, port_src, port_dst, action):
+    #     # self.id = id
+    #     self.mac_src = mac_src
+    #     self.mac_dst = mac_dst
+    #     self.ip_src = ip_src
+    #     self.ip_dst = ip_dst
+    #     self.port_src = port_src
+    #     self.port_dst = port_dst
+    #     self.transport_protocol = transport_protocol
+    #     self.counter_packet_number = 0
+    #     self.counter_packet_byte = 0
+    #     self.action = action
+
+
     def add_flow_entry_to_node(self, node, flowentry):
+
+        for flowent in self.G.nodes[node]['flow_table']:
+
+            if flowent.get_mac_src() == flowentry.get_mac_src() and flowent.get_mac_dst() == flowentry.get_mac_dst() and flowent.get_ip_src() == flowentry.get_ip_src() and flowent.get_ip_dst() == flowentry.get_ip_dst() and flowent.get_port_src() == flowentry.get_port_src() and flowent.get_port_dst() == flowentry.get_port_dst() and flowent.get_transport_protocol() == flowentry.get_transport_protocol():
+                return
+        # if flowentry not in self.G.nodes[node]['flow_table']:
         self.G.nodes[node]['flow_table'].append(flowentry)
 
     # def get_list_packets_to_send(self):
@@ -161,7 +181,7 @@ class NetworkTopology(object):
         # all_path = dict(nx.all_pairs_dijkstra_path(self.G, cutoff=None, weight='weight'))
 
         path = nx.dijkstra_path(self.G, src_host, dst_host, weight='bw')
-        print(path)
+        # print(path)
 
         # Enviamos a cada Switch un flowMod (Enviar graficamente)
 
@@ -259,8 +279,17 @@ class NetworkTopology(object):
     #         return event
 
     def processing_event_packet_propagation2(self, event, list_packets, list_openflow, miniNAM):
+
+        # animation_propagation_time = 3.5
+        print('flow time:', miniNAM.appPrefs['flowTime'])
+        if miniNAM.appPrefs['flowTime'] == 30:
+
+            animation_propagation_time = 3.5
+        else:
+            animation_propagation_time = 1.0
+
         if event['dst'] == 'c0' or event['src'] == 'c0':
-            propagation_delay = 0.06 + 3.5
+            propagation_delay = 0.06 + animation_propagation_time
             is_openflow = True
             type_message = list_openflow[event['openflow_id']]['type']
             load_packet = list_openflow[event['openflow_id']]['size']
@@ -269,10 +298,10 @@ class NetworkTopology(object):
             load_packet = len(list_packets[event['packet_id']])
             propagation_delay = (self.G.edges[event['src'], event['dst']]['distance'] / \
                                  self.G.edges[event['src'], event['dst']]['propagation_speed'] + load_packet /
-                                 self.G.edges[event['src'], event['dst']]['bw']) + 3.5
+                                 (1/self.G.edges[event['src'], event['dst']]['bw'])) + animation_propagation_time
             is_openflow = False
             type_message = None
-        print('imprimir:::::::::::::: ', self.G.edges[event['src'], event['dst']])
+        # print('imprimir:::::::::::::: ', self.G.edges[event['src'], event['dst']])
         if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
             last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
         else:
@@ -320,6 +349,7 @@ class NetworkTopology(object):
                     protocol = 'TCP'
                 else:
                     protocol = 'UDP'
+
                 self.add_flow_entry_to_node(event['dst'], FlowEntry('*', '*', list_packets[event['packet_id']][IP].src,
                                                                     list_packets[event['packet_id']][IP].dst, protocol,
                                                                     list_packets[event['packet_id']][protocol].sport,

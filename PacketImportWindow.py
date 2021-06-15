@@ -9,7 +9,7 @@ from scapy.utils import rdpcap
 from Utilities import Utilities
 
 
-class PackageImportWindow(tk.Frame):
+class PacketImportWindow(tk.Frame):
     def __init__(self, root, master, host, graph, **kw):
         super().__init__(master, **kw)
         self.port_dst = tk.StringVar()
@@ -145,10 +145,10 @@ class PackageImportWindow(tk.Frame):
             #         # packet[inf].dport))
             #         j += 1
 
-    def load_packages(self):
+    def load_packets(self):
         # Seleccionamos el fichero
         try:
-            path = filedialog.askopenfile(title='Load Graph', initialdir='./Packages',
+            path = filedialog.askopenfile(title='Load Graph', initialdir='./Packets',
                                           filetypes=(('Files .pcap', '*.pcap'), (('All Files', '*.*'))))
             # print(path.name)
             scapy_cap = rdpcap(path.name)
@@ -205,7 +205,7 @@ class PackageImportWindow(tk.Frame):
                 message_final = 'Error, (' + message + ') values are not valid. \n\no   Port must be a value between 1 and 65535.'
                 messagebox.showerror("Error", message_final)
         else:
-            messagebox.showerror("Error", 'The number of packages to insert must be greater than 0')
+            messagebox.showerror("Error", 'The number of packets to insert must be greater than 0')
 
     def update_values_hosts(self, event):
         print(self.showHostsOption)
@@ -226,15 +226,15 @@ class PackageImportWindow(tk.Frame):
         self.tree['show'] = 'headings'
         self.tree["columns"] = ("1", "2", "3", "4", "5", "6", "7", '8', '9')
         # Set the heading (Attribute Names)
-        self.tree.heading('1', text='Num Packet')
-        self.tree.heading('2', text='MAC Source')
-        self.tree.heading('3', text='MAC Destination')
-        self.tree.heading('4', text='IP Source')
-        self.tree.heading('5', text='IP Destination')
-        self.tree.heading('6', text='Port Source')
-        self.tree.heading('7', text='Port Destination')
+        self.tree.heading('1', text='Packet')
+        self.tree.heading('2', text='Source MAC')
+        self.tree.heading('3', text='Destination MAC')
+        self.tree.heading('4', text='Source IP')
+        self.tree.heading('5', text='Destination IP')
+        self.tree.heading('6', text='Source Port')
+        self.tree.heading('7', text='Destination Port')
         self.tree.heading('8', text='Transport Protocol')
-        self.tree.heading('9', text='Time Spawn')
+        self.tree.heading('9', text='Spawn Time')
         # Specify attributes of the columns (We want to stretch it!)
         self.tree.column('1', minwidth=120, width=145, stretch=False)
         self.tree.column('2', minwidth=120, width=145, stretch=False)
@@ -250,20 +250,20 @@ class PackageImportWindow(tk.Frame):
 
         # tk.Label(self.root, text=' ').grid(row=1)
 
-        campos = tk.LabelFrame(self.root, text="Parameters to change of the selected package")
+        campos = tk.LabelFrame(self.root, text="Packet Parameters")
         campos.grid(row=2, padx=5, pady=15)
 
         tk.Label(campos, text=' ').grid(row=0, column=0)
-        tk.Label(campos, text="Host src:").grid(row=1, column=0, sticky='w', padx=20, pady=5)
-        tk.Label(campos, text="Host dst:").grid(row=2, column=0, sticky='w', padx=20, pady=5)
-        tk.Label(campos, text="MAC src:").grid(row=1, column=2, sticky='w', padx=20, pady=5)
-        tk.Label(campos, text="MAC dst:").grid(row=2, column=2, sticky='w', padx=20, pady=5)
-        tk.Label(campos, text="IP src:").grid(row=1, column=4, sticky='w', padx=20, pady=5)
-        tk.Label(campos, text="IP dst:").grid(row=2, column=4, sticky='w', padx=20, pady=5)
-        tk.Label(campos, text="Port src:").grid(row=1, column=6, sticky='w', padx=20, pady=5)
-        tk.Label(campos, text="Port dst:").grid(row=2, column=6, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Src Host:").grid(row=1, column=0, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Dst Host:").grid(row=2, column=0, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Src MAC:").grid(row=1, column=2, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Dst MAC:").grid(row=2, column=2, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Src IP:").grid(row=1, column=4, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Dst IP:").grid(row=2, column=4, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Src Port:").grid(row=1, column=6, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="Dst Port:").grid(row=2, column=6, sticky='w', padx=20, pady=5)
         tk.Label(campos, text="Pransport protocol:").grid(row=1, column=8, sticky='w', padx=20, pady=5)
-        tk.Label(campos, text="Nº of packages to add:").grid(row=2, column=8, sticky='w', padx=20, pady=5)
+        tk.Label(campos, text="No. of packets to add:").grid(row=2, column=8, sticky='w', padx=20, pady=5)
 
         self.host_src.set(self.host)
         tk.Entry(campos, textvariable=self.host_src, width=10, state='disabled').grid(row=1, column=1, sticky='w')
@@ -308,7 +308,7 @@ class PackageImportWindow(tk.Frame):
         tk.Button(campos, text="Apply changes", command=self.apply_changes, height=1, width=15).grid(row=2, column=14,
                                                                                                      sticky='E', padx=5,
                                                                                                      pady=5)
-        tk.Button(campos, text="Add as new package", command=self.add_packets, height=1, width=15).grid(row=3,
+        tk.Button(campos, text="Add as new packet", command=self.add_packets, height=1, width=15).grid(row=3,
                                                                                                         column=14,
                                                                                                         sticky='E',
                                                                                                         padx=5, pady=5)
@@ -324,7 +324,7 @@ class PackageImportWindow(tk.Frame):
 
         tk.Button(buttonFrame, text="Delete Selected Packet", command=self.delete).grid(row=0, column=0, padx=0, pady=0)
         # tk.Label(botones, text=' ').grid(row=0, column=1)
-        tk.Button(buttonFrame, text="Load Packages from...", command=self.load_packages).grid(row=0, column=1, padx=20, pady=0)
+        tk.Button(buttonFrame, text="Load Packets from...", command=self.load_packets).grid(row=0, column=1, padx=20, pady=0)
         # tk.Label(botones, text=' ').grid(row=0, column=3)
         tk.Button(buttonFrame, text="Save Packets", command=self.return_list_packets).grid(row=0, column=2, padx=0, pady=0)
 
@@ -374,6 +374,6 @@ class PackageImportWindow(tk.Frame):
         # return self.list_packets
 
 # if __name__ == '__main__':
-#     app = PackageImportWindow(tk.Tk())
+#     app = PacketImportWindow(tk.Tk())
 #     app.root.resizable(False, False)
 #     app.root.mainloop()

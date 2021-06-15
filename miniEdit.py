@@ -3,23 +3,24 @@ import os
 from subprocess import call
 from tkinter import (Frame, Label, LabelFrame, Entry, Menu, Toplevel, Button, BitmapImage,
                      PhotoImage, Canvas, Scrollbar, Wm, TclError,
-                     StringVar, E, W, NW, Y, VERTICAL, SOLID,
+                     StringVar, W, NW, Y, VERTICAL, SOLID,
                      RIGHT, LEFT, BOTH, TRUE, FALSE, N)
 from tkinter import filedialog as tkFileDialog
 from tkinter import font as tkFont
 from tkinter import messagebox
 from tkinter import simpledialog as tkSimpleDialog
 
+import networkx as nx
+
 import Utilities
 
-message_help = '  o   Port must be a value between 1 and 65535. \n\n' \
-               '  o   IP address must have the following format:\n\n' \
+message_help = '  o   Valid Port value: [1, 65535] \n\n' \
+               '  o   IP address format:\n\n' \
                '              <num_1>.<num_2>.<num_3>.<num_4>\n\n' \
-               '      where each number must have a value between 0 and 255.\n\n' \
-               '  o   MAC address must be in the following format:\n\n' \
+               '      (from 0 to 255, both included)\n\n' \
+               '  o   MAC address format:\n\n' \
                '            <val1>:<val2>:<val3>:<val4>:<val5>:<val6>\n\n' \
-               '      where in values you can put number in hexadecimal\n' \
-               '      from 00 to FF.\n'
+               '      (from 00 to FF [HEX], both included)\n'
 
 message_help_2 = '  o   Bandwidth, Distance, and Velocity of Propagation\n' \
                  '      values must be a positive integer greater than 0.'
@@ -82,23 +83,23 @@ class HostDialog(CustomDialog):
         # remoteFrame = LabelFrame(master, text='Host parameters')
         # remoteFrame.grid(row=1, column=1, sticky=W)
 
-        Label(master, text="Hostname:").grid(row=0, column=0, sticky=W,padx=5, pady=5)
-        Entry(master, textvariable=self.hostname, state='disabled').grid(row=0, column=1,padx=5, pady=5)
+        Label(master, text="Hostname:").grid(row=0, column=0, sticky=W, padx=5, pady=5)
+        Entry(master, textvariable=self.hostname, state='disabled').grid(row=0, column=1, padx=5, pady=5)
         if 'hostname' in self.prefValues:
             self.hostname.set(self.prefValues['hostname'])
 
-        Label(master, text="MAC Address:").grid(row=1, sticky=W,padx=5, pady=5)
-        Entry(master, textvariable=self.mac).grid(row=1, column=1,padx=5, pady=5)
+        Label(master, text="MAC Address:").grid(row=1, sticky=W, padx=5, pady=5)
+        Entry(master, textvariable=self.mac).grid(row=1, column=1, padx=5, pady=5)
         if 'mac' in self.prefValues:
             self.mac.set(self.prefValues['mac'])
 
-        Label(master, text="IP Address:").grid(row=2, sticky=W,padx=5, pady=5)
-        Entry(master, textvariable=self.ip).grid(row=2, column=1,padx=5, pady=5)
+        Label(master, text="IP Address:").grid(row=2, sticky=W, padx=5, pady=5)
+        Entry(master, textvariable=self.ip).grid(row=2, column=1, padx=5, pady=5)
         if 'ip' in self.prefValues:
             self.ip.set(self.prefValues['ip'])
 
-        Label(master, text="Port:").grid(row=3, sticky=W,padx=5, pady=5)
-        Entry(master, textvariable=self.port).grid(row=3, column=1,padx=5, pady=5)
+        Label(master, text="Port:").grid(row=3, sticky=W, padx=5, pady=5)
+        Entry(master, textvariable=self.port).grid(row=3, column=1, padx=5, pady=5)
         if 'port' in self.prefValues:
             self.port.set(self.prefValues['port'])
 
@@ -383,6 +384,8 @@ class MiniEdit(Frame):
 
     def __init__(self, parent=None, cheight=600, cwidth=1000):
 
+        self.graph = nx.Graph()
+
         self.defaultIpBase = '10.0.0.0/8'
 
         self.nflowDefaults = {'nflowTarget': '',
@@ -410,7 +413,7 @@ class MiniEdit(Frame):
 
         Frame.__init__(self, parent)
         self.action = None
-        self.appName = 'MiniEdit'
+        self.appName = 'Customize Topology'
         self.fixedFont = tkFont.Font(family="DejaVu Sans Mono", size="14")
 
         # Style
@@ -482,15 +485,15 @@ class MiniEdit(Frame):
         self.switchRunPopup.add_command(label='List bridge details', font=self.font, command=self.listBridge)
 
         self.linkPopup = Menu(self.top, tearoff=0)
-        self.linkPopup.add_command(label='Link Options', font=self.font)
-        self.linkPopup.add_separator()
+        # self.linkPopup.add_command(label='Link Options', font=self.font)
+        # self.linkPopup.add_separator()
         self.linkPopup.add_command(label='Properties', font=self.font, command=self.linkDetails)
 
         self.linkRunPopup = Menu(self.top, tearoff=0)
-        self.linkRunPopup.add_command(label='Link Options', font=self.font)
-        self.linkRunPopup.add_separator()
-        self.linkRunPopup.add_command(label='Link Up', font=self.font, command=self.linkUp)
-        self.linkRunPopup.add_command(label='Link Down', font=self.font, command=self.linkDown)
+        # self.linkRunPopup.add_command(label='Link Options', font=self.font)
+        # self.linkRunPopup.add_separator()
+        # self.linkRunPopup.add_command(label='Link Up', font=self.font, command=self.linkUp)
+        # self.linkRunPopup.add_command(label='Link Down', font=self.font, command=self.linkDown)
 
         self.controllerPopup = Menu(self.top, tearoff=0)
         # self.controllerPopup.add_command(label='Controller Options', font=self.font)
@@ -531,8 +534,8 @@ class MiniEdit(Frame):
         fileMenu.add_command(label="Open", font=font, command=self.loadTopology)
         fileMenu.add_command(label="Save", font=font, command=self.saveTopology)
         # fileMenu.add_command( label="Export Level 2 Script", font=font, command=self.exportScript )
-        fileMenu.add_separator()
-        fileMenu.add_command(label='Quit', command=self.quit, font=font)
+        # fileMenu.add_separator()
+        # fileMenu.add_command(label='Quit', command=self.quit, font=font)
 
     def createCanvas(self):
         "Create and return our scrolling canvas frame."
@@ -641,6 +644,7 @@ class MiniEdit(Frame):
             self.controllerCount += 1
         if name is None:
             name = self.nodePrefixes[node] + nodeNum
+
         self.addNamedNode(node, name, x, y)
 
     def addNamedNode(self, node, name, x, y):
@@ -651,6 +655,9 @@ class MiniEdit(Frame):
         self.widgetToItem[icon] = item
         self.itemToWidget[item] = icon
         icon.links = {}
+
+        self.graph.add_node(name)
+        # print('Aniadimos el nodo', name)
 
     def loadTopology(self):
         c = self.canvas
@@ -744,7 +751,7 @@ class MiniEdit(Frame):
                                                         dx,
                                                         dy,
                                                         width=4,
-                                                        fill='red',
+                                                        fill='#95A5A6',
                                                         dash=(6, 4, 2, 4),
                                                         tag='link')
                     c.itemconfig(self.link, tags=c.gettags(self.link) + ('control',))
@@ -756,6 +763,7 @@ class MiniEdit(Frame):
         links = loadedTopology['links']
         for link in links:
             srcNode = link['src']
+            # print(srcNode)
             src = self.findWidgetByName(srcNode)
             sx, sy = self.canvas.coords(self.widgetToItem[src])
 
@@ -764,9 +772,9 @@ class MiniEdit(Frame):
             dx, dy = self.canvas.coords(self.widgetToItem[dest])
 
             self.link = self.canvas.create_line(sx, sy, dx, dy, width=4,
-                                                fill='blue', tag='link')
+                                                fill='#95A5A6', tag='link')
             c.itemconfig(self.link, tags=c.gettags(self.link) + ('data',))
-            print('opts:', link['opts'])
+            # print('opts:', link['opts'])
 
             self.addLink(src, dest, linkopts=link['opts'])
             self.createDataLinkBindings()
@@ -802,77 +810,124 @@ class MiniEdit(Frame):
         self.controllers = {}
         self.appPrefs["ipBase"] = self.defaultIpBase
 
+    def is_correct_graph(self):
+
+        if not nx.is_empty(self.graph):
+            if nx.is_connected(self.graph) and self.graph.number_of_nodes() >= 4:
+
+                # Vemos el numero de controladores en el grafo (no puede ser mas de uno)
+                list_controllers = [controller for controller in list(self.graph.nodes()) if (controller[0] == 'c')]
+                list_switchs = [switch for switch in list(self.graph.nodes()) if (switch[0] == 's')]
+                list_hosts = [host for host in list(self.graph.nodes()) if (host[0] == 'h')]
+                # print()
+                if len(list_controllers) == 1 and len(list_switchs) >= 1 and len(list_hosts) >= 2:
+                    # print('Llega aquí 1')
+                    for switch in list_switchs:
+                        if switch not in self.graph.neighbors(list_controllers[0]):
+                            return False
+
+                    for host in list_hosts:
+                        if not ('mac' in self.hostOpts[host] and 'ip' in self.hostOpts[host] and 'port' in
+                                self.hostOpts[host]):
+                            return False
+                        for host_2 in list_hosts:
+                            if (host_2 != host) and (
+                                    self.hostOpts[host]['ip'] == self.hostOpts[host_2]['ip'] or self.hostOpts[host][
+                                'mac'] == self.hostOpts[host_2]['mac']):
+                                return False
+                    # print('Llega aquí 2')
+                    list_nodes_without_controller = list_hosts + list_switchs
+
+                    if nx.is_connected(self.graph.subgraph(list_nodes_without_controller)) and nx.is_connected(
+                            self.graph.subgraph(list_switchs)):
+                        return True
+
+        return False
+
     def saveTopology(self):
 
-        savingDictionary = {}
-        fileName = tkFileDialog.asksaveasfilename(title='Save the topology as...', initialdir='./Graphs',
-                                                  filetypes=(('Files .json', '*.json'), ('All Files', '*.*')))
-        # fileName = tkFileDialog.asksaveasfilename(filetypes=myFormats ,title="Save the topology as...")
-        if len(fileName) > 0:
-            # Save Switches and Hosts
-            hostsToSave = []
-            switchesToSave = []
-            controllersToSave = []
-            for widget in self.widgetToItem:
-                name = widget['text']
-                tags = self.canvas.gettags(self.widgetToItem[widget])
-                x1, y1 = self.canvas.coords(self.widgetToItem[widget])
-                # if 'Switch' in tags or 'LegacySwitch' in tags or 'LegacyRouter' in tags:
-                if 'Switch' in tags:
-                    nodeNum = self.switchOpts[name]['nodeNum']
-                    nodeToSave = {'number': str(nodeNum),
-                                  'x': str(x1),
-                                  'y': str(y1),
-                                  'opts': self.switchOpts[name]}
-                    switchesToSave.append(nodeToSave)
-                elif 'Host' in tags:
-                    nodeNum = self.hostOpts[name]['nodeNum']
-                    nodeToSave = {'number': str(nodeNum),
-                                  'x': str(x1),
-                                  'y': str(y1),
-                                  'opts': self.hostOpts[name]}
-                    hostsToSave.append(nodeToSave)
-                elif 'Controller' in tags:
-                    nodeToSave = {'x': str(x1),
-                                  'y': str(y1),
-                                  'opts': self.controllers[name]}
-                    controllersToSave.append(nodeToSave)
-                else:
-                    raise Exception("Cannot create mystery node: " + name)
+        if self.is_correct_graph():
+            savingDictionary = {}
+            fileName = tkFileDialog.asksaveasfilename(title='Save the topology as...', initialdir='./Graphs',
+                                                      filetypes=(('Files .json', '*.json'), ('All Files', '*.*')))
+            # fileName = tkFileDialog.asksaveasfilename(filetypes=myFormats ,title="Save the topology as...")
+            if len(fileName) > 0:
+                # Save Switches and Hosts
+                hostsToSave = []
+                switchesToSave = []
+                controllersToSave = []
+                for widget in self.widgetToItem:
+                    name = widget['text']
+                    tags = self.canvas.gettags(self.widgetToItem[widget])
+                    x1, y1 = self.canvas.coords(self.widgetToItem[widget])
+                    # if 'Switch' in tags or 'LegacySwitch' in tags or 'LegacyRouter' in tags:
+                    if 'Switch' in tags:
+                        nodeNum = self.switchOpts[name]['nodeNum']
+                        nodeToSave = {'number': str(nodeNum),
+                                      'x': str(x1),
+                                      'y': str(y1),
+                                      'opts': self.switchOpts[name]}
+                        switchesToSave.append(nodeToSave)
+                    elif 'Host' in tags:
+                        nodeNum = self.hostOpts[name]['nodeNum']
+                        nodeToSave = {'number': str(nodeNum),
+                                      'x': str(x1),
+                                      'y': str(y1),
+                                      'opts': self.hostOpts[name]}
+                        hostsToSave.append(nodeToSave)
+                    elif 'Controller' in tags:
+                        nodeToSave = {'x': str(x1),
+                                      'y': str(y1),
+                                      'opts': self.controllers[name]}
+                        controllersToSave.append(nodeToSave)
+                    else:
+                        raise Exception("Cannot create mystery node: " + name)
 
-            savingDictionary['hosts'] = hostsToSave
-            savingDictionary['switches'] = switchesToSave
-            savingDictionary['controllers'] = controllersToSave
+                savingDictionary['hosts'] = hostsToSave
+                savingDictionary['switches'] = switchesToSave
+                savingDictionary['controllers'] = controllersToSave
 
-            # Save Links
-            linksToSave = []
-            for link in self.links.values():
-                src = link['src']
-                dst = link['dest']
-                linkopts = link['opts']
+                # Save Links
+                linksToSave = []
+                for link in self.links.values():
+                    src = link['src']
+                    dst = link['dest']
+                    linkopts = link['opts']
 
-                srcName, dstName = src['text'], dst['text']
-                linkToSave = {'src': srcName,
-                              'dest': dstName,
-                              'opts': linkopts}
-                # linkToSave['opts']['bw'] = linkopts['bw']
-                # linkToSave['opts']['distance'] = linkopts['distance']
-                # linkToSave['opts']['propagation_speed'] = linkopts['propagation_speed']
-                if link['type'] == 'data':
-                    linksToSave.append(linkToSave)
-            savingDictionary['links'] = linksToSave
+                    srcName, dstName = src['text'], dst['text']
+                    linkToSave = {'src': srcName,
+                                  'dest': dstName,
+                                  'opts': linkopts}
+                    # linkToSave['opts']['bw'] = linkopts['bw']
+                    # linkToSave['opts']['distance'] = linkopts['distance']
+                    # linkToSave['opts']['propagation_speed'] = linkopts['propagation_speed']
+                    if link['type'] == 'data':
+                        linksToSave.append(linkToSave)
+                savingDictionary['links'] = linksToSave
 
-            try:
-                f = open(fileName, 'w')
-                f.write(json.dumps(savingDictionary, sort_keys=True, indent=4, separators=(',', ': ')))
-            # pylint: disabled=broad-except
-            except Exception as er:
-                print(er)
-            # pylint: enable=broad-except
-            finally:
+                try:
+
+                    f = open(fileName, 'w')
+                    f.write(json.dumps(savingDictionary, sort_keys=True, indent=4, separators=(',', ': ')))
+                # pylint: disabled=broad-except
+                except Exception as er:
+                    print(er)
+                # pylint: enable=broad-except
+                finally:
+                    f.close()
+
                 f.close()
-
-            f.close()
+        else:
+            message = 'One or more of the requirements to save the created topology is not met.'
+            help_message = 'Minimum requirements: \n\n' \
+                           '  o   Controllers = 1 \n' \
+                           '  o   Switches >= 1 \n' \
+                           '  o   Hosts >= 2 \n' \
+                           '  o   The controller must be connected to all switches.\n' \
+                           '  o   Switches and hosts must form a connected graph.\n' \
+                           '  o   Switches must form a connected graph.\n' \
+                           '  o   All hosts must have assigned IP address, MAC and port'
+            messagebox.showerror("Error", message + '\n\n' + help_message)
 
     # Generic canvas handler
     #
@@ -979,6 +1034,9 @@ class MiniEdit(Frame):
             self.controllers[name] = ctrlr
             # We want to start controller count at 0
             self.controllerCount += 1
+
+        self.graph.add_node(name)
+        # print('aniadimos el nodo', name)
 
         icon = self.nodeIcon(node, name)
         item = self.canvas.create_window(x, y, anchor='c', window=icon,
@@ -1115,11 +1173,11 @@ class MiniEdit(Frame):
         def highlight(_event, link=self.link):
             "Highlight item on mouse entry."
             self.selectItem(link)
-            self.canvas.itemconfig(link, fill='green')
+            self.canvas.itemconfig(link, fill='#29D3A7')
 
         def unhighlight(_event, link=self.link):
             "Unhighlight item on mouse exit."
-            self.canvas.itemconfig(link, fill='red')
+            self.canvas.itemconfig(link, fill='#95A5A6')
             # self.selectItem( None )
 
         self.canvas.tag_bind(self.link, '<Enter>', highlight)
@@ -1140,11 +1198,11 @@ class MiniEdit(Frame):
         def highlight(_event, link=self.link):
             "Highlight item on mouse entry."
             self.selectItem(link)
-            self.canvas.itemconfig(link, fill='green')
+            self.canvas.itemconfig(link, fill='#29D3A7')
 
         def unhighlight(_event, link=self.link):
             "Unhighlight item on mouse exit."
-            self.canvas.itemconfig(link, fill='blue')
+            self.canvas.itemconfig(link, fill='purple')
             # self.selectItem( None )
 
         self.canvas.tag_bind(self.link, '<Enter>', highlight)
@@ -1162,7 +1220,7 @@ class MiniEdit(Frame):
         item = self.widgetToItem[w]
         x, y = self.canvas.coords(item)
         self.link = self.canvas.create_line(x, y, x, y, width=4,
-                                            fill='blue', tag='link')
+                                            fill='purple', tag='link')
         self.linkx, self.linky = x, y
         self.linkWidget = w
         self.linkItem = item
@@ -1172,11 +1230,13 @@ class MiniEdit(Frame):
         if self.link is None:
             return
         source = self.linkWidget
+
         c = self.canvas
         # Since we dragged from the widget, use root coords
         x, y = self.canvasx(event.x_root), self.canvasy(event.y_root)
         target = self.findItem(x, y)
         dest = self.itemToWidget.get(target, None)
+
         if (source is None or dest is None or source == dest
                 or dest in source.links or source in dest.links):
             self.releaseNetLink(event)
@@ -1201,7 +1261,7 @@ class MiniEdit(Frame):
         linkType = 'data'
         if 'Controller' in stags or 'Controller' in dtags:
             linkType = 'control'
-            c.itemconfig(self.link, dash=(6, 4, 2, 4), fill='red')
+            c.itemconfig(self.link, dash=(6, 4, 2, 4), fill='#95A5A6')
             self.createControlLinkBindings()
         else:
             linkType = 'data'
@@ -1238,12 +1298,13 @@ class MiniEdit(Frame):
             return
 
         prefDefaults = self.hostOpts[name]
+
         hostBox = HostDialog(self, title='Host Details', prefDefaults=prefDefaults)
         self.master.wait_window(hostBox.top)
 
         correct = True
         utilities = Utilities.Utilities()
-        parameter = ' '
+        parameter = ''
 
         if hostBox.result:
             newHostOpts = {'nodeNum': self.hostOpts[name]['nodeNum']}
@@ -1256,23 +1317,23 @@ class MiniEdit(Frame):
                 newHostOpts['mac'] = hostBox.result['mac']
             else:
                 correct = False
-                parameter = '{MAC address}'
+                parameter = '( MAC address )'
             if len(hostBox.result['ip']) > 0 and utilities.ip_address_check(hostBox.result['ip']):
                 newHostOpts['ip'] = hostBox.result['ip']
             else:
                 correct = False
-                parameter += '{IP address}'
+                parameter += '( IP address )'
             if len(hostBox.result['port']) > 0 and utilities.port_check(hostBox.result['port']):
                 newHostOpts['port'] = hostBox.result['port']
             else:
-                parameter += '{Port}'
+                parameter += '( Port )'
                 correct = False
 
             if not correct:
                 if len(parameter.split(' ')) > 0:
-                    message = 'Error, the parameters (' + parameter + ') are not correct. Values will not be saved.'
+                    message = 'Error, invalid parameters [ ' + parameter + ' ]. Values will not be saved.'
                 else:
-                    message = 'Error, the parameter (' + parameter + ') are not correct. The value will not be saved'
+                    message = 'Error, invalid parameter [ ' + parameter + ' ]. The value will not be saved'
                 messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help)
             else:
                 self.hostOpts[name] = newHostOpts
@@ -1306,46 +1367,47 @@ class MiniEdit(Frame):
                 newSwitchOpts['mac'] = switchBox.result['mac']
             else:
                 correct = False
-                parameter = '{MAC address}'
+                parameter = '( MAC address )'
 
             if len(switchBox.result['ip']) > 0 and utilities.ip_address_check(switchBox.result['ip']):
                 newSwitchOpts['ip'] = switchBox.result['ip']
             else:
                 correct = False
-                parameter += '{IP address}'
+                parameter += '( IP address )'
 
             if not correct:
                 if len(parameter.split(' ')) > 0:
-                    message = 'Error, the parameters (' + parameter + ') are not correct. Values will not be saved.'
+                    message = 'Error, invalid parameters [ ' + parameter + ' ]. Values will not be saved.'
                 else:
-                    message = 'Error, the parameter (' + parameter + ') are not correct. The value will not be saved'
+                    message = 'Error, invalid parameter [ ' + parameter + ' ]. The value will not be saved'
                 messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help)
 
-    def linkUp(self):
-        if (self.selection is None or
-                self.net is None):
-            return
-        link = self.selection
-        linkDetail = self.links[link]
-        src = linkDetail['src']
-        dst = linkDetail['dest']
-        srcName, dstName = src['text'], dst['text']
-        self.net.configLinkStatus(srcName, dstName, 'up')
-        self.canvas.itemconfig(link, dash=())
+    # def linkUp(self):
+    #     if (self.selection is None or
+    #             self.net is None):
+    #         return
+    #     link = self.selection
+    #     linkDetail = self.links[link]
+    #     src = linkDetail['src']
+    #     dst = linkDetail['dest']
+    #     srcName, dstName = src['text'], dst['text']
+    #     self.net.configLinkStatus(srcName, dstName, 'up')
+    #     self.canvas.itemconfig(link, dash=())
 
-    def linkDown(self):
-        if (self.selection is None or
-                self.net is None):
-            return
-        link = self.selection
-        linkDetail = self.links[link]
-        src = linkDetail['src']
-        dst = linkDetail['dest']
-        srcName, dstName = src['text'], dst['text']
-        self.net.configLinkStatus(srcName, dstName, 'down')
-        self.canvas.itemconfig(link, dash=(4, 4))
+    # def linkDown(self):
+    #     if (self.selection is None or
+    #             self.net is None):
+    #         return
+    #     link = self.selection
+    #     linkDetail = self.links[link]
+    #     src = linkDetail['src']
+    #     dst = linkDetail['dest']
+    #     srcName, dstName = src['text'], dst['text']
+    #     self.net.configLinkStatus(srcName, dstName, 'down')
+    #     self.canvas.itemconfig(link, dash=(4, 4))
 
     def linkDetails(self, _ignore=None):
+        parameter = ''
         correct = True
         if (self.selection is None or
                 self.net is not None):
@@ -1378,9 +1440,9 @@ class MiniEdit(Frame):
 
             if not correct:
                 if len(parameter.split(' ')) > 1:
-                    message = 'Error, the parameters [ ' + parameter + ' ] are not correct. Values will not be saved.'
+                    message = 'Error, invalid parameters [ ' + parameter + ' ]. Values will not be saved.'
                 else:
-                    message = 'Error, the parameter [' + parameter + '] are not correct. The value will not be saved.'
+                    message = 'Error, invalid parameter [' + parameter + ']. The value will not be saved.'
                 messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help_2)
 
     def controllerDetails(self, _ignore=None):
@@ -1396,7 +1458,7 @@ class MiniEdit(Frame):
             return
 
         ctrlrBox = ControllerDialog(self, title='Controller Details', ctrlrDefaults=self.controllers[name])
-        print(ctrlrBox.result)
+        # print(ctrlrBox.result)
         if ctrlrBox.result:
             utilities = Utilities.Utilities()
             parameter = ''
@@ -1424,9 +1486,9 @@ class MiniEdit(Frame):
 
             if not correct:
                 if len(parameter.split(' ')) > 1:
-                    message = 'Error, the parameters (' + parameter + ') are not correct. Values will not be saved.'
+                    message = 'Error, invalid parameters (' + parameter + '). Values will not be saved.'
                 else:
-                    message = 'Error, the parameter (' + parameter + ') are not correct. The value will not be saved.'
+                    message = 'Error, invalid parameter (' + parameter + '). The value will not be saved.'
                 messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help)
             else:
                 self.controllers[name] = ctrlrBox.result
@@ -1471,6 +1533,10 @@ class MiniEdit(Frame):
                                  'dest': dest,
                                  'opts': linkopts}
 
+        # print('Aniadimos el enlace', source['text'], dest['text'])
+        self.graph.add_edge(source['text'], dest['text'])
+        # print(self)
+
     def deleteLink(self, link):
         "Delete link from model."
         pair = self.links.get(link, None)
@@ -1479,6 +1545,12 @@ class MiniEdit(Frame):
             dest = pair['dest']
             del source.links[dest]
             del dest.links[source]
+
+            # print('Enlaces:', self.graph.edges(), 'Nodos:', self.graph.nodes())
+            if self.graph.has_edge(source['text'], dest['text']):
+                # print('Eliminamos Enlace', source['text'], dest['text'])
+                self.graph.remove_edge(source['text'], dest['text'])
+
             stags = self.canvas.gettags(self.widgetToItem[source])
             # dtags = self.canvas.gettags( self.widgetToItem[ dest ] )
             ltags = self.canvas.gettags(link)
@@ -1512,9 +1584,19 @@ class MiniEdit(Frame):
                 if 'Switch' in tags:
                     if widget['text'] in self.switchOpts[name]['controllers']:
                         self.switchOpts[name]['controllers'].remove(widget['text'])
+
+        self.graph.remove_node(widget['text'])
+        # print('Eliminamos el nodo', widget['text'], 'Enlaces:', self.graph.edges(), 'Nodos:', self.graph.nodes())
+
         for link in tuple(widget.links.values()):
             # Delete from view and model
             self.deleteItem(link)
+
+            # if self.graph.has_edge(link[0]['text'], link[1]['text']):
+            #     print('Eliminamos el enlace', link[0], link[1])
+            #     self.graph.remove_edge(link[0]['text'], link[1]['text'])
+            #     print('Eliminamos el enlace', link[0]['text'], link[1]['text'])
+
         del self.itemToWidget[item]
         del self.widgetToItem[widget]
 
@@ -1594,11 +1676,6 @@ class MiniEdit(Frame):
                     nflowCmd = nflowCmd + ' add_id_to_interface=false'
                 call(nflowCmd + nflowSwitches, shell=True)
 
-            else:
-                print('sd')
-        else:
-            print('dfasd')
-
         # Configure sFlow
         sflowValues = self.appPrefs['sflow']
         if len(sflowValues['sflowTarget']) > 0:
@@ -1622,55 +1699,48 @@ class MiniEdit(Frame):
                 # info( 'cmd = '+sflowCmd+sflowSwitches, '\n' )
                 call(sflowCmd + sflowSwitches, shell=True)
 
-            else:
-                print('wedsadasd')
-                # info( 'No switches with sflow\n' )
-        else:
-            print('sdasdasd')
-            # info( 'No sFlow targets specified.\n' )
+    # def start(self):
+    #     "Start network."
+    #     if self.net is None:
+    #
+    #         for widget in self.widgetToItem:
+    #             name = widget['text']
+    #             tags = self.canvas.gettags(self.widgetToItem[widget])
+    #             if 'Switch' in tags:
+    #                 opts = self.switchOpts[name]
+    #                 switchControllers = []
+    #                 for ctrl in opts['controllers']:
+    #                     switchControllers.append(self.net.get(ctrl))
+    #                 # Figure out what controllers will manage this switch
+    #                 self.net.get(name).start(switchControllers)
+    #             if 'LegacySwitch' in tags:
+    #                 self.net.get(name).start([])
+    #
+    #         self.postStartSetup()
 
-    def start(self):
-        "Start network."
-        if self.net is None:
-
-            for widget in self.widgetToItem:
-                name = widget['text']
-                tags = self.canvas.gettags(self.widgetToItem[widget])
-                if 'Switch' in tags:
-                    opts = self.switchOpts[name]
-                    switchControllers = []
-                    for ctrl in opts['controllers']:
-                        switchControllers.append(self.net.get(ctrl))
-                    # Figure out what controllers will manage this switch
-                    self.net.get(name).start(switchControllers)
-                if 'LegacySwitch' in tags:
-                    self.net.get(name).start([])
-
-            self.postStartSetup()
-
-    def stop(self):
-        "Stop network."
-        if self.net is not None:
-            # Stop host details
-            for widget in self.widgetToItem:
-                name = widget['text']
-                tags = self.canvas.gettags(self.widgetToItem[widget])
-                if 'Host' in tags:
-                    newHost = self.net.get(name)
-                    opts = self.hostOpts[name]
-                    # Run User Defined Stop Command
-                    if 'stopCommand' in opts:
-                        newHost.cmdPrint(opts['stopCommand'])
-                if 'Switch' in tags:
-                    newNode = self.net.get(name)
-                    opts = self.switchOpts[name]
-                    # Run User Defined Stop Command
-                    if 'stopCommand' in opts:
-                        newNode.cmdPrint(opts['stopCommand'])
-
-            self.net.stop()
-        # cleanUpScreens()
-        self.net = None
+    # def stop(self):
+    #     "Stop network."
+    #     if self.net is not None:
+    #         # Stop host details
+    #         for widget in self.widgetToItem:
+    #             name = widget['text']
+    #             tags = self.canvas.gettags(self.widgetToItem[widget])
+    #             if 'Host' in tags:
+    #                 newHost = self.net.get(name)
+    #                 opts = self.hostOpts[name]
+    #                 # Run User Defined Stop Command
+    #                 if 'stopCommand' in opts:
+    #                     newHost.cmdPrint(opts['stopCommand'])
+    #             if 'Switch' in tags:
+    #                 newNode = self.net.get(name)
+    #                 opts = self.switchOpts[name]
+    #                 # Run User Defined Stop Command
+    #                 if 'stopCommand' in opts:
+    #                     newNode.cmdPrint(opts['stopCommand'])
+    #
+    #         self.net.stop()
+    #     # cleanUpScreens()
+    #     self.net = None
 
     def do_linkPopup(self, event):
         # display the popup menu

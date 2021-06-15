@@ -25,7 +25,7 @@ class InfoLinkWindow(tk.Frame):
         tk.Label(self.root, text="m/s").grid(row=3, column=2, sticky='w', padx=10, pady=5)
 
         if 'bw' in self.link_data:
-            tk.Label(self.root, text=self.link_data['bw']).grid(row=1, column=1, sticky='w', padx=10, pady=5)
+            tk.Label(self.root, text=str(1/float(self.link_data['bw']))).grid(row=1, column=1, sticky='w', padx=10, pady=5)
         if 'distance' in self.link_data:
             tk.Label(self.root, text=self.link_data['distance']).grid(row=2, column=1, sticky='w', padx=10, pady=5)
         if 'propagation_speed' in self.link_data:
