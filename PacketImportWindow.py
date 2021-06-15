@@ -30,8 +30,8 @@ class PacketImportWindow(tk.Frame):
         self.index = 1
         self.graph = graph
         self.showProtocolsOption = None
-        self.time_spawn = tk.IntVar()
-        self.time_spawn.set(0)
+        self.time_spawn = tk.StringVar()
+        self.time_spawn.set('0.0')
         self.initialize_user_interface()
 
     def get_list_packets(self):
@@ -118,7 +118,7 @@ class PacketImportWindow(tk.Frame):
             self.tree.item(selected_item, values=(
                 self.tree.item(selected_item)['values'][0], self.mac_src.get(), self.mac_dst.get(), self.ip_src.get(),
                 self.ip_dst.get(), self.port_src.get(), self.port_dst.get(), self.protocol.get(),
-                self.time_spawn.get()))
+                float(self.time_spawn.get())))
 
             # print('Cambio Correcto')
             # except OSError as error:
@@ -175,7 +175,7 @@ class PacketImportWindow(tk.Frame):
 
     def add_packets(self):
         utilities = Utilities()
-        if self.number_packets.get() > 0:
+        if self.number_packets.get() > 0 and float(self.time_spawn.get()) >= 0.0:
             if utilities.port_check(self.port_src.get()) and utilities.port_check(self.port_dst.get()):
                 for i in range(1, self.number_packets.get() + 1):
 
@@ -188,11 +188,11 @@ class PacketImportWindow(tk.Frame):
                                                                                        dst=self.ip_dst.get()) / UDP(
                             sport=int(self.port_src.get()), dport=int(self.port_dst.get()))
 
-                    self.list_packets.append((p, self.time_spawn.get()))
+                    self.list_packets.append((p, float(self.time_spawn.get())))
                     self.tree.insert('', 'end', iid=self.index, values=(
                         self.index, p[Ether].src, p[Ether].dst, p[IP].src, p[IP].dst,
                         p[self.protocol.get()].sport,
-                        p[self.protocol.get()].dport, self.protocol.get(), self.time_spawn.get()))
+                        p[self.protocol.get()].dport, self.protocol.get(), float(self.time_spawn.get())))
                     self.index += 1
             else:
                 message = ''
@@ -205,7 +205,7 @@ class PacketImportWindow(tk.Frame):
                 message_final = 'Error, (' + message + ') values are not valid. \n\no   Port must be a value between 1 and 65535.'
                 messagebox.showerror("Error", message_final)
         else:
-            messagebox.showerror("Error", 'The number of packets to insert must be greater than 0')
+            messagebox.showerror("Error", 'The number of packets to insert must be greater than 0 and the packet spawn time must be greater than 0.')
 
     def update_values_hosts(self, event):
         print(self.showHostsOption)

@@ -104,7 +104,6 @@ class NetworkTopology(object):
     #     self.counter_packet_byte = 0
     #     self.action = action
 
-
     def add_flow_entry_to_node(self, node, flowentry):
 
         for flowent in self.G.nodes[node]['flow_table']:
@@ -283,7 +282,6 @@ class NetworkTopology(object):
         # animation_propagation_time = 3.5
         print('flow time:', miniNAM.appPrefs['flowTime'])
         if miniNAM.appPrefs['flowTime'] == 30:
-
             animation_propagation_time = 3.5
         else:
             animation_propagation_time = 1.0
@@ -298,11 +296,12 @@ class NetworkTopology(object):
             load_packet = len(list_packets[event['packet_id']])
             propagation_delay = (self.G.edges[event['src'], event['dst']]['distance'] / \
                                  self.G.edges[event['src'], event['dst']]['propagation_speed'] + load_packet /
-                                 (1/self.G.edges[event['src'], event['dst']]['bw'])) + animation_propagation_time
+                                 (1 / self.G.edges[event['src'], event['dst']]['bw'])) + animation_propagation_time
             is_openflow = False
             type_message = None
         # print('imprimir:::::::::::::: ', self.G.edges[event['src'], event['dst']])
-        if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+        if 'load' in self.G.edges[event['src'], event['dst']] and len(
+                self.G.edges[event['src'], event['dst']]['load']) > 0:
             last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
         else:
             last_load = 0
@@ -319,8 +318,9 @@ class NetworkTopology(object):
         else:
             type = 'packet_processing_switch'
         # print(propagation_delay)
+        src_host, dst_host = self.find_hosts_by_ip_packet(list_packets[event['packet_id']])
         miniNAM.display_multiple_packet(event['src'], event['dst'], list_packets[event['packet_id']], is_openflow,
-                                        type_message, event['src'] + '->' + event['dst'], propagation_delay)
+                                        type_message, src_host + '->' + dst_host, propagation_delay)
 
         # print('hola')
         if 'openflow_id' in event:
@@ -356,7 +356,8 @@ class NetworkTopology(object):
                                                                     list_packets[event['packet_id']][protocol].dport,
                                                                     list_openflow[event['openflow_id']]['action']))
 
-                if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+                if 'load' in self.G.edges[event['src'], event['dst']] and len(
+                        self.G.edges[event['src'], event['dst']]['load']) > 0:
                     last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
                 else:
                     last_load = 0
@@ -384,7 +385,8 @@ class NetworkTopology(object):
                                                                     list_packets[event['packet_id']][protocol].dport,
                                                                     list_openflow[event['openflow_id']]['action']))
 
-                if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+                if 'load' in self.G.edges[event['src'], event['dst']] and len(
+                        self.G.edges[event['src'], event['dst']]['load']) > 0:
                     last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
                 else:
                     last_load = 0
@@ -459,14 +461,16 @@ class NetworkTopology(object):
         return event
 
     # def processing_event_packet_controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
-    def processing_event_packet_controller_action(self, event, list_packets, list_openflow_messages):
+    def processing_event_packet_controller_action(self, event, list_packets, list_openflow_messages, reactive_proactive):
+
 
         packet = list_packets[event['packet_id']]
         src_host, dst_host = self.find_hosts_by_ip_packet(packet)
         path = nx.dijkstra_path(self.G, src_host, dst_host, weight='bw')
         list_new_events = []
 
-        if 'load' in self.G.edges[event['src'], event['dst']] and len(self.G.edges[event['src'], event['dst']]['load']) > 0:
+        if 'load' in self.G.edges[event['src'], event['dst']] and len(
+                self.G.edges[event['src'], event['dst']]['load']) > 0:
             last_load = self.G.edges[event['src'], event['dst']]['load'][-1][1]
         else:
             last_load = 0
@@ -489,7 +493,7 @@ class NetworkTopology(object):
                 list_openflow_messages[id] = {'type': 'packet_out', 'action': path[i + 1],
                                               'size': 50}  # TODO ver el tamanio real de un mensaje opnflow (p_out) y ponerlo aqui
                 # list_openflow_messages.append()
-            if self.proactive and path[i] and path[i] != event['src']:
+            if reactive_proactive == 1 and path[i] and path[i] != event['src']:
                 id = uuid.uuid4()
                 list_new_events.append({'type': 'packet_propagation',
                                         'src': event['dst'],
@@ -577,7 +581,7 @@ class NetworkTopology(object):
     #
     #                 Switch = action
 
-                # Enviamos paquet_in al controlador
+    # Enviamos paquet_in al controlador
     # def create_topology(self, num_host, num_switch):
     #
     #     nodo = []

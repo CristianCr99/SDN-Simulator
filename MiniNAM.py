@@ -48,8 +48,8 @@ MININAM_VERSION = "1.0.1"
 if 'PYTHONPATH' in os.environ:
     sys.path = os.environ['PYTHONPATH'].split(':') + sys.path
 
-FLOWTIMEDEF = 'Fast'
-FLOWTIME = OrderedDict([('Very Slow', 50), ('Slow', 40), ('Fast', 30), ('Very Fast', 20), ('Real Time', 1)])
+FLOWTIMEDEF = 'Slow'
+FLOWTIME = OrderedDict([('Slow', 30), ('Fast', 1)])
 
 LinkTime = 0.1
 
@@ -63,9 +63,10 @@ def version(*_args):
 class PrefsDialog(tkinter.simpledialog.Dialog):
     "Preferences dialog"
 
-    def __init__(self, parent, title, prefDefaults):
+    def __init__(self, parent, title, prefDefaults, simulation_running):
 
         self.prefValues = prefDefaults
+        self.simulation_is_running = simulation_running
 
         tkinter.simpledialog.Dialog.__init__(self, parent, title)
 
@@ -137,7 +138,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         self.UsertrafficColor = StringVar(self.typeColorsData)
         self.UsertrafficColor.set(self.typeColors["Usertraffic"])
         self.UsertrafficColorMenu = OptionMenu(self.typeColorsData, self.UsertrafficColor, "None", "Red", "Green",
-                                               "Blue", "Purple", 'Brown', 'Cyan', 'Orange')
+                                               "Blue", "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
         self.UsertrafficColorMenu.grid(row=1, column=0, sticky=W, padx=10)
 
         # Field for showing IP Packets
@@ -147,21 +148,28 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         self.showaddrOption.grid(row=7, column=1, sticky=W)
         self.showAddrVar.set(self.prefValues['showAddr'])
 
+        if self.simulation_is_running == True:
+            state_menu = 'disabled'
+        else:
+            state_menu = 'normal'
         # Field for Packet Flow Speed
         Label(self.rootFrame, text="Packet Flow Speed:").grid(row=8, sticky=W, padx=10, pady=10)
         self.flowTime = StringVar(self.rootFrame)
         self.flowTime.set(list(FLOWTIME.keys())[list(FLOWTIME.values()).index(self.prefValues['flowTime'])])
         self.flowTimeMenu = OptionMenu(self.rootFrame, self.flowTime, *FLOWTIME.keys())
+        self.flowTimeMenu.configure(state=state_menu)
         self.flowTimeMenu.grid(row=8, column=1, sticky=W)
         # Field for showing nodeStats
-        # Label(self.rootFrame, text="Show Node Statistics Box:").grid(row=8, sticky=W, padx=5, pady=5)
-        # self.showNodeStats = IntVar()
-        # self.cshowNodeStats = Checkbutton(self.rootFrame, variable=self.showNodeStats)
-        # self.cshowNodeStats.grid(row=8, column=1, sticky=W, padx=5, pady=10)
-        # if self.prefValues['showNodeStats'] == 0:
-        #     self.cshowNodeStats.deselect()
-        # else:
-        #     self.cshowNodeStats.select()
+
+        Label(self.rootFrame, text="Show Node Statistics Box:").grid(row=9, sticky=W, padx=5, pady=5)
+        self.reactive_proactive = IntVar()
+        self.cs_reactive_proactive = Checkbutton(self.rootFrame, variable=self.reactive_proactive)
+        self.cs_reactive_proactive.configure(state=state_menu)
+        self.cs_reactive_proactive.grid(row=9, column=1, sticky=W, padx=5, pady=10)
+        if self.prefValues['reactive_proactive'] == 0:
+            self.cs_reactive_proactive.deselect()
+        else:
+            self.cs_reactive_proactive.select()
 
     def apply(self):
 
@@ -179,7 +187,8 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
 
         self.result = {'flowTime': flowTime,
                        'typeColors': typeColors,
-                       'showAddr': self.showAddrVar.get()
+                       'showAddr': self.showAddrVar.get(),
+                       'reactive_proactive': self.reactive_proactive.get()
                        }
 
 
@@ -311,7 +320,7 @@ class MiniNAM(Frame, Thread):
             'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown',
                            'packet_in': 'Cyan', 'packet_out': 'Green', 'flow_mod': 'Red'},
             'showAddr': 'Source and destination',
-            'showNodeStats': 1
+            'reactive_proactive': 1  # 1 es proactivo y 0 reactivo
         }
         # self.appFilters = {
         #     'showPackets': ['TCP', 'UDP', 'ICMP'],  # ARP?
@@ -1145,7 +1154,7 @@ class MiniNAM(Frame, Thread):
 
         editMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Edit", menu=editMenu)
-        editMenu.add_command(label="Preferences", command=self.prefDetails)
+        editMenu.add_command(label="Preferences", command=lambda: self.prefDetails(self.simulation_is_running))
         # editMenu.add_command(label="Filters", command=self.filterDetails)
 
         self.runMenu = Menu(mbar, tearoff=False)
@@ -1400,9 +1409,10 @@ class MiniNAM(Frame, Thread):
         link = self.selection
         self.canvas.itemconfig(link, dash=(4, 4))
 
-    def prefDetails(self):
+    def prefDetails(self, simulation_is_running):
         prefDefaults = self.appPrefs
-        prefBox = PrefsDialog(self, title='Preferences', prefDefaults=prefDefaults)
+        prefBox = PrefsDialog(self, title='Preferences', prefDefaults=prefDefaults,
+                              simulation_running=simulation_is_running)
         if prefBox.result:
             self.appPrefs = prefBox.result
 
@@ -1704,7 +1714,7 @@ class MiniNAM(Frame, Thread):
 
             if self.event['type'] == 'packet_processing_controller':
                 new_event = graph.processing_event_packet_controller_action(self.event, self.packets_data,
-                                                                            self.packets_openflow)
+                                                                            self.packets_openflow, self.appPrefs['reactive_proactive'])
                 if len(new_event) > 0:
                     for i in new_event:
                         self.discrete_events.inser_event(i)
@@ -1729,6 +1739,7 @@ class MiniNAM(Frame, Thread):
             self.final_time = self.current_milli_time() - self.start - self.time_pause
             # print('Fin de la simulacion')
             self.processing_results()
+            self.simulation_is_running = True
 
     def update_chronometer(self, milliseconds):
         milli = math.trunc(milliseconds % 1000)
@@ -1738,6 +1749,8 @@ class MiniNAM(Frame, Thread):
               padx=3, pady=3, relief="ridge").grid(row=0, column=1, sticky='NE', padx=3, pady=3)
 
     def run_simulation2(self):
+
+        self.simulation_is_running = True
 
         # p1 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B2') / IP(src='192.168.120.131',
         #                                                                   dst='192.168.120.132') / TCP(
