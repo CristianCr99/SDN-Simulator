@@ -145,10 +145,10 @@ class NetworkTopology(object):
                 protocol = 'TCP'
             else:
                 protocol = 'UDP'
-            print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
-                Ether].src, i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
-                      IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,
-                  i.get_port_dst() == packet[protocol].dport)
+            # print(i.get_mac_src() == packet[Ether].src, i.get_mac_src() == '*', i.get_mac_dst() == packet[
+            #     Ether].src, i.get_mac_dst() == '*', i.get_ip_src() == packet[IP].src, i.get_ip_dst() == packet[
+            #           IP].dst, i.get_transport_protocol() == protocol, i.get_port_src() == packet[protocol].sport,
+            #       i.get_port_dst() == packet[protocol].dport)
 
             if i.get_mac_src() == packet[Ether].src or i.get_mac_src() == '*' and i.get_mac_dst() == packet[
                 Ether].src or i.get_mac_dst() == '*' \
@@ -168,10 +168,10 @@ class NetworkTopology(object):
             if i[0] == 'h':
                 if self.G.nodes[i]['ip'] == packet[IP].src:
                     src_host = i
-                    print('host origen:', packet[IP].src)
+                    # print('host origen:', packet[IP].src)
                 if self.G.nodes[i]['ip'] == packet[IP].dst:
                     dst_host = i
-                    print('host destino:', packet[IP].dst)
+                    # print('host destino:', packet[IP].dst)
         return src_host, dst_host
 
     def controller_action(self, miniNAM, packet, src_host, dst_host, switch, proactive):
@@ -198,7 +198,7 @@ class NetworkTopology(object):
                 self.add_flow_entry_to_node(path[i], FlowEntry('*', '*', packet[IP].src,
                                                                packet[IP].dst, protocol, packet[protocol].sport,
                                                                packet[protocol].dport, path[i + 1]))
-                print('flowMod a ', path[i])
+                # print('flowMod a ', path[i])
 
             if path[i] == switch:
                 action = path[i + 1]
@@ -206,7 +206,7 @@ class NetworkTopology(object):
         # miniNAM.join()
 
         # Enviamos paquet_out a switch (Enviar graficamente)
-        print('paquetOut a ', switch)
+        # print('paquetOut a ', switch)
         miniNAM.displayPacket('c0', switch, None, True, 'Packet_Out', 'c0' + '->' + switch)
         # self.miniNam.displayPacket('c0', 's' + str(switch), '')
         return action
@@ -214,7 +214,7 @@ class NetworkTopology(object):
     def processing_event_packet_generation(self, event, list_packets):
         # print(event['packet_id'])
         src_host, dst_host = self.find_hosts_by_ip_packet(list_packets[event['packet_id']])
-        print(src_host, dst_host)
+        # print(src_host, dst_host)
         # print('Hosts:', src_host, dst_host)
 
         if src_host is not None and dst_host is not None:
@@ -280,7 +280,7 @@ class NetworkTopology(object):
     def processing_event_packet_propagation2(self, event, list_packets, list_openflow, miniNAM):
 
         # animation_propagation_time = 3.5
-        print('flow time:', miniNAM.appPrefs['flowTime'])
+        # print('flow time:', miniNAM.appPrefs['flowTime'])
         if miniNAM.appPrefs['flowTime'] == 30:
             animation_propagation_time = 3.5
         else:
@@ -321,7 +321,8 @@ class NetworkTopology(object):
         src_host, dst_host = self.find_hosts_by_ip_packet(list_packets[event['packet_id']])
         miniNAM.display_multiple_packet(event['src'], event['dst'], list_packets[event['packet_id']], is_openflow,
                                         type_message, src_host + '->' + dst_host, propagation_delay)
-
+        # self.__running = threading.Event()  # Used to stop the thread identification
+        # self.__flag = threading.Event()  # The flag used to pause the thread
         # print('hola')
         if 'openflow_id' in event:
             event = {'type': type,

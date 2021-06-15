@@ -19,7 +19,7 @@ from PIL import ImageTk as itk
 from networkx.readwrite import json_graph
 from scapy.layers.inet import *
 from ttkbootstrap import Style
-
+import Threads as t
 import FlowInformation as fl_inf
 import InfoLinkWindow as info_link
 import InfoSwitchWindow as info_switch
@@ -309,6 +309,9 @@ class MiniNAM(Frame, Thread):
     def __init__(self, parent=None, cheight=720, cwidth=1280, locations={}):
 
         Frame.__init__(self, parent)
+        self.__running = threading.Event()  # Used to stop the thread identification
+        self.__flag = threading.Event()  # The flag used to pause the thread
+        self.list_threads = []
         self.list_processed_events = []
         self.action = None
         self.info_window_import = {}
@@ -474,6 +477,9 @@ class MiniNAM(Frame, Thread):
     #         else:
     #             raise Exception('could not find custom file: %s' % fileName)
 
+    def get__t_event(self):
+        return self.__flag , self.__running
+
     def setCustom(self, name, value):
         "Set custom parameters for Mininet."
         # if name.upper() == 'NET':
@@ -615,7 +621,7 @@ class MiniNAM(Frame, Thread):
         except Exception as e:
             print(e)
 
-    def displayPacket(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst, time):
+    def displayPacket(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst, time, flag, running):
         start = self.current_milli_time()
         try:
             c = self.canvas
@@ -709,19 +715,27 @@ class MiniNAM(Frame, Thread):
             print('Excepción!!!!')
 
     def display_multiple_packet(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst, time):
-        arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst, time]
-        threading.Thread(target=self.displayPacket, args=arr).start()
+        arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst, time, self.__flag, self.__running]
+        # threading.Thread(target=self.displayPacket, args=arr).start()
+
+        new_thread = t.run_process(target=self.displayPacket, args=arr)
+        new_thread.start()
+        self.list_threads.append(new_thread)
+
 
     def movePacket(self, packet, image, delta, t):
         c = self.canvas
         i = 0
         # Move the packet in 50 steps then remove the image
+        self.__flag.set()  # Set to True
+        self.__running.set()  # Set running to True
         while i < 50:
-            if self.stop_simulation == False:
-                i += 1
-                c.move(packet, delta[0], delta[1])
-                c.update()
-                time.sleep(t)
+            # if self.stop_simulation == False:
+            self.__flag.wait()  # return immediately when it is True, block until the internal flag is True when it is False
+            i += 1
+            c.move(packet, delta[0], delta[1])
+            c.update()
+            time.sleep(t)
         c.delete(packet)
         self.packetImage.remove(image)
 
@@ -1332,10 +1346,15 @@ class MiniNAM(Frame, Thread):
     def pause_simulation(self):
         self.stop_simulation = True
         self.time_start_pause = self.current_milli_time()
+        for thread in self.list_threads:
+            thread.pause()
 
     def resume_simulation(self):
         self.stop_simulation = False
         self.time_pause += self.current_milli_time() - self.time_start_pause
+        for thread in self.list_threads:
+            thread.resume()
+            print('RESUME')
         # self.time_pause = 0
 
     def doRun(self, menu):
@@ -1591,9 +1610,12 @@ class MiniNAM(Frame, Thread):
         # print('Host:', host)
         root = tkinter.Toplevel()
         # self.top.wait_variable()
-        name = self.itemToWidget[self.selection]['text']
-        # print(name)
-        p_import_w.PacketImportWindow(root=root, master=self, host=name, graph=graph)
+
+        try:
+            name = self.itemToWidget[self.selection]['text']
+            p_import_w.PacketImportWindow(root=root, master=self, host=name, graph=graph)
+        except:
+            print('')
         # print(list_packets)
 
         # graph.get_list_packets_to_send()[host] = list_packets
