@@ -35,8 +35,8 @@ class DiscreteEvents:
         for event in self.list_events:
             if event['time_spawn'] > new_event['time_spawn']:
                 self.list_events = self.list_events[:j] + [new_event] + self.list_events[j:]
-                print(new_event)
+                # print(new_event)
                 return
             j += 1
-        print(new_event)
+        # print(new_event)
         self.list_events.append(new_event)

@@ -156,6 +156,10 @@ class PacketImportWindow(tk.Frame):
             for packet in scapy_cap:
                 if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
                         'TCP' in packet or 'UDP' in packet):
+                    packet[Ether].src = self.mac_src.get()
+                    packet[Ether].dst = self.mac_dst.get()
+                    packet[IP].src = self.ip_src.get()
+                    packet[IP].dst = self.ip_dst.get()
                     self.list_packets.append(packet)
                     packet.show()
                     if 'TCP' in packet:
@@ -208,7 +212,7 @@ class PacketImportWindow(tk.Frame):
             messagebox.showerror("Error", 'The number of packets to insert must be greater than 0 and the packet spawn time must be greater than 0.')
 
     def update_values_hosts(self, event):
-        print(self.showHostsOption)
+        # print(self.showHostsOption)
         self.mac_dst.set(self.graph.get_graph().nodes[self.showHosts.get()]['mac'])
         self.ip_dst.set(self.graph.get_graph().nodes[self.showHosts.get()]['ip'])
 
@@ -278,6 +282,9 @@ class PacketImportWindow(tk.Frame):
                 list_ip.append(i)
 
         self.showHosts = tk.StringVar(campos)
+        self.showHosts.set(list_ip[0])
+        self.update_values_hosts('')
+        # print('value:',self.showHosts.get())
         self.showHostsOption = tk.OptionMenu(campos, self.showHosts, *list_ip, command=self.update_values_hosts)
         self.showHostsOption.grid(row=2, column=1, sticky='W')
         # must be -column, -columnspan, -in, -ipadx, -ipady, -padx, -pady, -row, -rowspan, or -sticky
@@ -344,12 +351,12 @@ class PacketImportWindow(tk.Frame):
             # for i in range(1,len(self.master.info_window_import[self.host])):
             #     self.master.info_window_import[self.host][i].show()
             # print(list)
-            print(self.list_packets)
-            print('longitusd:', len(self.master.info_window_import[self.host]))
+            # print(self.list_packets)
+            # print('longitusd:', len(self.master.info_window_import[self.host]))
             for i in range(0, len(self.master.info_window_import[self.host])):
                 packet, time_spawn = self.master.info_window_import[self.host][i]
                 packet.show()
-                print('MAC' in packet, 'Ethernet' in packet, 'IP' in packet, 'TCP' in packet, 'UDP' in packet)
+                # print('MAC' in packet, 'Ethernet' in packet, 'IP' in packet, 'TCP' in packet, 'UDP' in packet)
                 if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
                         'TCP' in packet or 'UDP' in packet):
                     if 'TCP' in packet:

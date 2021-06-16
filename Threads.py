@@ -28,7 +28,7 @@
 #     def add_thread(self, thread_add):
 #         thread_add.start()
 #         self.list_thread_animation.append(thread_add)
-
+import os
 import threading
 import time
 
@@ -36,7 +36,7 @@ class run_process(threading.Thread):
 
     def __init__(self,*args, **kwargs):
         super(run_process, self).__init__(*args, **kwargs)
-        print(kwargs)
+        # print(kwargs)
         self.__flag = kwargs['args'][7]  # The flag used to pause the thread
         self.__flag.set()  # Set to True
         self.__running = kwargs['args'][8]  # Used to stop the thread identification
@@ -60,6 +60,8 @@ class run_process(threading.Thread):
         self.__flag.set()  # Resume the thread from the suspended state, if it is already suspended
         self.__running.clear()  # Set to False
 
+    def get_ident(self):
+        return os.getpid()
 #
 # a = run_process()
 # a.start()

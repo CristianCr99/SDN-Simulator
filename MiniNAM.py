@@ -705,11 +705,11 @@ class MiniNAM(Frame, Thread):
             # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
             t = (float(self.appPrefs['flowTime']) * float(100) / 50000.0)  # 1000 for ms and 50 for steps
 
-            print('time:', t * 1000.0)
+            # print('time:', t * 1000.0)
 
             self.movePacket(packet, packetImage, delta, t)
             end = self.current_milli_time()
-            print("Time elapsed:", end - start)
+            # print("Time elapsed:", end - start)
 
         except Exception:
             print('Excepción!!!!')
@@ -737,6 +737,7 @@ class MiniNAM(Frame, Thread):
             c.update()
             time.sleep(t)
         c.delete(packet)
+
         self.packetImage.remove(image)
 
     def getQueue(self, PacketInfo):
@@ -1346,15 +1347,24 @@ class MiniNAM(Frame, Thread):
     def pause_simulation(self):
         self.stop_simulation = True
         self.time_start_pause = self.current_milli_time()
+
+        # for thread in self.list_threads:
         for thread in self.list_threads:
-            thread.pause()
+            # print(thread.get_ident(), os.getpid())
+            len(self.list_threads)
+            if not thread.is_alive():
+                # print('not is alive')
+                self.list_threads.pop(self.list_threads.index(thread))
+            else:
+                thread.pause()
+                # print('is alive and pause')
 
     def resume_simulation(self):
         self.stop_simulation = False
         self.time_pause += self.current_milli_time() - self.time_start_pause
         for thread in self.list_threads:
             thread.resume()
-            print('RESUME')
+            # print('RESUME')
         # self.time_pause = 0
 
     def doRun(self, menu):

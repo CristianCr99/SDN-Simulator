@@ -121,7 +121,7 @@ class ResultInformation(tk.Frame):
         for link in self.graph.get_graph().edges(data=True):
 
             if 'load' in link[2]:
-                print(link[0], link[1], link[2]['load'])
+                # print(link[0], link[1], link[2]['load'])
 
 
                 lista = (link[2]['load']).copy()
@@ -130,7 +130,7 @@ class ResultInformation(tk.Frame):
                 Output = [(a, b) for a, b in lista
                           if not (a in seen or seen.add(a))]
                 Output.reverse()
-                print(Output)
+                # print(Output)
 
                 x = []
                 y = []
@@ -146,7 +146,7 @@ class ResultInformation(tk.Frame):
                     if x[-1] != self.final_time:
                         x.append(self.final_time/1000)
                         y.append(0)
-                    print(x,y)
+                    # print(x,y)
                     util.create_graph(y=y, x_label='Time',
                                       x=x, y_label='Load (Bytes)',
                                       title_graph='Link Load: [' + link[0] + ',' + link[1] + ']',
