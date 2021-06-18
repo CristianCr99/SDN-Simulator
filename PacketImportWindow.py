@@ -150,18 +150,26 @@ class PacketImportWindow(tk.Frame):
         try:
             path = filedialog.askopenfile(title='Load Graph', initialdir='./Packets',
                                           filetypes=(('Files .pcap', '*.pcap'), (('All Files', '*.*'))))
+            if path is None:
+                return
             # print(path.name)
             scapy_cap = rdpcap(path.name)
-
+            is_first = True
             for packet in scapy_cap:
                 if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
                         'TCP' in packet or 'UDP' in packet):
+                    if is_first:
+                        initial_time = packet.time
+                        is_first = False
+
                     packet[Ether].src = self.mac_src.get()
                     packet[Ether].dst = self.mac_dst.get()
                     packet[IP].src = self.ip_src.get()
                     packet[IP].dst = self.ip_dst.get()
-                    self.list_packets.append(packet)
-                    packet.show()
+                    # print(packet.time)
+                    self.list_packets.append((packet, packet.time - initial_time))
+
+                    # print(packet.)
                     if 'TCP' in packet:
                         protocol = 'TCP'
                     else:
@@ -171,7 +179,7 @@ class PacketImportWindow(tk.Frame):
                     self.tree.insert('', 'end', iid=self.index, values=(
                         self.index, packet[Ether].src, packet[Ether].dst, packet[IP].src, packet[IP].dst,
                         packet[protocol].sport,
-                        packet[protocol].dport, protocol))
+                        packet[protocol].dport, protocol, packet.time - initial_time))
                     self.index += 1
 
         except Exception as er:

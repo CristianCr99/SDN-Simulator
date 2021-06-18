@@ -19,12 +19,13 @@ from PIL import ImageTk as itk
 from networkx.readwrite import json_graph
 from scapy.layers.inet import *
 from ttkbootstrap import Style
-import Threads as t
+
 import FlowInformation as fl_inf
 import InfoLinkWindow as info_link
 import InfoSwitchWindow as info_switch
 import PacketImportWindow as p_import_w
 import ProgramaGrafos as p
+import Threads as t
 import miniEdit as edit
 import simulationResultInformation as resultInfor
 from DiscreteEvents import DiscreteEvents
@@ -478,7 +479,7 @@ class MiniNAM(Frame, Thread):
     #             raise Exception('could not find custom file: %s' % fileName)
 
     def get__t_event(self):
-        return self.__flag , self.__running
+        return self.__flag, self.__running
 
     def setCustom(self, name, value):
         "Set custom parameters for Mininet."
@@ -721,7 +722,6 @@ class MiniNAM(Frame, Thread):
         new_thread = t.run_process(target=self.displayPacket, args=arr)
         new_thread.start()
         self.list_threads.append(new_thread)
-
 
     def movePacket(self, packet, image, delta, t):
         c = self.canvas
@@ -1620,14 +1620,14 @@ class MiniNAM(Frame, Thread):
         # print('Host:', host)
         root = tkinter.Toplevel()
         # self.top.wait_variable()
-
+        is_correct = True
         try:
             name = self.itemToWidget[self.selection]['text']
-            p_import_w.PacketImportWindow(root=root, master=self, host=name, graph=graph)
         except:
-            print('')
+            is_correct = False
         # print(list_packets)
-
+        if is_correct and name[0] == 'h':
+            p_import_w.PacketImportWindow(root=root, master=self, host=name, graph=graph)
         # graph.get_list_packets_to_send()[host] = list_packets
         # print(graph.get_list_packets_to_send()[host])
 
@@ -1746,7 +1746,8 @@ class MiniNAM(Frame, Thread):
 
             if self.event['type'] == 'packet_processing_controller':
                 new_event = graph.processing_event_packet_controller_action(self.event, self.packets_data,
-                                                                            self.packets_openflow, self.appPrefs['reactive_proactive'])
+                                                                            self.packets_openflow,
+                                                                            self.appPrefs['reactive_proactive'])
                 if len(new_event) > 0:
                     for i in new_event:
                         self.discrete_events.inser_event(i)
@@ -1771,7 +1772,33 @@ class MiniNAM(Frame, Thread):
             self.final_time = self.current_milli_time() - self.start - self.time_pause
             # print('Fin de la simulacion')
             self.processing_results()
-            self.simulation_is_running = True
+            self.simulation_is_running = False
+            # graph.get_graph().graph['events_list'] = self.list_processed_events
+
+            information = []
+
+            for event in self.list_processed_events:
+
+                if event != 0:
+                    # print(str(list(event.items())))
+                    information.append(str(list(event.items())))
+
+            graph.get_graph().graph['event_list'] = information
+
+            information = []
+
+            for i, j in self.packets_data.items():
+                information.append(
+                    'Packet Id: ' + str(i) + ' Packet Information: ' + str(list(j)) + ' Packet Lenght: ' + str(len(j)))
+            graph.get_graph().graph['packey_list'] = information
+
+
+            information = []
+
+            for i, j in self.packets_openflow.items():
+                information.append('Openflow Message Id: ' + str(i) + ' Information: ' + str(list(j.items())))
+
+            graph.get_graph().graph['openflow_list'] = information
 
     def update_chronometer(self, milliseconds):
         milli = math.trunc(milliseconds % 1000)
@@ -1818,6 +1845,8 @@ class MiniNAM(Frame, Thread):
         # print(self.packets_data)
         # print(self.packets_data)
         # print(self.event_queue)
+
+        # print(list(graph.get_graph().graph['events_list']))
         self.event = self.discrete_events.unqueue_list_events()
         self.list_processed_events.append(self.event)
         self.start = self.current_milli_time()
