@@ -337,7 +337,7 @@ class NetworkTopology(object):
                     protocol = 'UDP'
 
                 if i.get_mac_src() == packet[Ether].src or i.get_mac_src() == '*' and i.get_mac_dst() == packet[
-                    Ether].src or i.get_mac_dst() == '*' \
+                    Ether].dst or i.get_mac_dst() == '*' \
                         and i.get_ip_src() == packet[IP].src and i.get_ip_dst() == packet[
                     IP].dst and i.get_transport_protocol() == protocol \
                         and i.get_port_src() == packet[protocol].sport and i.get_port_dst() == packet[protocol].dport:

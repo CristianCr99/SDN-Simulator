@@ -146,7 +146,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         self.flowTimeMenu.configure(state=state_menu)
         self.flowTimeMenu.grid(row=8, column=1, sticky=W)
 
-        Label(self.rootFrame, text="Show Node Statistics Box:").grid(row=9, sticky=W, padx=5, pady=5)
+        Label(self.rootFrame, text="Proactive mode controller:").grid(row=9, sticky=W, padx=5, pady=5)
         self.reactive_proactive = IntVar()
         self.cs_reactive_proactive = Checkbutton(self.rootFrame, variable=self.reactive_proactive)
         self.cs_reactive_proactive.configure(state=state_menu)
@@ -483,14 +483,14 @@ class SDN_Simulator(Frame, Thread):
         # Movemos el paquete en 50 pasos y luego eliminamos la imagen
         self.__flag.set()
         self.__running.set()
-        tiempo_inicial = time.time()
+        # tiempo_inicial = time.time()
         while i < 50:
             self.__flag.wait()  # Punto de parada de la animacion cuando recibe una senial con dicho proposito
             i += 1
             c.move(packet, delta[0], delta[1])
             c.update()
             time.sleep(t)
-        print('Time: ' + str(time.time() - tiempo_inicial))
+        # print('Time: ' + str(time.time() - tiempo_inicial))
         c.delete(packet)
 
         self.packetImage.remove(image)
@@ -831,7 +831,6 @@ class SDN_Simulator(Frame, Thread):
         fileMenu.add_command(label="Save topology", command=self.saveGraph)
         fileMenu.add_separator()
         fileMenu.add_command(label="Topology editor", command=self.customize_topology)
-
 
         editMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Edit", menu=editMenu)
@@ -1255,11 +1254,26 @@ class SDN_Simulator(Frame, Thread):
         self.update_chronometer(self.start)
         threading.Timer(1.0 / 1000.0, self.processing_event).start()
 
-    # Funcion find_packet_equal, encargada de encontrar paquetes iguales.
+    # Funcion find_packet_equal, encargada de encontrar paquetes iguales (pertenecientes al mismo flujo).
     def find_packet_equal(self, list_packet, packet):
         for i in list_packet:
-            if i[1] == packet:
+            if 'TCP' in packet:
+                protocol = 'TCP'
+            else:
+                protocol = 'UDP'
+
+            if 'TCP' in i[1]:
+                protocol_2 = 'TCP'
+            else:
+                protocol_2 = 'UDP'
+
+            if i[1][Ether].src == packet[Ether].src and i[1][Ether].dst == packet[Ether].dst and \
+                    i[1][IP].src == packet[IP].src and i[1][IP].dst == packet[IP].dst and protocol_2 == protocol \
+                    and i[1][protocol].sport == packet[protocol].sport and \
+                    i[1][protocol].dport == packet[protocol].dport:
                 return i[0]
+            # if i[1] == packet:
+            #     return i[0]
         return None
 
     # Funcion processing_results, encargada de procesar la informacion tras haberse realizado la simulacion calculando
@@ -1302,7 +1316,6 @@ class SDN_Simulator(Frame, Thread):
 # Funcion miniImages, encargada de crear y devolver imagenes que seran usadas por nuestro simulador (imagenes de los
 # hosts, switches, controladores...)
 def miniImages():
-    
     return {
         'Select': BitmapImage(
             file='Arch\left_ptr'),
@@ -1451,7 +1464,7 @@ iVBORw0KGgoAAAANSUhEUgAAAG8AAABbCAYAAAB9LtvbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
 if __name__ == "__main__":
     try:
         graph = p.NetworkTopology()
-        style = Style(theme='TFG')
+        style = Style(theme='TFG', themes_file='./Arch/Themes.json')
         window = style.master
         app = SDN_Simulator()
         app.mainloop()
