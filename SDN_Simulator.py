@@ -829,9 +829,9 @@ class SDN_Simulator(Frame, Thread):
         mbar.add_cascade(label="File", menu=fileMenu)
         fileMenu.add_command(label="Load topology", command=self.loadGraph)
         fileMenu.add_command(label="Save topology", command=self.saveGraph)
-        fileMenu.add_command(label="Customize topology", command=self.customize_topology)
         fileMenu.add_separator()
-        fileMenu.add_command(label='Quit', command=self.quit)
+        fileMenu.add_command(label="Topology editor", command=self.customize_topology)
+
 
         editMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Edit", menu=editMenu)
@@ -986,7 +986,7 @@ class SDN_Simulator(Frame, Thread):
             about.title('About')
             desc = self.appName + ': a discrete event simulator.'
             version = self.appName + ' ' + SDN_Simulator_VERSION
-            author = 'Author: Cristian Cruz Carrasco <ccruzcar@alumnos.unex.es>, \nSeptember 2021.'
+            author = 'Author: Cristian Cruz Carrasco <ccruzcar@alumnos.unex.es>, \n <cristiancruzcarrasco999@gmail.com> \nSeptember 2021\n\n University of Extremadura'
             enhancements = 'Supervisors: Javier Carmona Murillo, Jesús Manuel Calle Cancho.'
             line1 = Label(about, text=desc, font='Helvetica 10 bold', bg=bg)
             line2 = Label(about, text=version, font='Helvetica 9', bg=bg)
