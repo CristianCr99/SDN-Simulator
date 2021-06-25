@@ -80,7 +80,7 @@ print(p.mysummary())
 
 
 def clicked():
-    scapy_cap = rdpcap('Packets/packlist.pcap')
+    scapy_cap = rdpcap('../Packets/packlist.pcap')
     for packet in scapy_cap:
         if 'LLC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
             if 'TCP' in packet:

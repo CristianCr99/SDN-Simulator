@@ -30,7 +30,7 @@ miFrame.config(bg='white')
 #miLabel.place(x=100,y=200) # Ancho y alto (hacia abajo)
 
 # Imagen:
-imagen = PhotoImage(file='gatito.png')
+imagen = PhotoImage(file='../gatito.png')
 Label(miFrame,image=imagen).place(x=100, y=400)
 
 # Wigets entry para introducir texto (to_do lo visto para los labels vale para los Entry):

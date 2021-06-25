@@ -3,9 +3,10 @@ from pathlib import Path
 
 from scapy.layers.inet import *
 
-
+# Clase Utilities, encargada de recopilar funciones generales empleadas en diversas clases.
 class Utilities:
 
+    # Funcion mac_address_check, encargada de comprobar si una direccion mac es correcta.
     def mac_address_check(self, mac_address):
         try:
             if re.match("[0-9a-f]{2}([:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", mac_address.lower()):
@@ -14,6 +15,7 @@ class Utilities:
         except:
             return False
 
+    # Funcion ip_address_check, encargada de comprobar si una direccion ip es correcta.
     def ip_address_check(self, ip_address):
         try:
             if len(ip_address.split('.')) == 4:
@@ -25,6 +27,7 @@ class Utilities:
         except:
             return False
 
+    # Funcion port_check, encargada de comprobar si un puerto es correcto.
     def port_check(self, port):
         try:
             port_number = int(port)
@@ -34,6 +37,7 @@ class Utilities:
         except:
             return False
 
+    # Funcion is_number_positive, encargada de comprobar si un numero es un numero y positivo.
     def is_number_positive(self, number):
         try:
             number = int(number)
@@ -43,16 +47,16 @@ class Utilities:
         except:
             return False
 
-    # https: // es.stackoverflow.com / questions / 281848 / calcular - el - jitter - en - kotlin
+    # Funcion calculate_jitter, encargada de calcular el jitter a partir de una lista de retardos.
     def calculate_jitter(self, list_delays):
         if len(list_delays) < 2:
             return 0.0
         sum = 0.0
         for i in range(0, len(list_delays)):
-            # if i > 0:
             sum += abs(list_delays[i - 1] - list_delays[i])
         return sum / (len(list_delays) - 1)
 
+    # Funcion create_graph, encargada de crear los graficos.
     def create_graph(self, x=[], y=[], color='#526B84', markerfacecolor='#95A5A6', x_range_min=1,
                      x_label='', y_label='', title_graph='', path_image='./GraphsImages', name='', dpi=300,
                      bbox_inches='tight', is_delay=True):
@@ -63,23 +67,19 @@ class Utilities:
                      marker='o', markerfacecolor=markerfacecolor, markersize=12)
             y_max = max(y)
             plt.ylim(0, y_max + 0.4 * y_max)
-            plt.xlim(1, len(x))
-            # plt.figure(figsize=(10, 5))
+            try:
+                plt.xlim(1, len(x))
+            except:
+                print('')
         else:
             plt.figure(figsize=(15, 3.3))
 
             plt.step(x, y, where='post')
 
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.title(title_graph)
 
-        # naming the x axis
-        plt.xlabel(x_label)  # 'Packet (number)'
-        # naming the y axis
-        plt.ylabel(y_label)  # 'Delay (ms)'
-
-        # giving a title to my graph
-        plt.title(title_graph)  # 'Delay per Packet'
-
-        # function to show the plot
         if not path.exists(path_image):
             Path("./GraphsImages").mkdir(parents=True, exist_ok=True)
 
@@ -93,7 +93,6 @@ class Utilities:
                          round(max(y), 2)) + ' ms   Min Delay:' + str(round(min(
                          y), 2)) + ' ms   Avg Delay: ' + str(round(sum(y) / len(y), 2)) + ' ms', fontsize=10,
                      transform=plt.gcf().transFigure)
-        # plt.rcParams['figure.figsize'] = [10, 10]
         else:
             text_pos_x = 0.35
             text_pos_y = - 0.07
@@ -104,39 +103,4 @@ class Utilities:
 
         plt.savefig(path_image + '/' + name, dpi=dpi, bbox_inches=bbox_inches)
 
-        plt.clf()
-
-    def create_graph_multiple(self, list_edges=None, x_label='', y_label='', title_graph='',
-                              path_image='./GraphsImages', name='', dpi=300, bbox_inches='tight'):
-
-        if not path.exists(path_image):
-            Path("./GraphsImages").mkdir(parents=True, exist_ok=True)
-        plt.figure(figsize=(10, 5))
-        for link in list_edges:
-
-            if 'load' in link[2]:
-                print(link[0], link[1], link[2]['load'])
-
-                lista = (link[2]['load']).copy()
-                lista.reverse()
-                seen = set()
-                Output = [(a, b) for a, b in lista
-                          if not (a in seen or seen.add(a))]
-                Output.reverse()
-                print(Output)
-
-                x = []
-                y = []
-                for data in Output:
-                    x.append(data[0])
-                    y.append(data[1])
-
-                if 0 < len(x) == len(y) > 0:
-                    plt.step(x, y, where='post', label='[' + link[0] + ',' + link[1] + ']')
-
-        plt.xlabel(x_label)  # 'Packet (number)'
-        plt.ylabel(y_label)  # 'Delay (ms)'
-        plt.title(title_graph)  # 'Delay per Packet'
-
-        plt.savefig(path_image + '/' + name, dpi=dpi, bbox_inches=bbox_inches)
         plt.clf()

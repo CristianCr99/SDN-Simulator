@@ -26,7 +26,7 @@ import InfoSwitchWindow as info_switch
 import PacketImportWindow as p_import_w
 import ProgramaGrafos as p
 import Threads as t
-import miniEdit as edit
+import customizetopology as edit
 import simulationResultInformation as resultInfor
 from DiscreteEvents import DiscreteEvents
 
@@ -43,27 +43,18 @@ except ImportError:
 
 from collections import OrderedDict
 
-MININAM_VERSION = "1.0.1"
-
-# Fix setuptools' evil madness, and open up (more?) security holes
+SDN_Simulator_VERSION = "1.0.0"
 if 'PYTHONPATH' in os.environ:
     sys.path = os.environ['PYTHONPATH'].split(':') + sys.path
-
 FLOWTIMEDEF = 'Slow'
 FLOWTIME = OrderedDict([('Slow', 30), ('Fast', 1)])
-
 LinkTime = 0.1
 
 
-def version(*_args):
-    "Print Mininet and MiniNAM version and exit"
-    # print("MiniNAM: %s" % MININAM_VERSION)
-    sys.exit()
-
-
+# Clase PrefsDialog, encargada de establecer las preferencias de las ventanas de dialogo.
 class PrefsDialog(tkinter.simpledialog.Dialog):
-    "Preferences dialog"
 
+    # Constructor parametrizado de la clase PrefsDialog.
     def __init__(self, parent, title, prefDefaults, simulation_running):
 
         self.prefValues = prefDefaults
@@ -71,11 +62,10 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
 
         tkinter.simpledialog.Dialog.__init__(self, parent, title)
 
+    # Funcion body, encargada de crear el cuerpo de la ventana de dialogo.
     def body(self, master):
-        "Create dialog body"
         self.rootFrame = master
 
-        # Selection for color of packet type
         self.typeColorsOpenFlow = LabelFrame(self.rootFrame, text='Openflow Packet Type Colors', padx=5, pady=5)
         self.typeColorsOpenFlow.grid(row=4, column=0, columnspan=2, sticky=EW, padx=5, pady=10)
         for i in range(3):
@@ -96,7 +86,6 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
                                             "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
         self.PacketInColorMenu.grid(row=1, column=1, sticky=W, padx=10)
 
-        # Selection of color for UDP
         Label(self.typeColorsOpenFlow, text="Packet Out").grid(row=0, column=2, sticky=W, padx=10)
         self.PacketOutColor = StringVar(self.typeColorsOpenFlow)
         self.PacketOutColor.set(self.typeColors["packet_out"])
@@ -118,7 +107,6 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         for i in range(3):
             self.typeColorsData.columnconfigure(i, weight=1)
 
-        # Selection of color for TCP
         Label(self.typeColorsData, text="TCP").grid(row=0, column=1, sticky=W, padx=10)
         self.TCPColor = StringVar(self.typeColorsData)
         self.TCPColor.set(self.typeColors["TCP"])
@@ -126,7 +114,6 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
                                        'Brown', 'Cyan', 'Orange', 'Violet')
         self.TCPColorMenu.grid(row=1, column=1, sticky=W, padx=10)
 
-        # Selection of color for UDP
         Label(self.typeColorsData, text="UDP").grid(row=0, column=2, sticky=W, padx=10)
         self.UDPColor = StringVar(self.typeColorsData)
         self.UDPColor.set(self.typeColors["UDP"])
@@ -134,7 +121,6 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
                                        'Brown', 'Cyan', 'Orange', 'Violet')
         self.UDPColorMenu.grid(row=1, column=2, sticky=W, padx=10)
 
-        # Selection of color for OpenFlow
         Label(self.typeColorsData, text="General").grid(row=0, column=0, sticky=W, padx=10)
         self.UsertrafficColor = StringVar(self.typeColorsData)
         self.UsertrafficColor.set(self.typeColors["Usertraffic"])
@@ -142,7 +128,6 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
                                                "Blue", "Purple", 'Brown', 'Cyan', 'Orange', 'Violet')
         self.UsertrafficColorMenu.grid(row=1, column=0, sticky=W, padx=10)
 
-        # Field for showing IP Packets
         Label(self.rootFrame, text="IP address on packets:").grid(row=7, sticky=W, padx=10, pady=10)
         self.showAddrVar = StringVar(self.rootFrame)
         self.showaddrOption = OptionMenu(self.rootFrame, self.showAddrVar, "Source and Destination", "None")
@@ -153,14 +138,13 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
             state_menu = 'disabled'
         else:
             state_menu = 'normal'
-        # Field for Packet Flow Speed
+
         Label(self.rootFrame, text="Packet Flow Speed:").grid(row=8, sticky=W, padx=10, pady=10)
         self.flowTime = StringVar(self.rootFrame)
         self.flowTime.set(list(FLOWTIME.keys())[list(FLOWTIME.values()).index(self.prefValues['flowTime'])])
         self.flowTimeMenu = OptionMenu(self.rootFrame, self.flowTime, *FLOWTIME.keys())
         self.flowTimeMenu.configure(state=state_menu)
         self.flowTimeMenu.grid(row=8, column=1, sticky=W)
-        # Field for showing nodeStats
 
         Label(self.rootFrame, text="Show Node Statistics Box:").grid(row=9, sticky=W, padx=5, pady=5)
         self.reactive_proactive = IntVar()
@@ -172,6 +156,8 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
         else:
             self.cs_reactive_proactive.select()
 
+    # Funcion apply, encargada de establecer los valores introducidos de los diferentes campos de la ventana de
+    # dialogo.
     def apply(self):
 
         flowTime = FLOWTIME[self.flowTime.get()]
@@ -193,132 +179,24 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
                        }
 
 
-class FiltersDialog(tkinter.simpledialog.Dialog):
-    "Filters dialog"
+# Clase SDN_Simulator. Es la principal clase de esta heramienta de simulacion. Recoge los metodos mas relevantes
+# para realizar la simulacion; desde la interfaz grafica hasta la logica que gobierna el funcionamiento del simulador
+# (haciendo llamada a las funciones principales de otras clases para el funcionamiento completo del simulador).
+class SDN_Simulator(Frame, Thread):
 
-    def __init__(self, parent, title, filterDefaults):
-
-        self.filterValues = filterDefaults
-
-        tkinter.simpledialog.Dialog.__init__(self, parent, title)
-
-    def body(self, master):
-        "Create dialog body"
-        self.rootFrame = master
-
-        # Field for Show Packet Types
-        Label(self.rootFrame, text="Show Packet Types:").grid(row=0, sticky=E)
-        self.showPackets = Text(self.rootFrame, height=1)
-        self.showPackets.grid(row=0, column=1)
-        showPackets = self.filterValues['showPackets']
-        for item in showPackets:
-            self.showPackets.insert(END, item + ', ')
-
-        # Field for Hide Packet Types
-        Label(self.rootFrame, text="Hide Packet Types:").grid(row=2, sticky=E)
-        self.hidePackets = Text(self.rootFrame, height=1)
-        self.hidePackets.grid(row=2, column=1)
-        hidePackets = self.filterValues['hidePackets']
-        for item in hidePackets:
-            self.hidePackets.insert(END, item + ', ')
-
-        # Field for Hide Packets From IP or MAC
-        Label(self.rootFrame, text="Hide Packets from IP or MAC:").grid(row=3, sticky=E)
-        self.hideFromIPMAC = Text(self.rootFrame, height=1)
-        self.hideFromIPMAC.grid(row=3, column=1)
-        hideFromIPMAC = self.filterValues['hideFromIPMAC']
-        for item in hideFromIPMAC:
-            self.hideFromIPMAC.insert(END, item + ', ')
-
-        # Field for Hide Packet To IP or MAC
-        Label(self.rootFrame, text="Hide Packets To IP or MAC:").grid(row=4, sticky=E)
-        self.hideToIPMAC = Text(self.rootFrame, height=1)
-        self.hideToIPMAC.grid(row=4, column=1)
-        hideToIPMAC = self.filterValues['hideToIPMAC']
-        for item in hideToIPMAC:
-            self.hideToIPMAC.insert(END, item + ', ')
-
-        # initial focus
-        return self.showPackets
-
-    def apply(self):
-        showPackets = str(self.showPackets.get("1.0", 'end-1c')).replace(' ', '').replace('\n', '').replace('\r',
-                                                                                                            '').split(
-            ',')
-        hidePackets = str(self.hidePackets.get("1.0", 'end-1c')).replace(' ', '').replace('\n', '').replace('\r',
-                                                                                                            '').split(
-            ',')
-        hideFromIPMAC = str(self.hideFromIPMAC.get("1.0", 'end-1c')).replace(' ', '').replace('\n', '').replace('\r',
-                                                                                                                '').split(
-            ',')
-        hideToIPMAC = str(self.hideToIPMAC.get("1.0", 'end-1c')).replace(' ', '').replace('\n', '').replace('\r',
-                                                                                                            '').split(
-            ',')
-        # Removing empty items from lists
-        showPackets = filter(None, showPackets)
-        hidePackets = filter(None, hidePackets)
-        hideFromIPMAC = filter(None, hideFromIPMAC)
-        hideToIPMAC = filter(None, hideToIPMAC)
-        self.result = {
-            'showPackets': showPackets,
-            'hidePackets': hidePackets,
-            'hideFromIPMAC': hideFromIPMAC,
-            'hideToIPMAC': hideToIPMAC
-        }
-
-
-class NodeStats(object):
-
-    def __init__(self, widget):
-        self.widget = widget
-        self.tipwindow = None
-        self.id = None
-        self.x = self.y = 0
-
-    def showtip(self, text):
-        "Display text in nodeStats window"
-        self.text = text
-        if self.tipwindow or not self.text:
-            return
-        x, y, _cx, cy = self.widget.bbox("insert")
-        x = x + self.widget.winfo_rootx() + 27
-        y = y + cy + self.widget.winfo_rooty() + 27
-        self.tipwindow = tw = Toplevel(self.widget)
-        tw.wm_overrideredirect(1)
-        tw.wm_geometry("+%d+%d" % (x, y))
-        try:
-            tw.tk.call("::tk::unsupported::MacWindowStyle",
-                       "style", tw._w,
-                       "help", "noActivates")
-        except TclError:
-            pass
-        label = Label(tw, text=self.text, justify=LEFT,
-                      background="#ffffe0", relief=SOLID, borderwidth=1,
-                      font=("tahoma", "8", "normal"))
-        label.pack(ipadx=1)
-
-    def hidetip(self):
-        tw = self.tipwindow
-        self.tipwindow = None
-        if tw:
-            tw.destroy()
-
-
-class MiniNAM(Frame, Thread):
-    "A realtime network animator for Mininet."
-
+    # Constructor por defecto de la clase SDN_Simulator.
     def __init__(self, parent=None, cheight=720, cwidth=1280, locations={}):
 
         Frame.__init__(self, parent)
-        self.__running = threading.Event()  # Used to stop the thread identification
-        self.__flag = threading.Event()  # The flag used to pause the thread
+        self.__running = threading.Event()
+        self.__flag = threading.Event()
         self.list_threads = []
         self.list_processed_events = []
         self.action = None
         self.info_window_import = {}
         self.simulation_is_running = False
 
-        # Defaults for preferences and filters
+        # Preferencias por defecto:
         self.appPrefs = {
             'flowTime': FLOWTIME[FLOWTIMEDEF],
             'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown',
@@ -326,25 +204,13 @@ class MiniNAM(Frame, Thread):
             'showAddr': 'Source and destination',
             'reactive_proactive': 1  # 1 es proactivo y 0 reactivo
         }
-        # self.appFilters = {
-        #     'showPackets': ['TCP', 'UDP', 'ICMP'],  # ARP?
-        #     'hidePackets': ['IPv6'],
-        #     'hideFromIPMAC': ['0.0.0.0', '255.255.255.255'],
-        #     'hideToIPMAC': ['0.0.0.0', '255.255.255.255']
-        # }
 
-        # Style
-        # self.fixedFont = tkinter.font.Font(family="DejaVu Sans Mono", size="14")
-        # self.font = ('Geneva', 9)
-        # self.smallFont = ('Geneva', 7)
-        # self.bg = 'white'
-        # If more hosts than this list then random colors are assigned to remaining hosts
         self.HOST_COLORS = ['#E57300', '#FF66B2', '#fa0004', '#b1b106', '#957aff', '#FF00FF', '#2f90d0', '#818c8d',
                             '#A93226', '#1b2ef8', '#3ef979', '#7c2ff9']
         self.Controller_Color = '#9D9D9D'
         self.images = miniImages()
 
-        # Title
+        # Titulo
         self.appName = 'SDN Simulator'
         self.top = self.winfo_toplevel()
         self.top.title(self.appName)
@@ -352,142 +218,84 @@ class MiniNAM(Frame, Thread):
         # Menu bar
         self.createMenubar()
 
-        # Editing canvas
         self.cheight, self.cwidth = cheight, cwidth
         self.cframe, self.canvas = self.createCanvas()
-        # Place window at bottom
         self.top.geometry("%dx%d%+d%+d" % (self.cwidth, self.cheight, 0, 0))  # CRISTIAN: QUITAR PARA QUE NO SE MUEVA
 
-        # Layout
         self.cframe.grid(column=1, row=0)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
         self.pack(expand=True, fill='both')
 
-        # Info boxes
         self.aboutBox = None
         self.infoBox = None
 
-        # Initialize node data
         self.nodeBindings = self.createNodeBindings()
         self.nodePrefixes = {'LegacyRouter': 'r', 'LegacySwitch': 's', 'Switch': 's', 'Host': 'h', 'Controller': 'c'}
         self.widgetToItem = {}
         self.itemToWidget = {}
         self.Nodes = []
-        # intfdata is [{"node":"-1", 'color': None, "type":"-1", "interface": "-1", "mac":"-1", "ip": "-1", "dgw":"-1", "link": "-1", "TXP":0, "RXP":0, "TXB":0, "RXB":0}]
         self.intfData = []
 
-        # Initialize link tool
         self.link = self.linkWidget = None
 
-        # Selection support
         self.selection = None
 
-        # Keyboard and Popup bindings
+        # Fijaciones del teclado y de las ventanas emergentes:
         self.bind('<Control-q>', lambda event: self.quit())
         self.focus()
         self.canvas.bind('<Button-1>', self.setFocus)
         self.hostPopup = Menu(self.top, tearoff=0, takefocus=1)
-        # self.hostPopup.add_command(label='Host Details')
         self.hostPopup.add_command(label='Traffic Insertion', command=self.traffic_insertion)
-        # self.hostPopup.add_separator()
-        # self.hostPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
         self.hostPopup.bind("<FocusOut>", self.popupFocusOut)
-
         self.legacyRouterPopup = Menu(self.top, tearoff=0, takefocus=1)
         self.legacyRouterPopup.add_command(label='Router Options')
         self.legacyRouterPopup.add_separator()
-        # self.legacyRouterPopup.add_command(label='Terminal', font=self.font, command=self.xterm)
         self.legacyRouterPopup.bind("<FocusOut>", self.popupFocusOut)
-
         self.switchPopup = Menu(self.top, tearoff=0, takefocus=1)
         self.switchPopup.add_command(label='Switch Details', command=self.show_switch_info)
-        # self.switchPopup.add_separator()
-        # self.switchPopup.add_command(label='List bridge details', font=self.font, command=self.listBridge)
-        # self.switchPopup.bind("<FocusOut>", self.popupFocusOut)
-
         self.linkPopup = Menu(self.top, tearoff=0, takefocus=1)
         self.linkPopup.add_command(label='Link Details', command=self.link_details)
-        self.linkPopup.add_separator()
-        self.linkPopup.add_command(label='Link Up', command=self.linkUp)
-        self.linkPopup.add_command(label='Link Down', command=self.linkDown)
         self.linkPopup.bind("<FocusOut>", self.popupFocusOut)
 
-        # Event handling initalization
+        # Initalizacion de la gestion de eventos
         self.linkx = self.linky = self.linkItem = None
         self.lastSelection = None
 
-        # Model initialization
+        # Inicializacion del modelo
         self.packetImage = []
         self.flowQueues = {}
-        # self.PLACEMENT = {'block': SwitchBinPlacer, 'random': RandomPlacer}
         self.links = {}
         self.cli = None
 
-        # Setting up values when MiniNAM class is called from a script
+        # Configuracion de valores cuando se llama a la clase SDN_Simulator desde un script
         self.nodelocations = locations
         self.options = None
         self.args = None
         self.validate = None
-        # self.net = net
         self.active = True
         self.traffic_hosts = None
 
-        # Gather topology info and create nodes
-        self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
+        # Reunimos informacion sobre la topología y creamos los nodos
+        self.TopoInfo()
         self.createNodes()
-        # Label(text='Text on the screen')
         self.chronometer = Label(self.cframe, text='\n Simulation Time \n\n00:00:000', padx=3, pady=3, relief="ridge")
         self.chronometer.grid(row=0, column=1, sticky='NE', padx=3, pady=3)
-
         self.stop_simulation = False
         self.time_pause = 0
         self.time_start_pause = 0
-        # self.chronometer.destroy()
-        # c = Canvas(self.cframe)
-        # c.grid(row=0, column=1, sticky='NE')
-        # c.create_text(100, 100, text="My Text")
-        # c.itemconfig(font=("courier", 12))
 
-        # self.displayPacket('h1', 's1', "hola")
-        # self.displayPacket('h1', 's1', "hola")
-        # self.displayPacket('h1', 's1', "hola")
-        # time.sleep(100)
-
-        # time.sleep(1)
-
-        # Close window gracefully
+        # cerramos la ventana
         Wm.wm_protocol(self.top, name='WM_DELETE_WINDOW', func=self.quit)
 
-    # def custom(self, _option, _opt_str, value, _parser):
-    #     "Parse custom file and add params."
-    #     files = []
-    #     if os.path.isfile(value):
-    #         # Accept any single file (including those with commas)
-    #         files.append(value)
-    #     else:
-    #         # Accept a comma-separated list of filenames
-    #         files += value.split(',')
-
-    #     for fileName in files:
-    #         customs = {}
-    #         if os.path.isfile(fileName):
-    #             exec(fileName, customs, customs)
-    #             for name, val in customs.iteritems():
-    #                 self.setCustom(name, val)
-    #         else:
-    #             raise Exception('could not find custom file: %s' % fileName)
-
+    # Funcion get__t_event, encargada de devolver la bandera y el proceso en ejecucion.
     def get__t_event(self):
         return self.__flag, self.__running
 
+    # Funcion setCustom, encargada de establecer los parametros personalizados para Mininet.
     def setCustom(self, name, value):
-        "Set custom parameters for Mininet."
-        # if name.upper() == 'NET':
-        #     # info('*** Loading network from custom file ***\n') (JJ)
-        #     # self.net = value
+
         if name in ('topos', 'switches', 'hosts', 'controllers'):
-            # Update dictionaries
             param = name.upper()
             try:
                 globals()[param].update(value)
@@ -495,70 +303,34 @@ class MiniNAM(Frame, Thread):
             except:
                 pass
         elif name == 'validate':
-            # Add custom validate function
             self.validate = value
 
         elif name == 'locations':
             self.nodelocations = value
 
         else:
-            # Add or modify global variable or class
             globals()[name] = value
 
+    # Funcion configs, encargada de la carga de configuraciones personalizadas.
     def configs(self, _option, _opt_str, value, _parser):
 
-        "Load custom configs."
         fileName = value
 
         if not os.path.isfile(fileName):
-            # print('Could not find config file: %s. Loading default preferences and filters.' % fileName)
             return
         f = open(fileName, 'r')
         loadedPrefs = self.convertJsonUnicode(json.load(f))
-        # Load application preferences
+        # Cargamos las preferencias de la aplicacion
         if 'preferences' in loadedPrefs:
             self.appPrefs = dict(self.appPrefs.items() + loadedPrefs['preferences'].items())
-        # Load application filters
         if 'filters' in loadedPrefs:
             self.appFilters = dict(self.appFilters.items() + loadedPrefs['filters'].items())
         f.close()
 
-    def setNat(self, _option, opt_str, value, parser):
-        "Set NAT option(s)"
-        assert self  # satisfy pylint
-        parser.values.nat = True
-        # first arg, first char != '-'
-        if parser.rargs and parser.rargs[0][0] != '-':
-            value = parser.rargs.pop(0)
-            # _, args, kwargs = splitArgs( opt_str + ',' + value )
-            # parser.values.nat_args = args
-            # parser.values.nat_kwargs = kwargs
-        else:
-            parser.values.nat_args = []
-            parser.values.nat_kwargs = {}
-
-    def addDictOption(self, opts, choicesDict, default, name, **kwargs):
-        """Convenience function to add choices dicts to OptionParser.
-           opts: OptionParser instance
-           choicesDict: dictionary of valid choices, must include default
-           default: default choice key
-           name: long option name
-           kwargs: additional arguments to add_option"""
-        helpStr = ('|'.join(sorted(choicesDict.keys())) +
-                   '[,param=value...]')
-        helpList = ['%s=%s' % (k, v.__name__)
-                    for k, v in choicesDict.items()]
-        helpStr += ' ' + (' '.join(helpList))
-        params = dict(type='string', default=default, help=helpStr)
-        params.update(**kwargs)
-        opts.add_option('--' + name, **params)
-
-    # Topology
-
+    # Funcion TopoInfo, encargada de establecer los parametros (direcciones ip, puertos...) a los diferentes elementos
+    # cargados en el grafo que contiene toda la informacion de la topologia.
     def TopoInfo(self):
-        # print('hello')
         for i in graph.get_graph().nodes():
-            # print(i[0])
             if i[0] == 'c':
                 ip = ''
                 port = ''
@@ -578,28 +350,18 @@ class MiniNAM(Frame, Thread):
                     {'name': i, 'widget': None, 'type': "Host", 'ip': graph.get_graph().nodes()[i]['ip'],
                      'color': None})
 
-    def intfExists(self, interface):
-        for data in self.intfData:
-            if data["interface"] == interface:
-                return data
-        return None
-
+    # Funcion crateNodes, encargada de dibujar los widgets de los nodos (junto a sus enlaces)
     def createNodes(self):
-        # Drawing node Widgets
         for node in self.Nodes:
             if not self.findWidgetByName(node['name']):
-                # location = self.nodelocations[node['name']] if node['name'] in self.nodelocations else (random.randrange(70,self.cwidth-100), random.randrange(70,self.cheight-100))
-                # print(node)
                 self.newNamedNode(node, float(graph.get_graph().nodes()[node['name']]['x']),
                                   float(graph.get_graph().nodes()[node['name']]['y']))
 
-        # Drawing data links
-
+        # Bibujamos los enlaces de los nodos
         for i in list(graph.get_graph().edges()):
             self.drawLink(i[0], i[1])
-            # print('enlace de', i[0], 'a', i[1])
 
-        # Drawing control links
+        # Dibujamos los enlaces del controlador
         for switch in self.Nodes:
             try:
                 for ctrlr in switch['controllers']:
@@ -607,23 +369,26 @@ class MiniNAM(Frame, Thread):
             except:
                 pass
 
+    # Funcion createPacket, encargada de mostrar en nuestro lienzo (canvas) un paqueye llamando a la funcion
+    # displayPacket para ello.
     def createPacket(self, src, dst, PacketInfo):
         try:
-            # Get the queue in which the packet should be added
+            # Obtenemos la cola en la que se debe aniadir el paquete
             q = self.getQueue(PacketInfo)
             if q is not None:
-                # Refresh a queue if it grows above 100 packets
+                # Refrescamos una cola si crece por encima de los 100 paquetes
                 if q.qsize() > 100:
                     self.clearQueue(q)
-                # Create a thread to display packet and add it to the queue
+                # Crear un hilo para mostrar el paquete y añadirlo a la cola
                 thr = Thread(target=self.displayPacket, args=(src, dst, PacketInfo))
                 thr.daemon = True
                 q.put(thr)
         except Exception as e:
             print(e)
 
+    # Funcion displayPacket, encargada de dibujar el paquete y moverlo por nuestro lienzo empleando para ello la
+    # funcion movePacket.
     def displayPacket(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst, time, flag, running):
-        start = self.current_milli_time()
         try:
             c = self.canvas
             s = self.findWidgetByName(src)
@@ -631,7 +396,7 @@ class MiniNAM(Frame, Thread):
             srcx, srcy = c.coords(self.widgetToItem[s])
             dstx, dsty = c.coords(self.widgetToItem[d])
 
-            # Draw a rectangle shape for the packet
+            # Dibujamos una forma de rectangulo para el paquete
             if is_openflow and type_openflow == 'packet_out':
                 image1 = Image.new("RGBA", (90, 15))
                 draw = ImageDraw.Draw(image1)
@@ -649,7 +414,7 @@ class MiniNAM(Frame, Thread):
             draw.polygon([(15, 0), (15, 15), (45, 15), (45, 0)], color_by_type_packet)
             if type_openflow == 'packet_out':
                 draw.polygon([(15 + 45, 0), (15 + 45, 15), (45 + 45, 15), (45 + 45, 0)], color_by_type_packet)
-            # print('1')
+
             if not is_openflow:
                 try:
                     if 'UDP' in Packet:
@@ -664,31 +429,21 @@ class MiniNAM(Frame, Thread):
                     ip_color = self.appPrefs['typeColors'][type_openflow]
                 except:
                     ip_color = 'pink'
-            # print('2')
-            # print(ip_color is not None)
+
             if ip_color is not None:
                 draw.polygon([(0, 0), (0, 15), (15, 15), (15, 0)], ip_color)
                 if type_openflow == 'packet_out':
                     draw.polygon([(0 + 45, 0), (0 + 45, 15), (15 + 45, 15), (15 + 45, 0)],
                                  self.appPrefs['typeColors']['flow_mod'])
 
-            # print('3')
-            # If IP address is not displayed then rotate the packet along the link
+            # Si el origen y destino no se muestra, entonces gira el paquete a lo largo del enlace
             if self.appPrefs['showAddr'] == 'None':
                 angle = -1 * atan2(dsty - srcy, dstx - srcx)
                 dx = 7 * sin(angle)
                 dy = 7 * cos(angle)
                 angle = 180 * angle / pi
                 packetImage = itk.PhotoImage(image1.rotate(angle, expand=True))
-
             else:
-                # if self.appPrefs['showAddr'] == 'Source':
-                #     addr = Packet[IP].src
-                # elif self.appPrefs['showAddr'] == 'Destination':
-                #     addr = Packet[IP].dst
-                #
-                # address = addr.split('.')[0] + '.' + addr.split('.')[-1]
-                # print(address)
                 angle = -1 * atan2(dsty - srcy, dstx - srcx)
                 dx = 10 * sin(angle)
                 dy = 10 * cos(angle)
@@ -696,42 +451,40 @@ class MiniNAM(Frame, Thread):
                 draw.text((0, 0), h_src_dst)
                 draw.text((45, 0), h_src_dst)
                 packetImage = itk.PhotoImage(image1)
-                # dx, dy = 0, 0
+
             self.packetImage.append(packetImage)
             packet = c.create_image(srcx + dx, srcy + dy, image=packetImage)
             deltax = (dstx - srcx) / 50
             deltay = (dsty - srcy) / 50
             delta = deltax, deltay
-            # print('4')
-            # t = float(20) * float(100) / 50000  # 1000 for ms and 50 for steps
-            t = (float(self.appPrefs['flowTime']) * float(100) / 50000.0)  # 1000 for ms and 50 for steps
 
-            # print('time:', t * 1000.0)
+            t = (float(self.appPrefs['flowTime']) * float(100) / 50000.0)
 
             self.movePacket(packet, packetImage, delta, t)
-            end = self.current_milli_time()
-            # print("Time elapsed:", end - start)
 
         except Exception:
-            print('Excepción!!!!')
+            print('Excepcion!')
 
+    # Funcion display_multiple_packet, encargada de ejecutar la animacion de un paquete por nuestro lienzo mediante
+    # la llamada de la funcion displayPacket, realizando dicha ejecucion en un hilo ejecutandose dicha animacion
+    # paralelamente al programa principal.
     def display_multiple_packet(self, src, dst, Packet, is_openflow, type_openflow, h_src_dst, time):
         arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst, time, self.__flag, self.__running]
-        # threading.Thread(target=self.displayPacket, args=arr).start()
-
         new_thread = t.run_process(target=self.displayPacket, args=arr)
         new_thread.start()
         self.list_threads.append(new_thread)
 
+    # Funcion movePacket, encargada de realizar exclusivamente la animacion del paquete a desplazar por el lienzo. En
+    # esta funcion tambien se establece el punto de parada del proceso que ejecuta esta funcion (mediante señales) con
+    # el fin de poder detener la ejecucion de las animaciones de los paquetes desplazandose por nuestro lienzo.
     def movePacket(self, packet, image, delta, t):
         c = self.canvas
         i = 0
-        # Move the packet in 50 steps then remove the image
-        self.__flag.set()  # Set to True
-        self.__running.set()  # Set running to True
+        # Movemos el paquete en 50 pasos y luego eliminamos la imagen
+        self.__flag.set()
+        self.__running.set()
         while i < 50:
-            # if self.stop_simulation == False:
-            self.__flag.wait()  # return immediately when it is True, block until the internal flag is True when it is False
+            self.__flag.wait()  # Punto de parada de la animacion cuando recibe una senial con dicho proposito
             i += 1
             c.move(packet, delta[0], delta[1])
             c.update()
@@ -746,9 +499,8 @@ class MiniNAM(Frame, Thread):
         interface = PacketInfo['interface']
         addr1, addr2 = s_addr, d_addr
 
-        t = float(self.appPrefs['flowTime']) * float(PacketInfo['time']) / 50000  # sec to ms 1000 and 50 steps
+        t = float(self.appPrefs['flowTime']) * float(PacketInfo['time']) / 50000
 
-        # Separate queue for each interface for real-time or if not trying to identify flows
         if self.appPrefs['flowTime'] == 1 or self.appPrefs['identifyFlows'] == 0:
             q_name = ip_protocol + addr1 + addr2 + interface
             if q_name in self.flowQueues:
@@ -759,8 +511,6 @@ class MiniNAM(Frame, Thread):
                 qt.daemon = True
                 qt.start()
                 return self.flowQueues[q_name]
-
-        # Queues based on packet type, s_addr and d_addr
         else:
             q_name1 = ip_protocol + addr1 + addr2
             q_name2 = ip_protocol + addr2 + addr1
@@ -793,8 +543,8 @@ class MiniNAM(Frame, Thread):
             except:
                 pass
 
+    # Funcion clearQueue, encargada de borrar la cola y eliminar todos los paquetes en cola.
     def clearQueue(self, qu=None):
-        "To clear queue and remove all enqueued packets"
         if qu is None:
             for q in self.flowQueues:
                 while not self.flowQueues[q].empty():
@@ -805,29 +555,27 @@ class MiniNAM(Frame, Thread):
                 qu.task_done()
                 qu.get()
 
-    # Canvas
-
+    # Funcion createCanvas, encargada de crear y devolver nuestro marco de lienzo desplazable.
     def createCanvas(self):
-        "Create and return our scrolling canvas frame."
-        f = Frame(self)
 
+        f = Frame(self)
         canvas = Canvas(f, width=self.cwidth, height=self.cheight)
 
-        # Scroll bars
+        # Scroll bars (Barras de desplazamiento)
         xbar = Scrollbar(f, orient='horizontal', command=canvas.xview)
         ybar = Scrollbar(f, orient='vertical', command=canvas.yview)
         canvas.configure(xscrollcommand=xbar.set, yscrollcommand=ybar.set)
 
-        # Resize box
+        # Cambiamos el tamanio de la caja
         resize = Label(f, bg='white')
 
-        # Layout
+        # Disenio
         canvas.grid(row=0, column=1, sticky='nsew')
         ybar.grid(row=0, column=2, sticky='ns')
         xbar.grid(row=1, column=1, sticky='ew')
         resize.grid(row=1, column=2, sticky='nsew')
 
-        # Resize behavior
+        # Comportamiento del cambio de tamanio
         f.rowconfigure(0, weight=1)
         f.columnconfigure(1, weight=1)
         f.grid(row=0, column=0, sticky='nsew')
@@ -835,20 +583,21 @@ class MiniNAM(Frame, Thread):
 
         return f, canvas
 
+    # Funcion updateScrollRegion, encargada de actualizar la región de desplazamiento del lienzo para contener todos los
+    # elementos de la topologia.
     def updateScrollRegion(self):
-        "Update canvas scroll region to hold everything."
         bbox = self.canvas.bbox('all')
         if bbox is not None:
             self.canvas.configure(scrollregion=(0, 0, bbox[2],
                                                 bbox[3]))
 
+    # Funcion canvasx, encargada de convertir la coordenada x de la raiz a la coordenada del lienzo.
     def canvasx(self, x_root):
-        "Convert root x coordinate to canvas coordinate."
         c = self.canvas
         return c.canvasx(x_root) - c.winfo_rootx()
 
+    # Funcion canvasy, encargada de convertir la coordenada y de la raíz a la coordenada del lienzo.
     def canvasy(self, y_root):
-        "Convert root y coordinate to canvas coordinate."
         c = self.canvas
         return c.canvasy(y_root) - c.winfo_rooty()
 
@@ -858,56 +607,35 @@ class MiniNAM(Frame, Thread):
     def setFocus(self, event=None):
         event.widget.focus_set()
 
-    # Generic node handlers
-
+    # Funcion findWidgetByName, encargada de encontrar un widget por su nombre.
     def findWidgetByName(self, name):
         for widget in self.widgetToItem:
             if name == widget['text']:
                 return widget
 
+    # Funcion findItem, encargada de encontrar items en un lugar de nuestro lienzo.
     def findItem(self, x, y):
-        "Find items at a location in our canvas."
         items = self.canvas.find_overlapping(x, y, x, y)
         if len(items) == 0:
             return None
         else:
             return items[0]
 
+    # Funcion nodeIcon, encargada de crear un nuevo icono de nodo.
     def nodeIcon(self, node, name, color):
-        "Create a new node icon."
         icon = Button(self.canvas, image=self.images[node],
                       text=name, compound='top')
         icon.config(highlightbackground=color, highlightcolor=color, highlightthickness=3)
-        # Unfortunately bindtags wants a tuple
         bindtags = [str(self.nodeBindings)]
         bindtags += list(icon.bindtags())
         icon.bindtags(tuple(bindtags))
         return icon
 
-    # def randColor(self):
-    #
-    #     i = 0;
-    #     color = self.HOST_COLORS[i]
-    #     try:
-    #         while color in [node['color'] for node in self.Nodes]:
-    #             i += 1
-    #             color = self.HOST_COLORS[i]
-    #     except:
-    #         color = "#" + ("%06x" % random.randint(0, 16777215))
-    #         while any(color in sublist for sublist in self.Nodes):
-    #             color = "#" + ("%06x" % random.randint(0, 16777215))
-    #
-    #     return color
-
+    # Funcion newNamedNode, encargada de aniadir a un icono de un nodo un nombre.
     def newNamedNode(self, Node, x, y):
-        # if 'ip' in Node:
-        #     ip = '\n' + Node['ip']
-        # else:
-        #     ip = ''
         name = Node['name']
         type = Node['type']
         color = None
-        # Add a new node to our canvas.
         c = self.canvas
         node = 'Switch'
         if type == "Router":
@@ -916,15 +644,11 @@ class MiniNAM(Frame, Thread):
             node = 'Switch'
         elif type == 'Host':
             node = 'Host'
-            # color = self.randColor() # He cambiado esta línea para quitar el método ese self.randColor() TODO
             color = None
         elif type == 'Controlador':
             node = 'Controller'
             color = self.Controller_Color
-        else:
-            print("Specify node type for ", Node['name'])
 
-        # node = 'Switch'
         icon = self.nodeIcon(node, name, color)
         item = self.canvas.create_window(x, y, anchor='c', window=icon,
                                          tags=node)
@@ -935,10 +659,8 @@ class MiniNAM(Frame, Thread):
 
         Node['color'], Node['widget'] = color, item
 
-        # self.showNodeStats(icon)
         icon.bind('<Button-1>', self.setFocus)
         if 'Switch' == node:
-            # print('hola')
             icon.bind('<Button-3>', self.do_switchPopup)
         if 'LegacyRouter' == node:
             icon.bind('<Button-3>', self.do_legacyRouterPopup)
@@ -950,83 +672,45 @@ class MiniNAM(Frame, Thread):
             icon.bind('<Button-3>', self.do_controllerPopup)
         self.updateScrollRegion()
 
+    # Funcion createNodeBindings, encargada de crear un conjunto de enlaces para los nodos.
     def createNodeBindings(self):
-        "Create a set of bindings for nodes."
         bindings = {
             '<ButtonPress-1>': self.selectNode,
             '<B1-Motion>': self.dragNodeAround,
             '<Enter>': self.enterNode,
             '<Leave>': self.leaveNode
         }
-        l = Label()  # lightweight-ish owner for bindings
+        l = Label()
         for event, binding in bindings.items():
             l.bind(event, binding)
         return l
 
+    # Funcion selectItem, encargada de seleccionar un elemento y recordar la seleccion anterior.
     def selectItem(self, item):
-        "Select an item and remember old selection."
         self.lastSelection = self.selection
         self.selection = item
 
+    # Funcion enterNode, encargada de seleccionar el nodo de entrada.
     def enterNode(self, event):
-        "Select node on entry."
-        # print(event)
         self.selectNode(event)
 
+    # Funcion leaveNode, encargada de restaurar la antigua selección al salir.
     def leaveNode(self, _event):
-        "Restore old selection on exit."
         self.selectItem(self.lastSelection)
 
-    # TODO Aquí se podría poner alguna información del elemento sobre el que nos hemos situado
-    # def showNodeStats(self, widget):
-    #     nodeStats = NodeStats(widget)
-    #
-    #     # print(nodeStats)
-    #
-    #     def enter(_event):
-    #         if self.appPrefs['showNodeStats'] == 0:
-    #             return
-    #
-    #         TXP = 0;
-    #         TXB = 0;
-    #         RXP = 0;
-    #         RXB = 0
-    #         node = widget['text']
-    #         for data in self.intfData:
-    #             if data['node'] == node:
-    #                 TXP += data['TXP']
-    #                 TXB += data['TXB']
-    #                 RXP += data['RXP']
-    #                 RXB += data['RXB']
-    #         text = "TXP: " + str(TXP) + "\n" + "RXP: " + str(RXP) + "\n" + "TXB: " + str(TXB) + "\n" + "RXB: " + str(
-    #             RXB)
-    #         nodeStats.showtip(text)
-    #
-    #     def leave(_event):
-    #         nodeStats.hidetip()
-    #
-    #     widget.bind('<Enter>', enter)
-    #     widget.bind('<Leave>', leave)
-
-    # Specific node handlers
-
+    # Funcion selectNode, encargada de Seleccionar el nodo sobre el que se ha hecho clic.
     def selectNode(self, event):
-        "Select the node that was clicked on."
         item = self.widgetToItem.get(event.widget, None)
         self.selectItem(item)
 
+    # Funcion dragNodeAround, encargada de arrastrar un nodo en el lienzo.
     def dragNodeAround(self, event):
-        "Drag a node around on the canvas."
         c = self.canvas
-        # Convert global to local coordinates;
-        # Necessary since x, y are widget-relative
         x = self.canvasx(event.x_root)
         y = self.canvasy(event.y_root)
         w = event.widget
-        # Adjust node position
         item = self.widgetToItem[w]
         c.coords(item, x, y)
-        # Adjust link positions
         for dest in w.links:
             link = w.links[dest]
             item = self.widgetToItem[dest]
@@ -1034,60 +718,45 @@ class MiniNAM(Frame, Thread):
             c.coords(link, x, y, x1, y1)
         self.updateScrollRegion()
 
+    # Funcion createControlLinkBindings, encargada de crear un conjunto de enlaces para los nodos (controlador).
     def createControlLinkBindings(self):
-        "Create a set of bindings for nodes."
-
-        # Link bindings
-        # Selection still needs a bit of work overall
-        # Callbacks ignore event
 
         def select(_event, link=self.link):
-            "Select item on mouse entry."
             self.selectItem(link)
 
         def highlight(_event, link=self.link):
-            "Highlight item on mouse entry."
             self.selectItem(link)
             self.canvas.itemconfig(link, fill='#29D3A7')
 
         def unhighlight(_event, link=self.link):
-            "Unhighlight item on mouse exit."
             self.canvas.itemconfig(link, fill='#95A5A6')
 
         self.canvas.tag_bind(self.link, '<Enter>', highlight)
         self.canvas.tag_bind(self.link, '<Leave>', unhighlight)
         self.canvas.tag_bind(self.link, '<ButtonPress-1>', select)
 
+    # Funcion createDataLinkBindings, encargada de crear un conjunto de enlaces para los nodos (Switches).
     def createDataLinkBindings(self):
-        "Create a set of bindings for nodes."
-
-        # Link bindings
-        # Selection still needs a bit of work overall
-        # Callbacks ignore event
 
         def select(_event, link=self.link):
-            "Select item on mouse entry."
             self.selectItem(link)
             self.canvas.focus_set()
 
         def highlight(_event, link=self.link):
-            "Highlight item on mouse entry."
             self.selectItem(link)
             self.canvas.itemconfig(link, fill='#29D3A7')
 
         def unhighlight(_event, link=self.link):
-            "Unhighlight item on mouse exit."
             self.canvas.itemconfig(link, fill='purple')
-            # self.selectItem( None )
 
         self.canvas.tag_bind(self.link, '<Enter>', highlight)
         self.canvas.tag_bind(self.link, '<Leave>', unhighlight)
         self.canvas.tag_bind(self.link, '<ButtonPress-1>', select)
         self.canvas.tag_bind(self.link, '<Button-3>', self.do_linkPopup)
 
+    # Funcion drawLink, encargada de preparar un enlace para su creacion final mediante la funcion addLink.
     def drawLink(self, src, dst):
 
-        "Finish creating a link"
         w = self.findWidgetByName(src)
         item = self.widgetToItem[w]
 
@@ -1107,7 +776,7 @@ class MiniNAM(Frame, Thread):
         if (source is None or dest is None or source == dest
                 or dest in source.links or source in dest.links):
             return
-        # For now, don't allow hosts to be directly linked
+        # Por ahora, no permitimos que los hosts se vinculen directamente
         stags = self.canvas.gettags(self.widgetToItem[source])
         dtags = self.canvas.gettags(self.widgetToItem[dest])
         if (('Host' in stags and 'Host' in dtags) or
@@ -1132,14 +801,12 @@ class MiniNAM(Frame, Thread):
 
         x, y = c.coords(self.widgetToItem[dest])
         c.coords(self.link, self.linkx, self.linky, x, y)
-        # print(linkType)
         self.addLink(source, dest, linktype=linkType)
 
-        # We're done
         self.link = self.linkWidget = None
 
+    # Funcion addLink, encargada de aniadir al modelo un enlace.
     def addLink(self, source, dest, linktype='data', linkopts=None):
-        "Add link to model."
         if linkopts is None:
             linkopts = {}
         source.links[dest] = self.link
@@ -1149,12 +816,9 @@ class MiniNAM(Frame, Thread):
                                  'dest': dest,
                                  'linkOpts': linkopts}
 
-    # Menu handlers
-
+    # Funcion createMenubar, encargada de crear la barra de menu bar de nuestro simulador, que contendra las diferentes
+    # opciones.
     def createMenubar(self):
-        "Create our menu bar."
-
-        # font = self.font
 
         mbar = Menu(self.top)
         self.top.configure(menu=mbar)
@@ -1170,38 +834,33 @@ class MiniNAM(Frame, Thread):
         editMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Edit", menu=editMenu)
         editMenu.add_command(label="Preferences", command=lambda: self.prefDetails(self.simulation_is_running))
-        # editMenu.add_command(label="Filters", command=self.filterDetails)
 
         self.runMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Simulation", menu=self.runMenu)
-        self.runMenu.add_command(label="Run", command=self.run_simulation2)
-        # runMenu.add_command(label="Pause", command=lambda: self.doRun(runMenu))
+        self.runMenu.add_command(label="Run", command=self.run_simulation)
         self.runMenu.add_command(label="Pause", command=self.pause_simulation)
         self.runMenu.add_command(label="Resume", command=self.resume_simulation)
         self.runMenu.add_command(label="Results", command=self.window_results)
         self.runMenu.entryconfig("Results", state="disable")
 
-        # fileMenu.add_separator()
-        # runMenu.add_command(label='Show Interfaces Summary', command=self.intfInfo)
-        # runMenu.add_command(label='Show OVS Summary', font=font, command=self.ovsShow)
-        # runMenu.add_command(label='Root Terminal', font=font, command=self.rootTerminal)
-
-        # Application menu
         appMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Help", menu=appMenu)
-        appMenu.add_command(label='About MiniNAM', command=self.about)
+        appMenu.add_command(label='About SDN_Simulator', command=self.about)
 
+    # Funcion convertJsonUnicode, encargada de convertir de un formato de json a unicode, ya que hay ciertas partes
+    # del programa que es necesario realizar esta conversion.
     def convertJsonUnicode(self, text):
-        "Some part of Mininet doesn't like Unicode"
         if isinstance(text, dict):
             return {self.convertJsonUnicode(key): self.convertJsonUnicode(value) for key, value in text.iteritems()}
         elif isinstance(text, list):
             return [self.convertJsonUnicode(element) for element in text]
-        # elif isinstance(text, unicode):
-        #    return text.encode('utf-8') # TODO
         else:
             return text
 
+    # Funcion saveGraph, encargada de guardar el estado de la topologia o de la simulacion (en el caso de que se haya
+    # ejecutado alguna simulacion sobre esta) en el formato json. Se almacena la topologia en si, la informacion de
+    # cada uno de los Switches, controladores, hosts, la carga y la informacion de los enlaces, los paquetes generados
+    # por cada host, los eventos que se han producido en la simulacion de eventos discretos, etc.
     def saveGraph(self):
         try:
             path = filedialog.asksaveasfile(title='Save Topology', initialdir='./Graphs',
@@ -1212,23 +871,20 @@ class MiniNAM(Frame, Thread):
             f.close()
         except Exception as er:
             return
-            # messagebox.showwarning(er)
-        # finally:
-        #    f.close()
 
-    # Este lo he modificado totalmente yo :)
+    # Funcion loadGraph, encargada de cargar la topologia guardada en un fichero en formato json.
     def loadGraph(self):
-        # Seleccionamos el fichero
-        # try:
+
         path = filedialog.askopenfile(title='Load Graph', initialdir='./Graphs',
                                       filetypes=(('Files .txt', '*.json'), (('All Files', '*.*'))))
-
         if path is None:
             return
         # Leemos el fichero json
-        edit_topo = json.load(open(path.name))  # TODO Error
-        # G = json_graph.cytoscape_graph(gnl)
-        # TODO Aniadir una funcion que compruebe si cada uno tiene los atributos que deben tener y que salte una ventana emergente de error en tal caso
+        try:
+            edit_topo = json.load(open(path.name))
+        except:
+            return
+
         g = nx.Graph()
         if 'hosts' in edit_topo:
             for i in edit_topo['hosts']:
@@ -1244,7 +900,6 @@ class MiniNAM(Frame, Thread):
                     g.nodes[i['opts']['hostname']]['x'] = i['x']
                 if 'y' in i:
                     g.nodes[i['opts']['hostname']]['y'] = i['y']
-                # print('info', g.nodes[i['opts']['hostname']])
 
         if 'controllers' in edit_topo:
             for i in edit_topo['controllers']:
@@ -1260,11 +915,9 @@ class MiniNAM(Frame, Thread):
                     g.nodes[i['opts']['hostname']]['x'] = i['x']
                 if 'y' in i:
                     g.nodes[i['opts']['hostname']]['y'] = i['y']
-                # print('info', g.nodes[i['opts']['hostname']])
 
         if 'switches' in edit_topo:
             for i in edit_topo['switches']:
-                # print(i['opts']['mac'])
                 if 'hostname' in i['opts']:
                     g.add_node(i['opts']['hostname'])
                 if 'mac' in i['opts']:
@@ -1280,134 +933,74 @@ class MiniNAM(Frame, Thread):
                     g.nodes[i['opts']['hostname']]['y'] = i['y']
                 if 'controllers' in i['opts']:
                     g.add_edges_from([(i['opts']['hostname'], i['opts']['controllers'][0], {'bw': sys.maxsize})])
-                # print('info', g.nodes[i['opts']['hostname']])
 
         if 'links' in edit_topo:
             for i in edit_topo['links']:
 
-                # print('hola', i)
                 if 'bw' in i['opts'] and 'distance' in i['opts'] and 'propagation_speed' in i['opts']:
                     g.add_edge(i['src'], i['dest'], bw=1 / int(i['opts']['bw']), distance=int(i['opts']['distance']),
                                propagation_speed=int(i['opts']['propagation_speed']), load=[])
-                    # else:
-                    #     g.add_edges_from([(i['src'], i['dest'], {'bw': 1})])
-
-                    # print('info', list(g.edges(data=True)))
-
-        # print('hola')
 
         graph.set_graph(g)
-        # print('infoooooooooooo', list(graph.get_graph().edges))
-        # print('infoooooooooooo', graph.get_graph().edges['h1','s1']['bw'])
-        self.TopoInfo()  # Cambiarlo para que use la topología de nuestra red simulada
+        self.TopoInfo()
         self.createNodes()
 
-        # p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
-        # graph.communication_hots(app, 'h1', p1)
-        #
-        # p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / TCP(sport=4000, dport=3000)
-        # graph.communication_hots(app, 'h2', p2)
-        #
-        # p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
-        # graph.communication_hots(app, 'h1', p1)
-        #
-        # p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / TCP(sport=4000, dport=3000)
-        # graph.communication_hots(app, 'h2', p2)
-        #
-        # p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / UDP(sport=20, dport=4)
-        # graph.communication_hots(app, 'h1', p1)
-        #
-        # p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / UDP(sport=4, dport=20)
-        # graph.communication_hots(app, 'h2', p2)
-        #
-        # p1 = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / UDP(sport=20, dport=4)
-        # graph.communication_hots(app, 'h1', p1)
-        #
-        # p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.2') / UDP(sport=4, dport=20)
-        # graph.communication_hots(app, 'h2', p2)
-
+    # Funcion customize_topology. Esta contiene la llamada de la herramienta customizetopology, la cual abrira ficha
+    # herramienta permitiendonos editar una topologia desde 0 o modificar una que hallamos creado anterioemente.
     def customize_topology(self):
         root = tkinter.Toplevel()
-        edit_topology = edit.MiniEdit(root)
+        edit_topology = edit.customize_topology(root)
 
-    def printdata(self):
-        # Convienience function to print interface data while developing
-        keys = ["node", "type", "interface", "ip", "dgw", "link", "TXP", "RXP", "TXB", "RXB", "mac"]
-        row_format = "{:>15}" * (len(keys) + 1)
-        # print(row_format.format("", *keys))
-        for data in self.intfData:
-            list = []
-            for key in keys:
-                try:
-                    list.append(data[key])
-                except:
-                    list.append("")
-            # print(row_format.format("", *list))
-
+    # Funcion pause_simulation, encargada de detener cada uno de los hilos que estan realizando la ejecucion de cada
+    # animacion de movimiento de los paquetes y del hilo que esta ejecutando el propio simulador de eventos discretos.
+    # Esta funcion almacena el instante de tiempo en el que la simulacion se detiene para que al reanudar la ejecucion
+    # siga por el instante de tiempo en el que se detuvo la ejecucion de esta.
     def pause_simulation(self):
         self.stop_simulation = True
         self.time_start_pause = self.current_milli_time()
 
-        # for thread in self.list_threads:
         for thread in self.list_threads:
-            # print(thread.get_ident(), os.getpid())
             len(self.list_threads)
             if not thread.is_alive():
-                # print('not is alive')
                 self.list_threads.pop(self.list_threads.index(thread))
             else:
                 thread.pause()
-                # print('is alive and pause')
 
+    # Funcion resume_simulation, encargada de realizar la pausa de la ejecucion de cada uno de los hilos que estan
+    # ejecutando la animacion de movimiento de un paquete y la propia ejecucion del simulador de eventos discretos.
     def resume_simulation(self):
         self.stop_simulation = False
         self.time_pause += self.current_milli_time() - self.time_start_pause
         for thread in self.list_threads:
             thread.resume()
-            # print('RESUME')
-        # self.time_pause = 0
 
-    def doRun(self, menu):
-        "Run command."
-        if self.active:
-            self.active = False
-            menu.entryconfigure(0, label="Resume")
-        else:
-            self.active = True
-            menu.entryconfigure(0, label="Pause")
-
+    # Funcion about, encargada de mostrar al usuario la informacion relativa al creador del simulador, los turores que
+    # han supervisdado este proyecto, la fecha de publicacion, etc.
     def about(self):
-        # print(self.info_window_import)
-        "Display about box."
         about = self.aboutBox
         if about is None:
             bg = 'white'
             about = Toplevel(bg='white')
             about.title('About')
-            desc = self.appName + ': a real-time network animator for Mininet'
-            version = 'MiniNAM ' + MININAM_VERSION
-            author = 'Originally by: Ahmed Khalid <a.khalid@cs.ucc.ie>, July 2016'
-            enhancements = 'Enhancements by: Ahmed Khalid, Nov 2017'
-            www = 'https://www.ucc.ie/en/misl/research/software/mininam/'
+            desc = self.appName + ': a discrete event simulator.'
+            version = self.appName + ' ' + SDN_Simulator_VERSION
+            author = 'Author: Cristian Cruz Carrasco <ccruzcar@alumnos.unex.es>, \nSeptember 2021.'
+            enhancements = 'Supervisors: Javier Carmona Murillo, Jesús Manuel Calle Cancho.'
             line1 = Label(about, text=desc, font='Helvetica 10 bold', bg=bg)
             line2 = Label(about, text=version, font='Helvetica 9', bg=bg)
             line3 = Label(about, text=author, font='Helvetica 9', bg=bg)
             line4 = Label(about, text=enhancements, font='Helvetica 9', bg=bg)
-            line5 = Entry(about, font='Helvetica 9', bg=bg, width=len(www), justify=CENTER)
-            line5.insert(0, www)
-            line5.configure(state='readonly')
             line1.pack(padx=20, pady=10)
             line2.pack(pady=10)
             line3.pack(pady=10)
             line4.pack(pady=10)
-            line5.pack(pady=10)
             hide = (lambda about=about: about.withdraw())
             self.aboutBox = about
-            # Hide on close rather than destroying window
             Wm.wm_protocol(about, name='WM_DELETE_WINDOW', func=hide)
-        # Show (existing) window
         about.deiconify()
 
+    # Funcion link_details, encargada de mostrar las caracteristicas de un enlace seleccionado haciendo para ello la
+    # llamada a la funcion InfoLinkWindow.
     def link_details(self):
         if self.selection is None:
             return
@@ -1417,27 +1010,10 @@ class MiniNAM(Frame, Thread):
         dst = linkDetail['dest']
         srcName, dstName = src['text'], dst['text']
         root = tkinter.Toplevel()
-        # print(srcName, dstName)
         info_s = info_link.InfoLinkWindow(root, graph.get_graph().edges[srcName, dstName], srcName + ',' + dstName)
         info_s.initialize_user_interface()
 
-    def linkUp(self):
-        if self.selection is None:
-            return
-        link = self.selection
-        linkDetail = self.links[link]
-        src = linkDetail['src']
-        dst = linkDetail['dest']
-        srcName, dstName = src['text'], dst['text']
-        # self.net.configLinkStatus(srcName, dstName, 'up')
-        self.canvas.itemconfig(link, dash=())
-
-    def linkDown(self):
-        if self.selection is None:
-            return
-        link = self.selection
-        self.canvas.itemconfig(link, dash=(4, 4))
-
+    # Funcion prefDetails, encargada de mostrar las preferencias del simulador.
     def prefDetails(self, simulation_is_running):
         prefDefaults = self.appPrefs
         prefBox = PrefsDialog(self, title='Preferences', prefDefaults=prefDefaults,
@@ -1445,192 +1021,90 @@ class MiniNAM(Frame, Thread):
         if prefBox.result:
             self.appPrefs = prefBox.result
 
-        # if self.appPrefs['startCLI'] == 1:
-        #    self.startCLI()
-
-    # def filterDetails(self):
-    #     filterDefaults = self.appFilters
-    #     filterBox = FiltersDialog(self, title='Filters', filterDefaults=filterDefaults)
-    #     if filterBox.result:
-    #         self.appFilters = filterBox.result
-
+    # Funcion show_switch_info, encargada de mostrar la informacion relativa al switch seleccionado haciendo para ello
+    # la llamada a la funcion InfoSwitchWindow.
     def show_switch_info(self, _ignore=None):
         if (self.selection is None or
                 self.selection not in self.itemToWidget):
             return
-
         root = tkinter.Toplevel()
         name = self.itemToWidget[self.selection]['text']
-
         info_s = info_switch.InfoSwitchWindow(root, graph.get_graph().nodes[name], name)
         info_s.initialize_user_interface()
 
-    def listBridge(self, _ignore=None):
-        if (self.selection is None or
-                self.selection not in self.itemToWidget):
-            return
-        name = self.itemToWidget[self.selection]['text']
-        tags = self.canvas.gettags(self.selection)
-
-        # if name not in self.net.nameToNode:
-        #    return
-        # if 'Switch' in tags or 'LegacySwitch' in tags:
-        # print('holaaaaaaaaaaaaaaaaaa')
-        # call([
-        #    "xterm -T 'Bridge Details' -sb -sl 2000 -e 'ovs-vsctl list bridge " + name + "; read -p \"Press Enter to close\"' &"],
-        #    shell=True)
-
-    # def intfInfo(self):
-    #
-    #     info = self.infoBox
-    #     if info is None:
-    #         info = Toplevel(bg='white')
-    #         info.title('Interfaces')
-    #
-    #         columns = 9
-    #         font = 'Helvetica 10 bold'
-    #         widgets = []
-    #         Label(info, text='Interface', borderwidth=0, font=font, padx=10).grid(row=0, column=0, sticky="nsew",
-    #                                                                               padx=1, pady=1)
-    #         Label(info, text='Linked To', borderwidth=0, font=font, padx=10).grid(row=0, column=1, sticky="nsew",
-    #                                                                               padx=1, pady=1)
-    #         Label(info, text='Node Type', borderwidth=0, font=font, padx=10).grid(row=0, column=2, sticky="nsew",
-    #                                                                               padx=1, pady=1)
-    #         Label(info, text='IP Address', borderwidth=0, font=font, padx=10).grid(row=0, column=3, sticky="nsew",
-    #                                                                                padx=1, pady=1)
-    #         Label(info, text='MAC Address', borderwidth=0, font=font, padx=10).grid(row=0, column=4, sticky="nsew",
-    #                                                                                 padx=1, pady=1)
-    #         Label(info, text='TXP', borderwidth=0, font=font, padx=10).grid(row=0, column=5, sticky="nsew", padx=1,
-    #                                                                         pady=1)
-    #         Label(info, text='RXP', borderwidth=0, font=font, padx=10).grid(row=0, column=6, sticky="nsew", padx=1,
-    #                                                                         pady=1)
-    #         Label(info, text='TXB', borderwidth=0, font=font, padx=10).grid(row=0, column=7, sticky="nsew", padx=1,
-    #                                                                         pady=1)
-    #         Label(info, text='RXB', borderwidth=0, font=font, padx=10).grid(row=0, column=8, sticky="nsew", padx=1,
-    #                                                                         pady=1)
-    #         row = 0
-    #         font = 'Helvetica 9'
-    #         infoOrder = ['interface', 'link', 'type', 'ip', 'mac', 'TXP', 'RXP', 'TXB', 'RXB']
-    #         for data in self.intfData:
-    #             row += 1
-    #             current_row = []
-    #             for column in range(columns):
-    #                 label = Label(info, text=data[infoOrder[column]], borderwidth=0, font=font, padx=5)
-    #                 label_name = 'label_' + infoOrder[column]
-    #                 data[label_name] = label
-    #                 label.grid(row=row, column=column, sticky="nsew", padx=1, pady=1)
-    #                 current_row.append(label)
-    #             widgets.append(current_row)
-    #
-    #         for column in range(columns):
-    #             info.columnconfigure(column, weight=1)
-    #         # Scroll bars
-    #         ybar = Scrollbar(info, orient='vertical')
-    #         ybar.grid(row=0, rowspan=row + 1, column=9, sticky='ns')
-    #
-    #         hide = (lambda info=info: info.withdraw())
-    #         self.infoBox = info
-    #         # Hide on close rather than destroying window
-    #         Wm.wm_protocol(info, name='WM_DELETE_WINDOW', func=hide)
-    #     # Show (existing) window
-    #     self.updateIntfInfo()
-    #     info.deiconify()
-
-    # def updateIntfInfo(self):
-    #     self.printdata()
-    #     items = ['interface', 'link', 'type', 'ip', 'mac',
-    #              'TXP', 'RXP', 'TXB', 'RXB', ]
-    #     for data in self.intfData:
-    #         for item in items:
-    #             data[str('label_' + item)].config(text=str(data[item]))
-
+    # Funcion do_linkPopup, encargada de mostrar el menu emergente de un enlace.
     def do_linkPopup(self, event):
-
-        # display the popup menu
-        # if self.net:
         try:
             self.linkPopup.post(event.x_root, event.y_root)
             self.linkPopup.focus_set()
         finally:
-            # make sure to release the grab (Tk 8.0a1 only)
             self.linkPopup.grab_release()
 
+    # Funcion do_controllerPopup, que en principio, no hace nada.
     def do_controllerPopup(self, event):
-        # do nothing
         return
 
+    # Funcion do_legacyRouterPopup, encargada de mostrar el menu emergente de un legacyRouter (que en principio
+    # no usaremos).
     def do_legacyRouterPopup(self, event):
-        # display the popup menu
-        # if self.net:
         try:
             self.legacyRouterPopup.post(event.x_root, event.y_root)
             self.legacyRouterPopup.focus_set()
         finally:
-            # make sure to release the grab (Tk 8.0a1 only)
             self.legacyRouterPopup.grab_release()
 
+    # Funcion do_hostPopup, encargado de mostrar el menu emergente de un host.
     def do_hostPopup(self, event):
-
-        # display the popup menu
-        # if self.net:
         try:
             self.hostPopup.post(event.x_root, event.y_root)
             self.hostPopup.focus_set()
         finally:
-            # make sure to release the grab (Tk 8.0a1 only)
             self.hostPopup.grab_release()
 
+    # Funcion do_legacySwitchPopup, encargada de mostrar el menu emergente de un legacySwitch (que en principio
+    # no usaremos).
     def do_legacySwitchPopup(self, event):
-        # display the popup menu
-        # if self.net:
         try:
             self.switchPopup.post(event.x_root, event.y_root)
             self.switchPopup.focus_set()
 
         finally:
-            # make sure to release the grab (Tk 8.0a1 only)
             self.switchPopup.grab_release()
 
+    # Funcion do_switchPopup, encargada de mostrar el menu emergente de un switch.
     def do_switchPopup(self, event):
-        # display the popup menu
-        # if self.net:
         try:
-            # print('asdasdasdasddas')
             self.switchPopup.post(event.x_root, event.y_root)
             self.switchPopup.focus_set()
         finally:
-            # make sure to release the grab (Tk 8.0a1 only)
             self.switchPopup.grab_release()
 
+    # Funcion stop, encargada de reiniciar el terminal aunque no se haya salido del CLI correctamente y borrar las
+    # colas de paquetes.
     def stop(self):
-        # Reset the terminal even if CLI wasn't exited properly
-        # print('hola')
-        # os.system('stty sane')
-        # Clear the packet queues
         for q in self.flowQueues:
             self.flowQueues[q].queue.clear()
 
+    # Funcion quit, encargada de reiniciar el terminal aunque no se haya salido del CLI correctamente y borrar las
+    # colas de paquetes mediante la llamada a la funcion stop y eliminando el frame.
     def quit(self):
-        "Stop our network, if any, then quit."
         self.stop()
-
         Frame.quit(self)
 
+    # Funcion traffic_insertion, encargada de mostrar la ventana de insercion de trafico de un host seleccionado
+    # llamando para ello a la funcion PacketImportWindow.
     def traffic_insertion(self):
-        # print('Host:', host)
         root = tkinter.Toplevel()
-        # self.top.wait_variable()
         is_correct = True
         try:
             name = self.itemToWidget[self.selection]['text']
         except:
             is_correct = False
-        # print(list_packets)
         if is_correct and name[0] == 'h':
             p_import_w.PacketImportWindow(root=root, master=self, host=name, graph=graph)
-        # graph.get_list_packets_to_send()[host] = list_packets
-        # print(graph.get_list_packets_to_send()[host])
 
+    # Funcion find_timeGeneration_timeArrive, encargada de devolver el tiempo en el que se genero y llego un paquete;
+    # ademas de devolver el numero de saltos que ha realizado dicho paquete y el host que lo genero.
     def find_timeGeneration_timeArrive(self, id_packet):
 
         time_generation = 0
@@ -1639,16 +1113,10 @@ class MiniNAM(Frame, Thread):
         host = 0
 
         for i in self.list_processed_events:
-
             if i != 0:
-                # print(i['type'] == 'packet_processing_switch', i['type'] == 'packet_processing_controller', i[
-                #    'type'] == 'packet_processing_host', i['packet_id'] == str(id_packet), 'condicion', i['type'] == 'packet_processing_switch' or i['type'] == 'packet_processing_controller' or i[
-                #    'type'] == 'packet_processing_host')
-
                 if i['type'] == 'packet_generation' and i['packet_id'] == str(id_packet):
                     time_generation = i['time_spawn']
                     host = i['src']
-                    # print('hostttttttttttttttt', host)
                 elif i['type'] == 'packet_processing_host' and i['packet_id'] == str(id_packet):
                     time_arrive = i['time_spawn']
                 elif (i['type'] == 'packet_processing_switch' or i['type'] == 'packet_processing_controller' or i[
@@ -1657,67 +1125,21 @@ class MiniNAM(Frame, Thread):
                         openflow_message = self.packets_openflow[i['openflow_id']]
                         if openflow_message['type'] == 'packet_out' or openflow_message['type'] == 'packet_in':
                             number_jumps += 1
-                            # print('ewr JAJA')
                     else:
-                        # print(i['type'])
                         number_jumps += 1
-                        # print('ewr JAJA 222222')
 
         return time_generation, time_arrive, number_jumps, host
 
-    def run_simulation(self):
-
-        # if len(self.info_window_import) > 0:
-        #     for host in self.info_window_import:
-        #         if len(self.info_window_import[host]) > 0:
-        #             print('Enviamos los paquetes del host:', host)
-        #             cola_eventos = self.info_window_import[host]
-        #             for paquet in cola_eventos:
-        #                 print('paquete:', paquet)
-        #                 graph.communication_hots(app, host, paquet)
-
-        p1 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B2') / IP(src='192.168.120.131',
-                                                                          dst='192.168.120.132') / TCP(
-            sport=int('10'), dport=int('20'))
-
-        p2 = Ether(src='00:1B:44:11:3A:B2', dst='00:1B:44:11:3A:B3') / IP(src='192.168.120.132',
-                                                                          dst='192.168.120.131') / TCP(
-            sport=int('10'), dport=int('20'))
-
-        packets_data = {'1': p1, '2': p2}
-        packets_openflow = {}
-        event_queue = [{'type': 'packet_generation', 'src': None, 'dst': None, 'time_spawn': 1.0, 'packet_id': '1'},
-                       {'type': 'packet_generation', 'src': None, 'dst': None, 'time_spawn': 2.0, 'packet_id': '2'}]
-
-        discrete_events = DiscreteEvents(initial_event_list=event_queue, initial_packets_list=packets_data,
-                                         initial_openflow_list=packets_openflow)
-
-        while not discrete_events.is_empty_list_events():
-            event = discrete_events.unqueue_list_events()
-            # print('Procesamos evento:', event)
-            if event['type'] == 'packet_generation':
-                new_event = graph.processing_event_packet_generation(event, packets_data)
-                if new_event != 0: discrete_events.inser_event(new_event)
-            if event['type'] == 'packet_propagation':
-                new_event = graph.processing_event_packet_propagation(event, packets_data)
-                discrete_events.inser_event(new_event)
-
-            if event['type'] == 'packet_processing_switch':
-                new_event = graph.processing_event_packet_match_and_action_switch(event, packets_data, packets_openflow)
-                if new_event != 0:
-                    discrete_events.inser_event(new_event)
-
-            if event['type'] == 'packet_processing_controller':
-                new_event = graph.processing_event_packet_controller_action(event, packets_data, packets_openflow)
-                if len(new_event) > 0:
-                    for i in new_event:
-                        discrete_events.inser_event(i)
-            if event['type'] == 'packet_processing_host':
-                print('ha llegado al destino el paquete con id:', event['packet_id'])
-
+    # Funcion current_milli_time, encargada de devolver el tiempo actual en segundos.
     def current_milli_time(self):
         return round(time.time() * 1000)
 
+    # Funcion processing_event, encargada de realizar el tratamiento de los eventos que van saliendo de la lista de
+    # eventos discretos realizando la llamada a si mismo para procesar el siguiente evento (mediante otro hilo cada
+    # 1 ms) y a las diferentes funciones destinadas al tratamiento de cada uno de los diferentes tipos de eventos.
+    # Cada vez que se ejecuta este metodo, se comprueba si el evento se tiene que ejecutar en el tiempo de ejecucion de
+    # la simulacion en el que le corresponde segun su tiempo de generacion. Ademas, realiza la actualizacion del
+    # cronometro que aparece en la simulacion haciendo la llamada al metodo update_chronometer.
     def processing_event(self):
         time = (self.current_milli_time() - self.start)
         if not self.stop_simulation:
@@ -1727,8 +1149,6 @@ class MiniNAM(Frame, Thread):
 
         if self.event != 0 and float(self.event['time_spawn']) * 1000.0 <= (
                 time - self.time_pause) and self.stop_simulation == False:
-
-            # print('Procesamos evento:', self.event, 'en el instante de tiempo:', time - self.time_pause)
 
             if self.event['type'] == 'packet_generation':
                 new_event = graph.processing_event_packet_generation(self.event, self.packets_data)
@@ -1752,7 +1172,6 @@ class MiniNAM(Frame, Thread):
                     for i in new_event:
                         self.discrete_events.inser_event(i)
             if self.event['type'] == 'packet_processing_host':
-                # print('ha llegado al destino el paquete con id:', self.event['packet_id'])
                 if 'load' in graph.get_graph().edges[self.event['src'], self.event['dst']] and len(
                         graph.get_graph().edges[self.event['src'], self.event['dst']]['load']) > 0:
                     last_load = graph.get_graph().edges[self.event['src'], self.event['dst']]['load'][-1][1]
@@ -1770,29 +1189,22 @@ class MiniNAM(Frame, Thread):
 
         elif self.event == 0:
             self.final_time = self.current_milli_time() - self.start - self.time_pause
-            # print('Fin de la simulacion')
             self.processing_results()
             self.simulation_is_running = False
-            # graph.get_graph().graph['events_list'] = self.list_processed_events
-
             information = []
 
             for event in self.list_processed_events:
 
                 if event != 0:
-                    # print(str(list(event.items())))
                     information.append(str(list(event.items())))
 
             graph.get_graph().graph['event_list'] = information
-
             information = []
 
             for i, j in self.packets_data.items():
                 information.append(
                     'Packet Id: ' + str(i) + ' Packet Information: ' + str(list(j)) + ' Packet Lenght: ' + str(len(j)))
             graph.get_graph().graph['packey_list'] = information
-
-
             information = []
 
             for i, j in self.packets_openflow.items():
@@ -1800,6 +1212,8 @@ class MiniNAM(Frame, Thread):
 
             graph.get_graph().graph['openflow_list'] = information
 
+    # Funcion update_chronometer, encargada de actualizar el cronometro de nuestra simulacion, mostrando los minutos,
+    # segundos y milisegundos de la ejecucion de dicha simulacion.
     def update_chronometer(self, milliseconds):
         milli = math.trunc(milliseconds % 1000)
         seconds = math.trunc((milliseconds / 1000) % 60)
@@ -1807,22 +1221,16 @@ class MiniNAM(Frame, Thread):
         Label(self.cframe, text='\n Simulation Time \n\n' + str(minutes) + ':' + str(seconds) + ':' + str(milli),
               padx=3, pady=3, relief="ridge").grid(row=0, column=1, sticky='NE', padx=3, pady=3)
 
-    def run_simulation2(self):
+    # Funcion run_simulation, encargada de iniciar la ejecucion del simulador de eventos discretos inicializando del
+    # tiempo de inicio de la simulacion, inicializando la lista de paquetes de datos, de mensajes openflow y eventos.
+    # Para iniciar el tratamiento de los eventos en la cola de eventos discretos, se emplea la funcion processing_event
+    # ya mencionada anteriormente.
+    def run_simulation(self):
 
         self.simulation_is_running = True
-
-        # p1 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B2') / IP(src='192.168.120.131',
-        #                                                                   dst='192.168.120.132') / TCP(
-        #     sport=int('10'), dport=int('20'))
-        #
-        # p2 = Ether(src='00:1B:44:11:3A:B1', dst='00:1B:44:11:3A:B3') / IP(src='192.168.120.132',
-        #                                                                   dst='192.168.120.133') / TCP(
-        #     sport=int('10'), dport=int('20'))
-
         self.packets_data = {}
         self.packets_openflow = {}
         self.event_queue = []
-
         self.discrete_events = DiscreteEvents(initial_event_list=self.event_queue,
                                               initial_packets_list=self.packets_data,
                                               initial_openflow_list=self.packets_openflow)
@@ -1830,47 +1238,33 @@ class MiniNAM(Frame, Thread):
         if len(self.info_window_import) > 0:
             for host in self.info_window_import:
                 if len(self.info_window_import[host]) > 0:
-                    # print('Enviamos los paquetes del host:', host)
                     cola_eventos = self.info_window_import[host]
                     for paquet in cola_eventos:
-                        # print('paquete:', paquet)
                         self.packets_data[str(i)] = paquet[0]
                         self.discrete_events.inser_event(
                             {'type': 'packet_generation', 'src': host, 'dst': None, 'time_spawn': paquet[1],
                              'packet_id': str(i)})
-
                         i += 1
-                        # print(i)
-                        # graph.communication_hots(app, host, paquet)
-        # print(self.packets_data)
-        # print(self.packets_data)
-        # print(self.event_queue)
 
-        # print(list(graph.get_graph().graph['events_list']))
         self.event = self.discrete_events.unqueue_list_events()
         self.list_processed_events.append(self.event)
         self.start = self.current_milli_time()
         self.stop_simulation = False
         self.update_chronometer(self.start)
-
-        # # print(self.event_queue)
         threading.Timer(1.0 / 1000.0, self.processing_event).start()
 
-        # arr = [src, dst, Packet, is_openflow, type_openflow, h_src_dst, time]
-        # threading.Thread(target=self.displayPacket, args=arr).start()
-
+    # Funcion find_packet_equal, encargada de encontrar paquetes iguales.
     def find_packet_equal(self, list_packet, packet):
         for i in list_packet:
-            # print('idX', i[0])
             if i[1] == packet:
-                # print(i[1],packet)
                 return i[0]
         return None
 
+    # Funcion processing_results, encargada de procesar la informacion tras haberse realizado la simulacion calculando
+    # el delay por paquete.
     def processing_results(self):
         self.list_flow = {}
         list_packet = []
-        # print(self.packets_data)
 
         for id_packet, packet in self.packets_data.items():
             time_generation, time_arrive, number_jumps, host = self.find_timeGeneration_timeArrive(id_packet)
@@ -1881,52 +1275,33 @@ class MiniNAM(Frame, Thread):
                 animation_propagation_time = 1.0
 
             delay = (time_arrive - time_generation - (animation_propagation_time * (number_jumps + 1))) * 1000
-            # print('DELAY', id_packet, delay)
-            # print(time_generation, time_arrive, number_jumps, host)
-            # print(delay * 1000)
             id = self.find_packet_equal(list_packet, packet)
-            # print('ID:', id)
-            # print('iddddd:', id)
+
             if host not in self.list_flow:
                 self.list_flow[host] = {}
             if id == None:
-                # list_packet[id_packet] = packet
+
                 self.list_flow[host][id_packet] = fl_inf.flow_information(packet)
                 self.list_flow[host][id_packet].add_delay(delay, time_generation)
                 list_packet.append((id_packet, packet, time_generation))
             else:
                 self.list_flow[host][id].add_delay(delay, time_generation)
 
-        #     print(list_flow)
-        # print(list_flow)
-        # utilities = utili.Utilities()
         self.runMenu.entryconfig("Results", state="normal")
-        # for node in graph.get_graph().nodes:
-        #     if node[0] == 'h' and node in list_flow:
-        #         for flujo in list_flow[node].items():
-        #             packet_delay_list = flujo[1].get_packet_delay_list()
-        #             print('Flujo', flujo[0], ':', packet_delay_list)
-        #             # print('1:', [i[0] for i in packet_delay_list], '2:', list(range(1, len(packet_delay_list) + 1 )))
-        #             list_delays = [i[0] for i in packet_delay_list]
-        #
-        #             utilities.create_graph(y=list_delays, x=list(range(1, len(list_delays) + 1)), x_label = 'Packet (number)', y_label='Delay (ms)', title_graph='Delay per Packet')
 
+    # Funcion window_results, encargada de mostrar los resultados de la simulacion (graficas) mediante la funcion
+    # ResultInformation.
     def window_results(self):
         root = tkinter.Toplevel()
-        # root.configure(width=1000, height=600)
         resultInfor.ResultInformation(root=root, master=self, graph=graph,
                                       list_flow=self.list_flow, final_time=self.final_time)
 
 
+# Funcion miniImages, encargada de crear y devolver imagenes que seran usadas por nuestro simulador (imagenes de los
+# hosts, switches, controladores...)
 def miniImages():
-    "Create and return images for MiniNAM."
-
-    # Image data. Git will be unhappy. However, the alternative
-    # is to keep track of separate binary files, which is also
-    # unappealing.
-
+    
     return {
-
         'Select': BitmapImage(
             file='Arch\left_ptr'),
 
@@ -2076,13 +1451,12 @@ if __name__ == "__main__":
         graph = p.NetworkTopology()
         style = Style(theme='TFG')
         window = style.master
-        app = MiniNAM()
+        app = SDN_Simulator()
         app.mainloop()
     except KeyboardInterrupt:
         app.stop()
 
     except Exception:
-        # Print exception
         type_, val_, trace_ = sys.exc_info()
         line = sys.exc_info()[-1].tb_lineno
         errorMsg = ("-" * 80 + "\n" +
@@ -2090,9 +1464,7 @@ if __name__ == "__main__":
                     " Cleaning up...\n\n" + "%s: %s\n" % (type_.__name__, val_) +
                     "-" * 80 + "\n")
         error(errorMsg)
-        # Print stack trace to debug log
         import traceback
 
         stackTrace = traceback.format_exc()
-        # debug(stackTrace + "\n")
         app.stop()

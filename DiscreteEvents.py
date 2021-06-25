@@ -1,7 +1,5 @@
-"""
- Clase DiscreteEvents, encargada de recopilar la informacion de los eventeos que tienen lugar en la red junto a los
- diferentes paquetes geredados por los hosts y aquellos paquetes generados a partir de estos.
-"""
+# Clase DiscreteEvents, encargada de recopilar la informacion de los eventeos que tienen lugar en la red junto a los
+# diferentes paquetes geredados por los hosts y aquellos paquetes generados a partir de estos.
 class DiscreteEvents:
 
     # Contructor parametrizado de la clase DiscreteEvents.
@@ -10,15 +8,15 @@ class DiscreteEvents:
         self.list_packets = initial_packets_list
         self.list_packets_openflow = initial_openflow_list
 
-    # Funcion get_list_events, encargado de devolver la lista de eventos.
+    # Getter get_list_events, encargado de devolver la lista de eventos.
     def get_list_events(self):
         return self.list_events
 
-    # Funcion get_list_packets, encargada de devolver la lista de paquetes de datos.
+    # Getter del atributo list_packets.
     def get_list_packets(self):
         return self.list_packets
 
-    # Funcion get_list_packets_openflow, encargada de devolver la lista de mensajes OpenFlow.
+    # Getter del atributo list_packets_openflow.
     def get_list_packets_openflow(self):
         return self.list_packets_openflow
 
@@ -34,21 +32,17 @@ class DiscreteEvents:
         except:
             return 0
 
+    # Funcion is_empty_list_events, edvuelve True si la cola esta vacía, False si no lo esta.
     def is_empty_list_events(self):
-        """ Devuelve True si la cola esta vacía, False si no."""
         return self.list_events == []
 
+    # Funcion inser_event, encargado de insertar un evento en la cola de eventos en la posicion en la cual le
+    # corresponde dependiendo del tiempo de tratamiento de dicho evento.
     def inser_event(self, new_event):
         j = 0
-
         for event in self.list_events:
             if event['time_spawn'] > new_event['time_spawn']:
                 self.list_events = self.list_events[:j] + [new_event] + self.list_events[j:]
-                # print(new_event)
                 return
             j += 1
-        # print(new_event)
         self.list_events.append(new_event)
-
-    # def get_lists(self):
-    #     return self.list_events, self.list_packets, self.list_packets_openflow
