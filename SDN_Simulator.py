@@ -483,12 +483,14 @@ class SDN_Simulator(Frame, Thread):
         # Movemos el paquete en 50 pasos y luego eliminamos la imagen
         self.__flag.set()
         self.__running.set()
+        tiempo_inicial = time.time()
         while i < 50:
             self.__flag.wait()  # Punto de parada de la animacion cuando recibe una senial con dicho proposito
             i += 1
             c.move(packet, delta[0], delta[1])
             c.update()
             time.sleep(t)
+        print('Time: ' + str(time.time() - tiempo_inicial))
         c.delete(packet)
 
         self.packetImage.remove(image)
