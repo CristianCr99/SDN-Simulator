@@ -827,10 +827,10 @@ class SDN_Simulator(Frame, Thread):
 
         fileMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="File", menu=fileMenu)
-        fileMenu.add_command(label="Load topology", command=self.loadGraph)
-        fileMenu.add_command(label="Save topology", command=self.saveGraph)
+        fileMenu.add_command(label="Load Topology", command=self.loadGraph)
+        fileMenu.add_command(label="Save Topology", command=self.saveGraph)
         fileMenu.add_separator()
-        fileMenu.add_command(label="Topology editor", command=self.customize_topology)
+        fileMenu.add_command(label="Topology Editor", command=self.customize_topology)
 
         editMenu = Menu(mbar, tearoff=False)
         mbar.add_cascade(label="Edit", menu=editMenu)
@@ -950,6 +950,7 @@ class SDN_Simulator(Frame, Thread):
     # herramienta permitiendonos editar una topologia desde 0 o modificar una que hallamos creado anterioemente.
     def customize_topology(self):
         root = tkinter.Toplevel()
+        root.iconbitmap('./Arch/red.ico')
         edit_topology = edit.customize_topology(root)
 
     # Funcion pause_simulation, encargada de detener cada uno de los hilos que estan realizando la ejecucion de cada
@@ -1314,7 +1315,7 @@ class SDN_Simulator(Frame, Thread):
 
 
 # Funcion miniImages, encargada de crear y devolver imagenes que seran usadas por nuestro simulador (imagenes de los
-# hosts, switches, controladores...)
+# hosts, switches, controladores...).
 def miniImages():
     return {
         'Select': BitmapImage(
@@ -1466,6 +1467,7 @@ if __name__ == "__main__":
         graph = p.NetworkTopology()
         style = Style(theme='TFG', themes_file='./Arch/Themes.json')
         window = style.master
+        window.iconbitmap('./Arch/red.ico')
         app = SDN_Simulator()
         app.mainloop()
     except KeyboardInterrupt:

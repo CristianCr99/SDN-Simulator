@@ -423,7 +423,7 @@ class customize_topology(Frame):
 
         Frame.__init__(self, parent)
         self.action = None
-        self.appName = 'Customize Topology'
+        self.appName = 'Topology Editor'
         self.fixedFont = tkFont.Font(family="DejaVu Sans Mono", size="14")
 
         # Establecemos el estilo:
@@ -740,7 +740,7 @@ class customize_topology(Frame):
             dx, dy = self.canvas.coords(self.widgetToItem[dest])
 
             self.link = self.canvas.create_line(sx, sy, dx, dy, width=4,
-                                                fill='#95A5A6', tag='link')
+                                                fill='purple', tag='link')
             c.itemconfig(self.link, tags=c.gettags(self.link) + ('data',))
 
             self.addLink(src, dest, linkopts=link['opts'])
@@ -1127,6 +1127,7 @@ class customize_topology(Frame):
 
         def select(_event, link=self.link):
             self.selectItem(link)
+            self.canvas.itemconfig(link, fill='purple')
 
         def highlight(_event, link=self.link):
             self.selectItem(link)

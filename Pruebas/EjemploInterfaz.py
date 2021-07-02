@@ -11,7 +11,7 @@ root.title("Interface")
 root.resizable(True,True)                   # Por defecto estan a True
 
 # Ponemos una imagen de icono
-root.iconbitmap('gatito.ico')
+root.iconbitmap('little_cat.ico')
 
 # Damos un ancho y alto a nuestra ventana:
 root.geometry('1280x720')
