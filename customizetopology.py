@@ -1314,6 +1314,8 @@ class customize_topology(Frame):
                 else:
                     message = 'Error, invalid parameter [ ' + parameter + ' ]. The value will not be saved'
                 messagebox.showerror("Error", message + '\n\n' + 'Help:\n\n' + message_help)
+            else:
+                self.switchOpts[name] = newSwitchOpts
 
     # Funcion linkDetails, encagada de almacenar los parametros introducidos en la ventana de dialogo de un enlace,
     # realizando las comprobaciones correspondientes a cada uno de los campos.
