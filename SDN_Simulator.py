@@ -200,7 +200,7 @@ class SDN_Simulator(Frame, Thread):
         self.appPrefs = {
             'flowTime': FLOWTIME[FLOWTIMEDEF],
             'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown',
-                           'packet_in': 'Cyan', 'packet_out': 'Green', 'flow_mood': 'Red'},
+                           'packet_in': 'Cyan', 'packet_out': 'Green', 'flow_mood': 'Violet'},
             'showAddr': 'Source and destination',
             'reactive_proactive': 1  # 1 es proactivo y 0 reactivo
         }
