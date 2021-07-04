@@ -1,8 +1,10 @@
 from __future__ import print_function
-import networkx as nx
-import matplotlib.pyplot as plt
+
 from builtins import range
 from datetime import date
+
+import matplotlib.pyplot as plt
+import networkx as nx
 
 
 def menu():
@@ -29,6 +31,7 @@ def menu():
           "----------")
     return input("¿Que opcion desea hacer (0 para salir)? ")
 
+
 def insertarOmodificarAtri_Grafo(G):
     opcion = input("Indique si desea asignarle mas atributos"
                    " al grafo"
@@ -41,6 +44,7 @@ def insertarOmodificarAtri_Grafo(G):
                        "atributos al "
                        "grafo o cambiar alguno existente "
                        "(si/no):")
+
 
 def insertarOmodificarAtri_Nodo(G):
     nombre = input("Nombre del nodo:")
@@ -56,6 +60,7 @@ def insertarOmodificarAtri_Nodo(G):
                        " al nodo "
                        "o cambiar alguno existente (si/no):")
 
+
 def insertarOmodificarAtri_Enlace(G):
     enlace1 = input("Nombre del nodo 1:")
     enlace2 = input("Nombre del nodo 2:")
@@ -70,12 +75,14 @@ def insertarOmodificarAtri_Enlace(G):
         opcion = input("Indique si desea asignarle atributos al o "
                        "cambiar alguno existente (si/no):")
 
+
 def caminoValido(g, p):
     plen = len(p)
     for i in range(plen - 1):
         if not g.has_edge(p[i], p[i + 1]):
             return False
     return True
+
 
 def hayCaminoPorNodos(G):
     nodo = input("Introduzca el nodo (no para finalizar la entrada"
@@ -87,8 +94,10 @@ def hayCaminoPorNodos(G):
                      "entrada de nodos):")
     return caminoValido(G, nodos)
 
+
 def hayEnlaceEntreNodos(G, nodo1, nodo2):
     return G.has_edge(nodo1, nodo2)
+
 
 def verInformacionGrafo(G):
     print('\n\n  Características del Grafo G:',
@@ -98,6 +107,7 @@ def verInformacionGrafo(G):
           '\n    Lista de nodos:', list(G.nodes),
           '\n    Lista de arcos:', list(G.edges))
 
+
 def verInformacionConcretaNodo(G):
     nodo = input("Introduzca nombre del nodo:")
     print('\n  Informacion del nodo:', nodo,
@@ -106,6 +116,7 @@ def verInformacionConcretaNodo(G):
           G.degree(nodo),
           '\n    Enlaces de', nodo, ':', G.edges(nodo))
 
+
 def verInformacionConcretaEnlace(G):
     nodo1 = input("Introduzca nombre del nodo:")
     nodo2 = input("Introduzca nombre del nodo:")
@@ -113,10 +124,10 @@ def verInformacionConcretaEnlace(G):
           ')',
           '\n    Atributos:', G.edges[nodo1, nodo2])
 
+
 def pintarGrafo(G):
     nx.draw_shell(G, with_labels=True, font_weight='bold')
     plt.show()
-
 
 
 def caminoMasCorto(G):
@@ -131,16 +142,16 @@ def caminoMasCorto(G):
     print('Distancia a cada nodo desde el nodo', nodo,
           ':', sorted(distanciaNodo.items()))
 
+
 def all_dijkstra_path(G):
     nodo1 = input("Introduzca nombre del nodo1:")
     nodo2 = input("Introduzca nombre del nodo2:")
     camino = dict(nx.all_pairs_dijkstra_path(G,
                                              cutoff=None,
                                              weight='weight'))
-    print('Camino a seguir para ir del nodo',nodo1,
+    print('Camino a seguir para ir del nodo', nodo1,
           'al nodo', nodo2, camino[nodo1][nodo2])
-    nx.dijkstra_path(G,'0','4') # Esta es la funcion que debería usar
-
+    nx.dijkstra_path(G, '0', '4')  # Esta es la funcion que debería usar
 
 
 def grafoPorDefecto(G):
@@ -193,7 +204,7 @@ while opcion != "0":
         elif opcion == "8":
             print('\n\n  -- Comprobar si un camino es'
                   ' valido --')
-            print('Hay camino:',hayCaminoPorNodos(G))
+            print('Hay camino:', hayCaminoPorNodos(G))
         elif opcion == "9":
             print('\n\n  -- Crear Grafo por defecto con'
                   ' nodos, atributos, enlaces ...  --')

@@ -96,7 +96,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
 
         Label(self.typeColorsOpenFlow, text="Flow Mod").grid(row=0, column=3, sticky=W, padx=10)
         self.FlowModColor = StringVar(self.typeColorsOpenFlow)
-        self.FlowModColor.set(self.typeColors["flow_mod"])
+        self.FlowModColor.set(self.typeColors["flow_mood"])
         self.FlowModColorMenu = OptionMenu(self.typeColorsOpenFlow, self.FlowModColor, "None", "Red", "Green", "Blue",
                                            "Purple",
                                            'Brown', 'Cyan', 'Orange', 'Violet')
@@ -200,7 +200,7 @@ class SDN_Simulator(Frame, Thread):
         self.appPrefs = {
             'flowTime': FLOWTIME[FLOWTIMEDEF],
             'typeColors': {'Usertraffic': 'Purple', 'TCP': 'Orange', 'OpenFlow': 'Blue', 'UDP': 'Brown',
-                           'packet_in': 'Cyan', 'packet_out': 'Green', 'flow_mod': 'Red'},
+                           'packet_in': 'Cyan', 'packet_out': 'Green', 'flow_mood': 'Red'},
             'showAddr': 'Source and destination',
             'reactive_proactive': 1  # 1 es proactivo y 0 reactivo
         }
@@ -429,12 +429,13 @@ class SDN_Simulator(Frame, Thread):
                     ip_color = self.appPrefs['typeColors'][type_openflow]
                 except:
                     ip_color = 'pink'
+                    print('Excepción:', type_openflow)
 
             if ip_color is not None:
                 draw.polygon([(0, 0), (0, 15), (15, 15), (15, 0)], ip_color)
                 if type_openflow == 'packet_out':
                     draw.polygon([(0 + 45, 0), (0 + 45, 15), (15 + 45, 15), (15 + 45, 0)],
-                                 self.appPrefs['typeColors']['flow_mod'])
+                                 self.appPrefs['typeColors']['flow_mood'])
 
             # Si el origen y destino no se muestra, entonces gira el paquete a lo largo del enlace
             if self.appPrefs['showAddr'] == 'None':
