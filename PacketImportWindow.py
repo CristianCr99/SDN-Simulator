@@ -187,7 +187,7 @@ class PacketImportWindow(tk.Frame):
                 messagebox.showerror("Error", message_final)
         else:
             messagebox.showerror("Error",
-                                 'The number of packets to insert must be greater than 0 and the packet spawn time must be greater than 0.')
+                                 'The number of packets to insert must be greater than 0 and the packet timestamp must be greater than 0.')
 
     # Funcion update_values_hosts, encargada de actualizar los valores de destino de los campos de la ventana de
     # insercion de trafico.
@@ -218,7 +218,7 @@ class PacketImportWindow(tk.Frame):
         self.tree.heading('6', text='Source Port')
         self.tree.heading('7', text='Destination Port')
         self.tree.heading('8', text='Transport Protocol')
-        self.tree.heading('9', text='Spawn Time')
+        self.tree.heading('9', text='Timestamp')
         self.tree.column('1', minwidth=120, width=145, stretch=False)
         self.tree.column('2', minwidth=120, width=145, stretch=False)
         self.tree.column('3', minwidth=120, width=145, stretch=False)
@@ -270,7 +270,7 @@ class PacketImportWindow(tk.Frame):
         tk.Label(campos, text='     ').grid(row=1, column=13)
         tk.Label(campos, text='     ').grid(row=2, column=13)
         tk.Label(campos, text='     ').grid(row=3, column=13)
-        tk.Label(campos, text="       Time Spawn:  ").grid(row=1, column=11, sticky='w')
+        tk.Label(campos, text="       Timestamp:  ").grid(row=1, column=11, sticky='w')
         tk.Entry(campos, textvariable=self.time_spawn, width=7).grid(row=1, column=12, sticky='w')
         tk.Button(campos, text="Load values", command=self.load_values, height=1, width=15).grid(row=1, column=14,
                                                                                                  sticky='E', padx=5,

@@ -1,19 +1,19 @@
 from scapy.layers.inet import *
-from scapy.sendrecv import sniff, AsyncSniffer, send
-import socket
-import tkinter as tk
-from scapy.utils import wrpcap, wireshark, rdpcap
-
 
 # cache = []
 #
-p = Ether() / IP(src='192.168.1.2', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
-p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
+p = Ether(src='00:1B:44:11:3A:B7', dst='00:1B:44:11:3A:B8') /\
+    IP(src='192.168.1.2', dst='192.168.1.3') /\
+    TCP(sport=3000, dport=4000)
 
-if p == p2:
-    print('Iguales!!')
-else:
-    print('No iguales!!')
+p.show()
+
+# p2 = Ether() / IP(src='192.168.1.3', dst='192.168.1.3') / TCP(sport=3000, dport=4000)
+
+# if p == p2:
+#     print('Iguales!!')
+# else:
+#     print('No iguales!!')
 
 # print(list(p))
 #
@@ -63,7 +63,7 @@ else:
 #
 
 
-#ans, unans = sr(IP(dst='localhost')/TCP(dport=80, flags='A'))
+# ans, unans = sr(IP(dst='localhost')/TCP(dport=80, flags='A'))
 # send(IP()/ICMP(id=1, seq=1))
 
 # print(len(pkt))
@@ -75,20 +75,19 @@ else:
 #     print('1')
 #     print(i['IP'].src)
 
-
-print(p.mysummary())
-
-
-def clicked():
-    scapy_cap = rdpcap('../Packets/packlist.pcap')
-    for packet in scapy_cap:
-        if 'LLC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
-            if 'TCP' in packet:
-                inf = 'TCP'
-            else:
-                inf = 'UDP'
-            print('src MAC:',packet['LLC'].ssap,'dst MAC',packet['LLC'].dsap,'src:', packet[IP].src, 'dst:', packet[IP].dst, 'sport:', packet[inf].sport, 'dport:', packet[inf].sport)
-
-
-
-
+#
+# print(p.mysummary())
+#
+#
+# def clicked():
+#     scapy_cap = rdpcap('../Packets/packlist.pcap')
+#     for packet in scapy_cap:
+#         if 'LLC' in packet and 'IP' in packet and 'TCP' in packet or 'UDP' in packet:
+#             if 'TCP' in packet:
+#                 inf = 'TCP'
+#             else:
+#                 inf = 'UDP'
+#             print('src MAC:',packet['LLC'].ssap,'dst MAC',packet['LLC'].dsap,'src:', packet[IP].src, 'dst:', packet[IP].dst, 'sport:', packet[inf].sport, 'dport:', packet[inf].sport)
+#
+#
+#
