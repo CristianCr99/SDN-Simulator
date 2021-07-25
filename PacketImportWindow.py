@@ -120,7 +120,7 @@ class PacketImportWindow(tk.Frame):
     def load_packets(self):
 
         try:
-            path = filedialog.askopenfile(title='Load Graph', initialdir='./Packets',
+            path = filedialog.askopenfile(title='Load PCAP', initialdir='./Packets',
                                           filetypes=(('Files .pcap', '*.pcap'), (('All Files', '*.*'))))
             if path is None:
                 return
@@ -128,6 +128,7 @@ class PacketImportWindow(tk.Frame):
             scapy_cap = rdpcap(path.name)
             is_first = True
             for packet in scapy_cap:
+
                 if ('MAC' in packet or 'Ethernet' in packet) and 'IP' in packet and (
                         'TCP' in packet or 'UDP' in packet):
                     if is_first:

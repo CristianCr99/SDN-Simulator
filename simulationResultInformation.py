@@ -101,8 +101,12 @@ class ResultInformation(tk.Frame):
                 lista = (link[2]['load']).copy()
                 lista.reverse()
                 seen = set()
-                Output = [(a, b) for a, b in lista
-                          if not (a in seen or seen.add(a))]
+                # print(lista)
+                list2 = []
+                for i in lista:
+                    list2.append((float(i[0]), i[1]))
+
+                Output = [(a, b) for a, b in list2 if not (a in seen or seen.add(a))]
                 Output.reverse()
 
                 x = []

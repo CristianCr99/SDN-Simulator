@@ -236,7 +236,8 @@ class NetworkTopology(object):
         new_load = last_load + load_packet
 
         if 'load' in self.G.edges[event['src'], event['dst']]:
-            self.G.edges[event['src'], event['dst']]['load'].append((event['time_spawn'], new_load))  # TODO ooooooooooo
+            print((float(event['time_spawn']), new_load))
+            self.G.edges[event['src'], event['dst']]['load'].append((float(event['time_spawn']), new_load))  # TODO ooooooooooo
 
         if event['dst'] == 'c0':
             type = 'packet_processing_controller'
