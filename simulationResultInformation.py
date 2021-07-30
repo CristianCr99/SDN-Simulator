@@ -101,7 +101,6 @@ class ResultInformation(tk.Frame):
                 lista = (link[2]['load']).copy()
                 lista.reverse()
                 seen = set()
-                # print(lista)
                 list2 = []
                 for i in lista:
                     list2.append((float(i[0]), i[1]))

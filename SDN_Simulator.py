@@ -94,7 +94,7 @@ class PrefsDialog(tkinter.simpledialog.Dialog):
                                              'Brown', 'Cyan', 'Orange', 'Violet')
         self.PacketOutColorMenu.grid(row=1, column=2, sticky=W, padx=10)
 
-        Label(self.typeColorsOpenFlow, text="Flow Mod").grid(row=0, column=3, sticky=W, padx=10)
+        Label(self.typeColorsOpenFlow, text="Flow Mood").grid(row=0, column=3, sticky=W, padx=10)
         self.FlowModColor = StringVar(self.typeColorsOpenFlow)
         self.FlowModColor.set(self.typeColors["flow_mood"])
         self.FlowModColorMenu = OptionMenu(self.typeColorsOpenFlow, self.FlowModColor, "None", "Red", "Green", "Blue",
