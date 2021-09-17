@@ -1,4 +1,4 @@
-# SDN-Simulator (Windows 10 - English)
+# SDN-Simulator (Windows 10)
 
 1. Installing Python 3.8
 
