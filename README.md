@@ -14,11 +14,12 @@ Presione el botón de Windows y escriba CMD y ejecútelo cómo administrador.
     
 Ejecute los siguientes comandos:
     
-    python -m pip install –upgrade pip
+    python -m pip install ––upgrade pip
     pip install networkx
     pip install Image
     pip install scapy
     pip install matplotlib
+    pip install ttkbootstrap
 
 3. Ejecución del programa
 
