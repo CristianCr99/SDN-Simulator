@@ -26,3 +26,7 @@ Execute the following commands in order to install the necessary packages for th
 Unzip the ZIP project file downloaded from GitHub 
     
 Double click on the file "SDN_Simulator.py".
+
+You can see the installation process in the following video:
+
+    https://youtu.be/T5qDrh1dSyA
