@@ -12,7 +12,7 @@ Once downloaded, run it and install it following the installation process.
 
 Press the Windows button and type CMD and run it as administrator.
     
-Execute the following commands:
+Execute the following commands in order to install the necessary packages for this project:
     
     python -m pip install --upgrade pip
     pip install networkx
